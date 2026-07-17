@@ -5,9 +5,6 @@ import { type AuthEnv, getAuthUser } from '../auth/auth-context';
 import { authMiddleware } from '../auth/auth.middleware';
 import { errorHandler } from '../utils/response.utils';
 
-/**
- * User account routes; only operations needing the service role live here.
- */
 export const usersRoutes = new Hono<AuthEnv>();
 usersRoutes.onError(errorHandler);
 

@@ -6,11 +6,6 @@ import { validateJson } from '../utils/validate.utils';
 import { type AuthEnv, getAuthToken } from './auth-context';
 import { authMiddleware } from './auth.middleware';
 
-/**
- * Auth routes wrapping Supabase server-side: the API owns the wire contract
- * while clients adopt the returned tokens into supabase-js for persistence
- * and refresh.
- */
 export const authRoutes = new Hono<AuthEnv>();
 authRoutes.onError(errorHandler);
 
@@ -21,7 +16,8 @@ authRoutes.post(
   validateJson(signUpRequestSchema),
   async (c) => {
     const { email, password } = c.req.valid('json');
-    return c.json(await authService.signUp(email, password));
+    const session = await authService.signUp(email, password);
+    return c.json(session);
   },
 );
 
@@ -30,11 +26,13 @@ authRoutes.post(
   validateJson(signInRequestSchema),
   async (c) => {
     const { email, password } = c.req.valid('json');
-    return c.json(await authService.signIn(email, password));
+    const session = await authService.signIn(email, password);
+    return c.json(session);
   },
 );
 
 authRoutes.post(ApiRoute.SignOut, authMiddleware, async (c) => {
-  await authService.signOut(getAuthToken(c));
+  const authToken = getAuthToken(c);
+  await authService.signOut(authToken);
   return c.json({ success: true });
 });

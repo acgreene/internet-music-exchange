@@ -33,7 +33,7 @@ const STATELESS_AUTH_OPTIONS = {
 export class AuthService {
   constructor(
     /**
-     * Client bound to the publishable key, for user-scoped operations.
+     * Client bound to the publishable key for user-scoped operations.
      * Defaults to a client built from the validated environment; pass one
      * explicitly only in tests.
      */

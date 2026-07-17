@@ -1,3 +1,3 @@
 export * from './lib/models';
 export * from './lib/api';
-export * from './lib/api-status';
+export * from './lib/api/api-status';
