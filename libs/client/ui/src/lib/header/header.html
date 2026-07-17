@@ -7,9 +7,10 @@
   <span class="flex items-center gap-2 text-xs text-zinc-400">
     <span
       class="h-2 w-2 rounded-full"
-      [class.bg-emerald-400]="apiStatus() === 'online'"
-      [class.bg-amber-400]="apiStatus() === 'checking'"
-      [class.bg-rose-500]="apiStatus() === 'offline'"
+      [class.bg-emerald-400]="apiStatus() === ApiStatus.Online"
+      [class.bg-amber-400]="apiStatus() === ApiStatus.Checking"
+      [class.bg-orange-500]="apiStatus() === ApiStatus.Degraded"
+      [class.bg-rose-500]="apiStatus() === ApiStatus.Offline"
     ></span>
     API {{ apiStatus() }}
   </span>

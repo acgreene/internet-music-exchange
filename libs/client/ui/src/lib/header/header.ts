@@ -1,9 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-
-/**
- * Connectivity of the API as seen by the client, shown in the header indicator.
- */
-export type ApiStatus = 'checking' | 'online' | 'offline';
+import { ApiStatus } from '@ime/models';
 
 /**
  * Shared top bar for the client apps: brand wordmark plus an API status dot.
@@ -17,5 +13,11 @@ export class Header {
   /**
    * Current API connectivity to display.
    */
-  readonly apiStatus = input<ApiStatus>('checking');
+  readonly apiStatus = input<ApiStatus>(ApiStatus.Checking);
+
+  /**
+   * Exposes the enum to the template for comparisons.
+   * @protected
+   */
+  protected readonly ApiStatus = ApiStatus;
 }

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ApiStatus } from '@ime/models';
 import { Header } from './header';
 
 describe('Header', () => {
@@ -20,7 +21,7 @@ describe('Header', () => {
   });
 
   it('reflects the apiStatus input', async () => {
-    fixture.componentRef.setInput('apiStatus', 'online');
+    fixture.componentRef.setInput('apiStatus', ApiStatus.Online);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('API online');

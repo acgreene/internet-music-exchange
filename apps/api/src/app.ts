@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
+import { getDb, pingDb } from '@ime/db';
+import { Logger } from '@ime/logger';
 import { ApiRoute, type HealthResponse, HealthStatus } from '@ime/models';
 
 /**
@@ -8,11 +10,13 @@ import { ApiRoute, type HealthResponse, HealthStatus } from '@ime/models';
 export function createApp() {
   const app = new Hono();
 
-  app.use(logger());
+  const httpLog = new Logger('api').child('http');
+  app.use(logger((line, ...rest) => httpLog.debug(line, ...rest)));
 
-  app.get(ApiRoute.Health, (c) => {
+  app.get(ApiRoute.Health, async (c) => {
+    const databaseOk = await pingDb(getDb());
     const health: HealthResponse = {
-      status: HealthStatus.Ok,
+      status: databaseOk ? HealthStatus.Ok : HealthStatus.Degraded,
       timestamp: new Date().toISOString(),
     };
     return c.json(health);

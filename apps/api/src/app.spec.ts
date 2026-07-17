@@ -1,13 +1,30 @@
+import { ApiRoute } from '@ime/models';
+import { pingDb } from '@ime/db';
 import { createApp } from './app';
 
-describe('api', () => {
-  const app = createApp();
+vi.mock('@ime/db', () => ({
+  getDb: () => ({}),
+  pingDb: vi.fn(),
+}));
 
-  it('reports health', async () => {
-    const res = await app.request('/api/health');
+describe('api', () => {
+  it('reports ok when the database is reachable', async () => {
+    vi.mocked(pingDb).mockResolvedValue(true);
+
+    const res = await createApp().request(ApiRoute.Health);
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.status).toBe('ok');
+  });
+
+  it('reports degraded when the database is unreachable', async () => {
+    vi.mocked(pingDb).mockResolvedValue(false);
+
+    const res = await createApp().request(ApiRoute.Health);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe('degraded');
   });
 });

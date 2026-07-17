@@ -8,6 +8,11 @@ export enum HealthStatus {
    * The service and its dependencies are operating normally.
    */
   Ok = 'ok',
+
+  /**
+   * The service is up, but a dependency (such as the database) is unreachable.
+   */
+  Degraded = 'degraded',
 }
 
 /**
