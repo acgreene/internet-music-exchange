@@ -16,7 +16,10 @@
     "strict": false,
     "paths": {
       "@ime/models": ["./libs/shared/models/src/index.ts"],
-      "@ime/ui": ["./libs/client/ui/src/index.ts"]
+      "@ime/ui": ["./libs/client/ui/src/index.ts"],
+      "@ime/db": ["./libs/api/db/src/index.ts"],
+      "@ime/testing": ["./libs/shared/testing/src/index.ts"],
+      "@ime/api-service": ["./libs/client/api-service/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

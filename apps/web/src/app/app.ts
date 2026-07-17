@@ -1,7 +1,7 @@
-import { Component, afterNextRender, signal } from '@angular/core';
+import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { ApiService } from '@ime/api-service';
 import { Header, type ApiStatus } from '@ime/ui';
-import type { ApiHealth } from '@ime/models';
 
 @Component({
   imports: [Header, RouterModule],
@@ -10,21 +10,14 @@ import type { ApiHealth } from '@ime/models';
   styleUrl: './app.css',
 })
 export class App {
+  private readonly api = inject(ApiService);
   protected readonly apiStatus = signal<ApiStatus>('checking');
 
   constructor() {
     afterNextRender(() => {
-      fetch('/api/health')
-        .then((res): Promise<ApiHealth> => {
-          if (!res.ok) {
-            throw new Error(`API responded with ${res.status}`);
-          }
-          return res.json();
-        })
-        .then((health) =>
-          this.apiStatus.set(health.status === 'ok' ? 'online' : 'offline')
-        )
-        .catch(() => this.apiStatus.set('offline'));
+      void this.api.health().then((result) => {
+        this.apiStatus.set(result.ok ? 'online' : 'offline');
+      });
     });
   }
 }

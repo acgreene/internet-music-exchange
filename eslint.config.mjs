@@ -34,6 +34,23 @@ export default [
     },
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/*.spec.ts', '**/test-setup.ts', 'libs/shared/testing/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@ime/testing',
+              message: 'Test utilities may only be imported from spec files.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: [
       '**/*.ts',
       '**/*.tsx',

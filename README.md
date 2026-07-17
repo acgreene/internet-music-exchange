@@ -17,6 +17,17 @@ pnpm nx serve mobile   # Mobile app in the browser on http://localhost:4201
 
 Both client dev servers proxy `/api/*` to the Hono server, so clients use relative URLs.
 
+## Database
+
+Postgres runs locally through Supabase (requires OrbStack or Docker):
+
+```sh
+supabase start    # local stack; Postgres on port 54332
+cp .env.example .env
+```
+
+The Drizzle schema lives in `libs/api/db` (currently empty, tables land with the first feature). After changing it, run `pnpm db:generate` to create a migration, then `pnpm db:migrate` to apply it. `pnpm db:studio` opens a data browser.
+
 ## Mobile (Capacitor)
 
 Mobile UI work happens in the browser via `pnpm nx serve mobile`. To run inside the native shells:

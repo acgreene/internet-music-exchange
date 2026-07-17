@@ -42,6 +42,11 @@ Thumbs.db
 .nx
 .claude
 
+# environment
+.env
+.env.*
+!.env.example
+
 .angular
 
 __screenshots__/
