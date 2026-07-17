@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Load .env into process.env before validating. This module initializes on
-// first import, before any consumer code runs, so every module in the API can
+// the first import, before any consumer code runs, so every module in the API can
 // count on validated environment variables at construction time.
 try {
   process.loadEnvFile();
@@ -11,7 +11,7 @@ try {
 
 /**
  * Schema for every environment variable the API requires. The process refuses
- * to launch when any of them is missing or malformed.
+ * to launch when any of them are missing or malformed.
  */
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),

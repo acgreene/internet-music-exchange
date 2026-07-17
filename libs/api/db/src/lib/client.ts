@@ -10,10 +10,7 @@ import * as schema from './schema';
 export type Db = PostgresJsDatabase<typeof schema>;
 
 /**
- * Create a database handle from a Postgres connection string. prepare is
- * disabled to stay compatible with Supabase's transaction pooler, and
- * connections fail fast so health checks report an unreachable database
- * promptly.
+ * Create a database handle from a Postgres connection string.
  */
 export function createDb(connectionString: string): Db {
   const client = postgres(connectionString, {
@@ -24,9 +21,7 @@ export function createDb(connectionString: string): Db {
 }
 
 /**
- * The process-wide database handle. A module-level singleton so the process
- * holds one connection pool; env validation in @ime/env guarantees
- * DATABASE_URL is present before this initializer runs.
+ * Singleton database instance.
  */
 export const db: Db = createDb(env.DATABASE_URL);
 

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { AuthError } from '@ime/auth';
+import { errorHandler } from '../utils/response.utils';
 import { type AuthEnv, getAuthUser } from './auth-context';
 import { authMiddleware } from './auth.middleware';
 
@@ -25,11 +26,13 @@ const USER = {
 };
 
 /**
- * A minimal protected route that echoes the authenticated user.
+ * A minimal protected route that echoes the authenticated user, mounted the
+ * same way real routers are: with the shared errorHandler.
  */
 const app = new Hono<AuthEnv>().get('/protected', authMiddleware, (c) =>
   c.json(getAuthUser(c)),
 );
+app.onError(errorHandler);
 
 describe('authMiddleware', () => {
   it('responds 401 when the bearer token is missing', async () => {

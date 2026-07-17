@@ -55,8 +55,7 @@ export class AuthService {
   ) {}
 
   /**
-   * Create an account. Returns a session because email confirmation is
-   * disabled in local and initial production config.
+   * Create an account.
    */
   public async signUp(email: string, password: string): Promise<Session> {
     const { data, error } = await this.anonClient.auth.signUp({
@@ -82,8 +81,7 @@ export class AuthService {
   }
 
   /**
-   * Exchange email and password for a session. Wrong credentials always read
-   * as the same message so the endpoint cannot be used to enumerate accounts.
+   * Exchange email and password for a session.
    */
   public async signIn(email: string, password: string): Promise<Session> {
     const { data, error } = await this.anonClient.auth.signInWithPassword({
@@ -175,4 +173,3 @@ export class AuthService {
     };
   }
 }
-
