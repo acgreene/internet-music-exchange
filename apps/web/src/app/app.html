@@ -1,0 +1,17 @@
+<div class="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
+  <ime-header [apiStatus]="apiStatus()" />
+
+  <main
+    class="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center"
+  >
+    <h1 class="max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
+      Internet Music Exchange
+    </h1>
+    <p class="max-w-xl text-lg text-zinc-400">
+      A community-owned home for selling music. Artist pages that are art. Zero
+      platform cut.
+    </p>
+  </main>
+
+  <router-outlet></router-outlet>
+</div>

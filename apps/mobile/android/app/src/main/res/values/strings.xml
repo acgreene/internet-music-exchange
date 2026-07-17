@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Internet Music Exchange</string>
+    <string name="title_activity_main">Internet Music Exchange</string>
+    <string name="package_name">com.internetmusicexchange.app</string>
+    <string name="custom_url_scheme">com.internetmusicexchange.app</string>
+</resources>

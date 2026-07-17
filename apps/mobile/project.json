@@ -1,0 +1,107 @@
+{
+  "name": "mobile",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "ime",
+  "sourceRoot": "apps/mobile/src",
+  "tags": ["scope:client", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/mobile",
+        "browser": "apps/mobile/src/main.ts",
+        "tsConfig": "apps/mobile/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/mobile/public"
+          }
+        ],
+        "styles": ["apps/mobile/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "port": 4201,
+        "proxyConfig": "apps/mobile/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "mobile:build:production"
+        },
+        "development": {
+          "buildTarget": "mobile:build:development"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "cap-sync": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "npx cap sync",
+        "cwd": "apps/mobile"
+      }
+    },
+    "cap-open-ios": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx cap open ios",
+        "cwd": "apps/mobile"
+      }
+    },
+    "cap-open-android": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx cap open android",
+        "cwd": "apps/mobile"
+      }
+    },
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {
+        "watch": false
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "mobile:build",
+        "port": 4201,
+        "staticFilePath": "dist/apps/mobile/browser",
+        "spa": true
+      }
+    }
+  }
+}
