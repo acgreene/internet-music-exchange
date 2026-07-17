@@ -1,9 +1,21 @@
 import { z } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { jsonResponse } from '@ime/testing';
 import { ApiErrorKind } from './api-error';
 import { ApiTransport } from './api-transport';
 
 const echoSchema = z.object({ id: z.string() });
+
+/**
+ * Build a transport over a fake supabase client holding the given access token.
+ */
+function makeTransport(accessToken: string | null = null) {
+  const session = accessToken ? { access_token: accessToken } : null;
+  const supabase = {
+    auth: { getSession: async () => ({ data: { session } }) },
+  };
+  return new ApiTransport(() => supabase as unknown as SupabaseClient);
+}
 
 /**
  * Replace the global fetch with a spy that responds using the given factory.
@@ -15,8 +27,6 @@ function stubFetch(respond: () => Promise<Response>) {
 }
 
 describe('ApiTransport', () => {
-  const transport = new ApiTransport();
-
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -24,7 +34,7 @@ describe('ApiTransport', () => {
   it('returns data when the response matches the schema', async () => {
     stubFetch(() => jsonResponse({ id: 'abc' }));
 
-    const result = await transport.get('/api/echo', echoSchema);
+    const result = await makeTransport().get('/api/echo', echoSchema);
 
     expect(result).toEqual({ ok: true, data: { id: 'abc' } });
   });
@@ -32,7 +42,7 @@ describe('ApiTransport', () => {
   it('sends GET requests without a body', async () => {
     const fetchSpy = stubFetch(() => jsonResponse({ id: 'abc' }));
 
-    await transport.get('/api/echo', echoSchema);
+    await makeTransport().get('/api/echo', echoSchema);
 
     const [path, init] = fetchSpy.mock.calls[0];
     expect(path).toBe('/api/echo');
@@ -43,7 +53,7 @@ describe('ApiTransport', () => {
   it('sends POST bodies as JSON', async () => {
     const fetchSpy = stubFetch(() => jsonResponse({ id: 'abc' }));
 
-    await transport.post('/api/echo', { name: 'x' }, echoSchema);
+    await makeTransport().post('/api/echo', { name: 'x' }, echoSchema);
 
     const [, init] = fetchSpy.mock.calls[0];
     expect(init?.method).toBe('POST');
@@ -51,10 +61,21 @@ describe('ApiTransport', () => {
     expect(init?.body).toBe('{"name":"x"}');
   });
 
+  it('attaches the supabase access token as a bearer header', async () => {
+    const fetchSpy = stubFetch(() => jsonResponse({ id: 'abc' }));
+
+    await makeTransport('access123').get('/api/echo', echoSchema);
+
+    const [, init] = fetchSpy.mock.calls[0];
+    expect((init?.headers as Record<string, string>)['Authorization']).toBe(
+      'Bearer access123',
+    );
+  });
+
   it('returns the server message for an http error', async () => {
     stubFetch(() => jsonResponse({ error: 'boom' }, 500));
 
-    const result = await transport.get('/api/echo', echoSchema);
+    const result = await makeTransport().get('/api/echo', echoSchema);
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -67,7 +88,7 @@ describe('ApiTransport', () => {
   it('returns an invalid-response error when the body does not match the schema', async () => {
     stubFetch(() => jsonResponse({ wrong: true }));
 
-    const result = await transport.get('/api/echo', echoSchema);
+    const result = await makeTransport().get('/api/echo', echoSchema);
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -78,7 +99,7 @@ describe('ApiTransport', () => {
   it('returns a network error when the request fails', async () => {
     stubFetch(() => Promise.reject(new TypeError('fetch failed')));
 
-    const result = await transport.get('/api/echo', echoSchema);
+    const result = await makeTransport().get('/api/echo', echoSchema);
 
     expect(result.ok).toBe(false);
     if (!result.ok) {

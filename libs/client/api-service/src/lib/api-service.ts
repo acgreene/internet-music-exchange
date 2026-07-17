@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { ApiRoute, type HealthResponse, healthResponseSchema } from '@ime/models';
 import type { ApiResult } from './api-result';
 import { ApiTransport } from './api-transport';
+import { getSupabaseClient } from './auth';
+import { UserApi } from './user';
 
 /**
  * SDK for the IME API.
@@ -9,10 +11,15 @@ import { ApiTransport } from './api-transport';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   /**
-   * Shared HTTP core used by this facade and every future domain group.
+   * Shared HTTP core used by this facade and every domain group.
    * @private
    */
-  private readonly transport = new ApiTransport();
+  private readonly transport = new ApiTransport(getSupabaseClient);
+
+  /**
+   * Account and session operations.
+   */
+  public readonly user = new UserApi(this.transport, getSupabaseClient);
 
   /**
    * Check the health of the API.

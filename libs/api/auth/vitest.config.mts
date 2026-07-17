@@ -4,10 +4,10 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/api',
+  cacheDir: '../../../node_modules/.vite/libs/api/auth',
   plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
   test: {
-    name: 'api',
+    name: 'auth',
     watch: false,
     globals: true,
     environment: 'node',
@@ -15,7 +15,7 @@ export default defineConfig(() => ({
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../../coverage/apps/api',
+      reportsDirectory: '../../../coverage/libs/api/auth',
       provider: 'v8' as const,
     },
   },

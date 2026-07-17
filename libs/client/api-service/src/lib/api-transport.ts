@@ -1,5 +1,6 @@
 import { isDevMode } from '@angular/core';
 import { z } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { apiErrorBodySchema } from '@ime/models';
 import { ApiError, ApiErrorKind } from './api-error';
 import type { ApiResult } from './api-result';
@@ -23,12 +24,23 @@ enum HttpMethod {
    * Create a resource or invoke an action with a JSON body.
    */
   Post = 'POST',
+
+  /**
+   * Replace or update a resource with a JSON body.
+   */
+  Put = 'PUT',
+
+  /**
+   * Remove a resource.
+   */
+  Delete = 'DELETE',
 }
 
 /**
  * Shared HTTP core for the API service. Owns the base URL, performs requests,
- * validates response bodies against contract schemas, and maps every failure
- * mode to a typed ApiError.
+ * attaches the Supabase session's bearer token, validates response bodies
+ * against contract schemas, and maps every failure mode to a typed ApiError.
+ * Domain groups compose this class; nothing extends it.
  */
 export class ApiTransport {
   /**
@@ -38,6 +50,14 @@ export class ApiTransport {
   private readonly baseUrl = isDevMode()
     ? DEVELOPMENT_BASE_URL
     : PRODUCTION_BASE_URL;
+
+  constructor(
+    /**
+     * Lazy source of the Supabase client, called only when a request needs the
+     * access token so SSR never constructs the client.
+     */
+    private readonly supabase: () => SupabaseClient,
+  ) {}
 
   /**
    * Fetch a GET endpoint and validate its body against the given contract schema.
@@ -62,7 +82,31 @@ export class ApiTransport {
   }
 
   /**
-   * Perform a request and map every failure mode to a typed ApiError.
+   * Send a JSON body to a PUT endpoint and validate the response body against
+   * the given contract schema.
+   */
+  public async put<T>(
+    path: string,
+    body: unknown,
+    schema: z.ZodType<T>,
+  ): Promise<ApiResult<T>> {
+    return this.request(HttpMethod.Put, path, schema, body);
+  }
+
+  /**
+   * Call a DELETE endpoint and validate the response body against the given
+   * contract schema.
+   */
+  public async delete<T>(
+    path: string,
+    schema: z.ZodType<T>,
+  ): Promise<ApiResult<T>> {
+    return this.request(HttpMethod.Delete, path, schema);
+  }
+
+  /**
+   * Perform a request and map every failure mode to a typed ApiError. All verb
+   * methods delegate here so cross-cutting behavior is applied exactly once.
    * @private
    */
   private async request<T>(
@@ -71,14 +115,22 @@ export class ApiTransport {
     schema: z.ZodType<T>,
     body?: unknown,
   ): Promise<ApiResult<T>> {
+    const headers: Record<string, string> = {};
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const { data } = await this.supabase().auth.getSession();
+    const accessToken = data.session?.access_token;
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     let response: Response;
     try {
       response = await fetch(`${this.baseUrl}${path}`, {
         method,
-        headers:
-          body === undefined
-            ? undefined
-            : { 'Content-Type': 'application/json' },
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch {

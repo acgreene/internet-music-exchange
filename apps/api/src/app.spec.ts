@@ -3,7 +3,7 @@ import { pingDb } from '@ime/db';
 import { createApp } from './app';
 
 vi.mock('@ime/db', () => ({
-  getDb: () => ({}),
+  db: {},
   pingDb: vi.fn(),
 }));
 

@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { env } from '@ime/env';
 import * as schema from './schema';
 
 /**
@@ -22,24 +23,12 @@ export function createDb(connectionString: string): Db {
   return drizzle(client, { schema });
 }
 
-let sharedDb: Db | undefined;
-
 /**
- * The process-wide database handle, created lazily from DATABASE_URL. Throws
- * when the variable is missing so a misconfigured process fails loudly.
+ * The process-wide database handle. A module-level singleton so the process
+ * holds one connection pool; env validation in @ime/env guarantees
+ * DATABASE_URL is present before this initializer runs.
  */
-export function getDb(): Db {
-  if (!sharedDb) {
-    const connectionString = process.env['DATABASE_URL'];
-    if (!connectionString) {
-      throw new Error(
-        'DATABASE_URL is not set. Copy .env.example to .env and run `supabase start`.',
-      );
-    }
-    sharedDb = createDb(connectionString);
-  }
-  return sharedDb;
-}
+export const db: Db = createDb(env.DATABASE_URL);
 
 /**
  * Report whether the database answers a trivial query.

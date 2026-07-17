@@ -7,4 +7,24 @@ export enum ApiRoute {
    * API health check.
    */
   Health = '/api/health',
+
+  /**
+   * The signed-in user resource: DELETE permanently removes the account.
+   */
+  Users = '/api/users',
+
+  /**
+   * Create an account.
+   */
+  SignUp = '/api/auth/sign-up',
+
+  /**
+   * Exchange email and password for a session.
+   */
+  SignIn = '/api/auth/sign-in',
+
+  /**
+   * Revoke the caller's session.
+   */
+  SignOut = '/api/auth/sign-out',
 }
