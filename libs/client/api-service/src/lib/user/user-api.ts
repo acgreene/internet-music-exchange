@@ -1,20 +1,19 @@
-import type {
-  AuthError as SupabaseAuthError,
-  SupabaseClient,
-  User as SupabaseUser,
-} from '@supabase/supabase-js';
-import {
-  type AckResponse,
-  ackResponseSchema,
-  ApiRoute,
-  type Session,
-  sessionSchema,
-  type User,
-  type UserUpdate,
-} from '@ime/models';
+import type { AuthError as SupabaseAuthError, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { ApiRoute, type Session, sessionSchema, type User, type UserUpdate } from '@ime/models';
 import { ApiError, ApiErrorKind } from '../api-error';
 import type { ApiResult } from '../api-result';
 import type { ApiTransport } from '../api-transport';
+
+/**
+ * Body the API returns for actions with no data.
+ */
+const ackSchema = z.object({ success: z.literal(true) });
+
+/**
+ * A validated acknowledgement.
+ */
+type Ack = z.infer<typeof ackSchema>;
 
 /**
  * Map a supabase-js auth failure to the SDK's ApiError.
@@ -99,12 +98,8 @@ export class UserApi {
    * session is cleared even when the server call fails, so the client always
    * signs out.
    */
-  public async signOut(): Promise<ApiResult<AckResponse>> {
-    const result = await this.transport.post(
-      ApiRoute.SignOut,
-      {},
-      ackResponseSchema,
-    );
+  public async signOut(): Promise<ApiResult<Ack>> {
+    const result = await this.transport.post(ApiRoute.SignOut, {}, ackSchema);
     await this.supabase().auth.signOut({ scope: 'local' });
     return result;
   }
@@ -124,11 +119,8 @@ export class UserApi {
    * Permanently delete the signed-in user's account through the API, which
    * holds the service role key, then clear the local session.
    */
-  public async deleteAccount(): Promise<ApiResult<AckResponse>> {
-    const result = await this.transport.delete(
-      ApiRoute.Users,
-      ackResponseSchema,
-    );
+  public async deleteAccount(): Promise<ApiResult<Ack>> {
+    const result = await this.transport.delete(ApiRoute.Users, ackSchema);
     if (result.ok) {
       await this.supabase().auth.signOut({ scope: 'local' });
     }
