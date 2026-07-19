@@ -1,23 +1,11 @@
 import { Hono } from 'hono';
-import { AuthError } from '@ime/auth';
-import { errorHandler } from '../utils/response.utils';
-import { type AuthEnv, getAuthUser } from './auth-context';
-import { authMiddleware } from './auth.middleware';
+import { AuthError, type AuthService } from '@ime/auth';
+import { createAuthMiddleware } from './auth-middleware';
+import { RouteUtils } from '../utils';
 
-const { fakeAuth } = vi.hoisted(() => ({
-  fakeAuth: {
-    getUser: vi.fn(),
-  },
-}));
-
-vi.mock('@ime/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@ime/auth')>()),
-  AuthService: class {
-    constructor() {
-      return fakeAuth;
-    }
-  },
-}));
+const mockAuthService = {
+  getUser: vi.fn(),
+};
 
 const USER = {
   id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
@@ -29,12 +17,20 @@ const USER = {
  * A minimal protected route that echoes the authenticated user, mounted the
  * same way real routers are: with the shared errorHandler.
  */
-const app = new Hono<AuthEnv>().get('/protected', authMiddleware, (c) =>
-  c.json(getAuthUser(c)),
+const authMiddleware = createAuthMiddleware(
+  mockAuthService as unknown as AuthService,
 );
-app.onError(errorHandler);
+const app = new Hono().get('/protected', authMiddleware, (c) => {
+  const routeUtils = new RouteUtils(c);
+  return c.json(routeUtils.getAuthUser());
+});
+app.onError(RouteUtils.errorHandler);
 
 describe('authMiddleware', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('responds 401 when the bearer token is missing', async () => {
     const res = await app.request('/protected');
 
@@ -42,7 +38,9 @@ describe('authMiddleware', () => {
   });
 
   it('relays auth service failures for invalid tokens', async () => {
-    fakeAuth.getUser.mockRejectedValue(new AuthError(401, 'invalid JWT'));
+    mockAuthService.getUser.mockRejectedValue(
+      new AuthError(401, 'invalid JWT'),
+    );
 
     const res = await app.request('/protected', {
       headers: { Authorization: 'Bearer expired' },
@@ -54,7 +52,7 @@ describe('authMiddleware', () => {
   });
 
   it('attaches the verified user for downstream handlers', async () => {
-    fakeAuth.getUser.mockResolvedValue(USER);
+    mockAuthService.getUser.mockResolvedValue(USER);
 
     const res = await app.request('/protected', {
       headers: { Authorization: 'Bearer access123' },
@@ -63,6 +61,6 @@ describe('authMiddleware', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.id).toBe(USER.id);
-    expect(fakeAuth.getUser).toHaveBeenCalledWith('access123');
+    expect(mockAuthService.getUser).toHaveBeenCalledWith('access123');
   });
 });

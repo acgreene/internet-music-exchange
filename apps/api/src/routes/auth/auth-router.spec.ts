@@ -1,38 +1,36 @@
 import { ApiRoute } from '@ime/models';
-import { AuthError } from '@ime/auth';
-import { authRoutes } from './auth.routes';
+import { AuthError, type AuthService } from '@ime/auth';
+import { AuthRouter } from './auth-router';
 
-const { fakeAuth } = vi.hoisted(() => ({
-  fakeAuth: {
-    signUp: vi.fn(),
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-  },
-}));
+const mockAuthService = {
+  signUp: vi.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  getUser: vi.fn(),
+};
 
-vi.mock('@ime/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@ime/auth')>()),
-  AuthService: class {
-    constructor() {
-      return fakeAuth;
-    }
-  },
-}));
+const authRoutes = new AuthRouter(
+  mockAuthService as unknown as AuthService,
+).router;
 
-const SESSION = {
+const mockSession = {
   accessToken: 'access123',
   refreshToken: 'refresh123',
   expiresAt: 1800000000,
   user: {
-    id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
-    email: 'artist@example.com',
+    id: 'mock-user-id',
+    email: 'user@example.com',
     createdAt: '2026-07-17T12:00:00.000Z',
   },
 };
 
 describe('auth routes', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('signs up and returns the session', async () => {
-    fakeAuth.signUp.mockResolvedValue(SESSION);
+    mockAuthService.signUp.mockResolvedValue(mockSession);
 
     const res = await authRoutes.request(ApiRoute.SignUp, {
       method: 'POST',
@@ -59,7 +57,7 @@ describe('auth routes', () => {
   });
 
   it('relays auth service failures with their status and message', async () => {
-    fakeAuth.signIn.mockRejectedValue(
+    mockAuthService.signIn.mockRejectedValue(
       new AuthError(401, 'Invalid email or password.'),
     );
 
@@ -78,5 +76,22 @@ describe('auth routes', () => {
     const res = await authRoutes.request(ApiRoute.SignOut, { method: 'POST' });
 
     expect(res.status).toBe(401);
+  });
+
+  it('signs out the session behind the bearer token', async () => {
+    mockAuthService.getUser.mockResolvedValue({
+      id: 'mock-user-id',
+      email: 'user@example.com',
+      createdAt: '2026-07-17T12:00:00.000Z',
+    });
+    mockAuthService.signOut.mockResolvedValue(undefined);
+
+    const res = await authRoutes.request(ApiRoute.SignOut, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer access123' },
+    });
+
+    expect(res.status).toBe(200);
+    expect(mockAuthService.signOut).toHaveBeenCalledWith('access123');
   });
 });

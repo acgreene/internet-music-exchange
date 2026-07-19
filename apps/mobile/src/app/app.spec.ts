@@ -10,13 +10,10 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renders the mobile home', async () => {
+  it('renders the taskbar with the brand', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Your collection',
-    );
     expect(compiled.textContent).toContain('Internet Music Exchange');
   });
 });

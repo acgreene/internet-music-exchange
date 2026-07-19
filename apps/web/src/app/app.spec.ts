@@ -10,12 +10,10 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renders the platform name', async () => {
+  it('renders the taskbar with the brand', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Internet Music Exchange',
-    );
+    expect(compiled.textContent).toContain('Internet Music Exchange');
   });
 });

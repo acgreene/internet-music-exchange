@@ -1,15 +1,10 @@
-<div class="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
-  <ime-header [apiStatus]="apiStatus()" />
-
-  <main
-    class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center"
-  >
-    <h1 class="text-3xl font-bold tracking-tight">Your collection</h1>
-    <p class="max-w-sm text-base text-zinc-400">
-      The mobile listening surface. Same components, same libraries, same
-      monorepo as the web app.
-    </p>
-  </main>
+<div class="desktop font-ui flex min-h-screen flex-col">
+  <ime-header
+    [apiStatus]="apiStatus()"
+    [user]="auth.user()"
+    (signOutSelected)="signOut()"
+  />
+  <ime-marquee [items]="tickerItems" />
 
   <router-outlet></router-outlet>
 </div>

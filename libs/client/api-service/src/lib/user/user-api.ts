@@ -27,9 +27,10 @@ function toApiError(error: SupabaseAuthError): ApiError {
 }
 
 /**
- * Map a supabase-js user to the domain user.
+ * Map a supabase-js user to the domain user. Exported for the auth store,
+ * which maps users straight off supabase auth events.
  */
-function toUser(user: SupabaseUser): User {
+export function toUser(user: SupabaseUser): User {
   return { id: user.id, email: user.email ?? '', createdAt: user.created_at };
 }
 

@@ -1,0 +1,41 @@
+@if (state() === WindowState.Open) {
+  <div class="bevel-out window-float p-1" data-frame>
+    <div
+      class="titlebar relative flex cursor-grab select-none items-center justify-between overflow-hidden px-2 py-1 active:cursor-grabbing"
+      (pointerdown)="startDrag($event)"
+    >
+      <span
+        class="font-ui pointer-events-none text-[13px] font-bold text-white [text-shadow:1px_1px_0_rgba(0,0,0,0.5)]"
+        >{{ windowTitle() }}</span
+      >
+      <span class="flex gap-[3px]">
+        <button
+          type="button"
+          data-window-control
+          aria-label="Minimize window"
+          class="window-control bevel-out flex h-4 w-4 cursor-pointer items-center justify-center text-[9px] leading-none text-ink"
+          (click)="minimize()"
+        >
+          _
+        </button>
+        <span
+          class="bevel-out flex h-4 w-4 items-center justify-center text-[9px] leading-none text-ink"
+          aria-hidden="true"
+          >□</span
+        >
+        <button
+          type="button"
+          data-window-control
+          aria-label="Close window"
+          class="window-control bevel-out flex h-4 w-4 cursor-pointer items-center justify-center text-[9px] leading-none text-ink"
+          (click)="close()"
+        >
+          ✕
+        </button>
+      </span>
+    </div>
+    <div class="bg-chrome p-4">
+      <ng-content />
+    </div>
+  </div>
+}

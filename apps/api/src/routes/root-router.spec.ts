@@ -1,11 +1,18 @@
 import { ApiRoute } from '@ime/models';
 import { pingDb } from '@ime/db';
-import { createApp } from './app';
+import type { AuthService } from '@ime/auth';
+import { RootRouter } from './root-router';
 
 vi.mock('@ime/db', () => ({
   db: {},
   pingDb: vi.fn(),
 }));
+
+const mockAuthService = {
+  getUser: vi.fn(),
+} as unknown as AuthService;
+
+const createApp = () => new RootRouter(mockAuthService).router;
 
 describe('api', () => {
   it('reports ok when the database is reachable', async () => {

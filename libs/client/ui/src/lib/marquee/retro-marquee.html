@@ -1,0 +1,24 @@
+<div
+  class="marquee border-y border-white/10 bg-black/30 py-1 text-[12px] text-chrome/80"
+>
+  <div
+    [attr.data-scrolling]="shift() !== null ? '' : null"
+    [style.--marquee-duration]="duration()"
+    [style.--marquee-shift]="shift()"
+    class="marquee-track font-retro-mono"
+    data-track
+  >
+    @for (copy of copyIndexes(); track copy) {
+      <span
+        [attr.aria-hidden]="copy === 0 ? null : true"
+        [attr.data-group]="copy === 0 ? '' : null"
+        class="flex items-center"
+      >
+        @for (item of items(); track item) {
+          <span class="whitespace-nowrap px-4">{{ item }}</span>
+          <span aria-hidden="true" class="text-hot">//</span>
+        }
+      </span>
+    }
+  </div>
+</div>

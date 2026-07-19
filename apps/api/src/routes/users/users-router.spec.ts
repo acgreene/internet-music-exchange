@@ -1,22 +1,15 @@
 import { ApiRoute } from '@ime/models';
-import { AuthError } from '@ime/auth';
-import { usersRoutes } from './users.routes';
+import { AuthError, type AuthService } from '@ime/auth';
+import { UsersRouter } from './users-router';
 
-const { fakeAuth } = vi.hoisted(() => ({
-  fakeAuth: {
-    getUser: vi.fn(),
-    deleteUser: vi.fn(),
-  },
-}));
+const mockAuthService = {
+  getUser: vi.fn(),
+  deleteUser: vi.fn(),
+};
 
-vi.mock('@ime/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@ime/auth')>()),
-  AuthService: class {
-    constructor() {
-      return fakeAuth;
-    }
-  },
-}));
+const usersRoutes = new UsersRouter(
+  mockAuthService as unknown as AuthService,
+).router;
 
 const USER = {
   id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
@@ -25,6 +18,10 @@ const USER = {
 };
 
 describe('user routes', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('requires a bearer token to delete the account', async () => {
     const res = await usersRoutes.request(ApiRoute.Users, { method: 'DELETE' });
 
@@ -32,8 +29,8 @@ describe('user routes', () => {
   });
 
   it('deletes the account behind the bearer token', async () => {
-    fakeAuth.getUser.mockResolvedValue(USER);
-    fakeAuth.deleteUser.mockResolvedValue(undefined);
+    mockAuthService.getUser.mockResolvedValue(USER);
+    mockAuthService.deleteUser.mockResolvedValue(undefined);
 
     const res = await usersRoutes.request(ApiRoute.Users, {
       method: 'DELETE',
@@ -41,11 +38,13 @@ describe('user routes', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(fakeAuth.deleteUser).toHaveBeenCalledWith(USER.id);
+    expect(mockAuthService.deleteUser).toHaveBeenCalledWith(USER.id);
   });
 
   it('relays auth service failures with their status and message', async () => {
-    fakeAuth.getUser.mockRejectedValue(new AuthError(401, 'invalid JWT'));
+    mockAuthService.getUser.mockRejectedValue(
+      new AuthError(401, 'invalid JWT'),
+    );
 
     const res = await usersRoutes.request(ApiRoute.Users, {
       method: 'DELETE',
