@@ -6,7 +6,7 @@ import {
   type User as SupabaseUser
 } from '@supabase/supabase-js';
 import { env } from '@ime/env';
-import { ApiError, ApiErrorKind } from '@ime/api-service';
+import { ApiError, ApiErrorKind } from '@ime/models';
 
 /**
  * Supabase error codes that indicate rate limiting in addition to status 429.
@@ -65,7 +65,7 @@ export class AuthService {
           'Too many sign-up attempts. Please try again later.',
         );
       }
-      throw error;
+      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
     }
     if (!data.session) {
       throw new ApiError(
@@ -107,7 +107,7 @@ export class AuthService {
   public async signOut(accessToken: string): Promise<void> {
     const { error } = await this.adminClient.auth.admin.signOut(accessToken);
     if (error) {
-      throw error;
+      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
     }
   }
 
@@ -117,7 +117,7 @@ export class AuthService {
   public async getUser(accessToken: string): Promise<SupabaseUser> {
     const { data, error } = await this.anonClient.auth.getUser(accessToken);
     if (error) {
-      throw error;
+      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
     }
     return data.user;
   }
@@ -128,7 +128,7 @@ export class AuthService {
   public async deleteUser(userId: string): Promise<void> {
     const { error } = await this.adminClient.auth.admin.deleteUser(userId);
     if (error) {
-      throw error;
+      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
     }
   }
 

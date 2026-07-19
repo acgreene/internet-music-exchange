@@ -1,5 +1,5 @@
-import { ApiRoute } from '@ime/models';
-import { AuthError, type AuthService } from '@ime/auth';
+import { ApiError, ApiErrorKind, ApiRoute } from '@ime/models';
+import type { AuthService } from '@ime/auth';
 import { AuthRouter } from './auth-router';
 
 const mockAuthService = {
@@ -13,15 +13,18 @@ const authRoutes = new AuthRouter(
   mockAuthService as unknown as AuthService,
 ).router;
 
-const mockSession = {
-  accessToken: 'access123',
-  refreshToken: 'refresh123',
-  expiresAt: 1800000000,
-  user: {
-    id: 'mock-user-id',
-    email: 'user@example.com',
-    createdAt: '2026-07-17T12:00:00.000Z',
-  },
+const mockSupabaseUser = {
+  id: 'mock-user-id',
+  email: 'user@example.com',
+  created_at: '2026-07-17T12:00:00.000Z',
+};
+
+const mockSupabaseSession = {
+  access_token: 'access123',
+  refresh_token: 'refresh123',
+  expires_at: 1800000000,
+  expires_in: 3600,
+  user: mockSupabaseUser,
 };
 
 describe('auth routes', () => {
@@ -29,8 +32,8 @@ describe('auth routes', () => {
     vi.resetAllMocks();
   });
 
-  it('signs up and returns the session', async () => {
-    mockAuthService.signUp.mockResolvedValue(mockSession);
+  it('signs up and returns the supabase session', async () => {
+    mockAuthService.signUp.mockResolvedValue(mockSupabaseSession);
 
     const res = await authRoutes.request(ApiRoute.SignUp, {
       method: 'POST',
@@ -43,7 +46,7 @@ describe('auth routes', () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.accessToken).toBe('access123');
+    expect(body).toEqual(mockSupabaseSession);
   });
 
   it('rejects an invalid sign-up body', async () => {
@@ -58,7 +61,7 @@ describe('auth routes', () => {
 
   it('relays auth service failures with their status and message', async () => {
     mockAuthService.signIn.mockRejectedValue(
-      new AuthError(401, 'Invalid email or password.'),
+      new ApiError(ApiErrorKind.Http, 401, 'Invalid email or password.'),
     );
 
     const res = await authRoutes.request(ApiRoute.SignIn, {
@@ -79,11 +82,7 @@ describe('auth routes', () => {
   });
 
   it('signs out the session behind the bearer token', async () => {
-    mockAuthService.getUser.mockResolvedValue({
-      id: 'mock-user-id',
-      email: 'user@example.com',
-      createdAt: '2026-07-17T12:00:00.000Z',
-    });
+    mockAuthService.getUser.mockResolvedValue(mockSupabaseUser);
     mockAuthService.signOut.mockResolvedValue(undefined);
 
     const res = await authRoutes.request(ApiRoute.SignOut, {

@@ -1,7 +1,6 @@
-import type { AuthError as SupabaseAuthError, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import type { AuthError as SupabaseAuthError, SupabaseClient, User } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { ApiRoute, type Session, sessionSchema, type User, type UserUpdate } from '@ime/models';
-import { ApiError, ApiErrorKind } from '../api-error';
+import { ApiError, ApiErrorKind, ApiRoute, sessionSchema, type UserUpdate } from '@ime/models';
 import type { ApiResult } from '../api-result';
 import type { ApiTransport } from '../api-transport';
 
@@ -16,6 +15,12 @@ const ackSchema = z.object({ success: z.literal(true) });
 type Ack = z.infer<typeof ackSchema>;
 
 /**
+ * A session as validated off the wire. Supabase-shaped; the extra fields
+ * supabase sends ride along untouched.
+ */
+type SessionResponse = z.infer<typeof sessionSchema>;
+
+/**
  * Map a supabase-js auth failure to the SDK's ApiError.
  */
 function toApiError(error: SupabaseAuthError): ApiError {
@@ -27,14 +32,6 @@ function toApiError(error: SupabaseAuthError): ApiError {
 }
 
 /**
- * Map a supabase-js user to the domain user. Exported for the auth store,
- * which maps users straight off supabase auth events.
- */
-export function toUser(user: SupabaseUser): User {
-  return { id: user.id, email: user.email ?? '', createdAt: user.created_at };
-}
-
-/**
  * Account and session operations, exposed as api.user on the ApiService
  * facade. Sign-up, sign-in, and sign-out go through our API routes, and the
  * returned tokens are adopted into supabase-js, which owns session
@@ -43,10 +40,6 @@ export function toUser(user: SupabaseUser): User {
 export class UserApi {
   constructor(
     private readonly transport: ApiTransport,
-    /**
-     * Lazy source of the Supabase client, called only when an operation runs
-     * so SSR never constructs the client.
-     */
     private readonly supabase: () => SupabaseClient,
   ) {}
 
@@ -55,7 +48,7 @@ export class UserApi {
    */
   public async currentUser(): Promise<User | null> {
     const { data } = await this.supabase().auth.getSession();
-    return data.session ? toUser(data.session.user) : null;
+    return data.session?.user ?? null;
   }
 
   /**
@@ -64,7 +57,7 @@ export class UserApi {
   public async signUp(
     email: string,
     password: string,
-  ): Promise<ApiResult<Session>> {
+  ): Promise<ApiResult<SessionResponse>> {
     const result = await this.transport.post(
       ApiRoute.SignUp,
       { email, password },
@@ -82,7 +75,7 @@ export class UserApi {
   public async signIn(
     email: string,
     password: string,
-  ): Promise<ApiResult<Session>> {
+  ): Promise<ApiResult<SessionResponse>> {
     const result = await this.transport.post(
       ApiRoute.SignIn,
       { email, password },
@@ -113,7 +106,7 @@ export class UserApi {
     if (error) {
       return { ok: false, error: toApiError(error) };
     }
-    return { ok: true, data: toUser(data.user) };
+    return { ok: true, data: data.user };
   }
 
   /**
@@ -133,10 +126,10 @@ export class UserApi {
    * refreshes it from here on.
    * @private
    */
-  private async adoptSession(session: Session): Promise<void> {
+  private async adoptSession(session: SessionResponse): Promise<void> {
     await this.supabase().auth.setSession({
-      access_token: session.accessToken,
-      refresh_token: session.refreshToken,
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
     });
   }
 }

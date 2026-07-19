@@ -1,27 +1,20 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { jsonResponse } from '@ime/testing';
-import { ApiErrorKind } from '../api-error';
+import { ApiErrorKind } from '@ime/models';
 import { ApiTransport } from '../api-transport';
 import { UserApi } from './user-api';
 
-const SESSION = {
-  accessToken: 'access123',
-  refreshToken: 'refresh123',
-  expiresAt: 1800000000,
-  user: {
-    id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
-    email: 'artist@example.com',
-    createdAt: '2026-07-17T12:00:00.000Z',
-  },
+const SUPABASE_USER = {
+  id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
+  email: 'artist@example.com',
+  created_at: '2026-07-17T12:00:00.000Z',
 };
 
 const SUPABASE_SESSION = {
   access_token: 'access123',
-  user: {
-    id: SESSION.user.id,
-    email: SESSION.user.email,
-    created_at: SESSION.user.createdAt,
-  },
+  refresh_token: 'refresh123',
+  expires_at: 1800000000,
+  user: SUPABASE_USER,
 };
 
 /**
@@ -30,7 +23,9 @@ const SUPABASE_SESSION = {
 function makeUserApi() {
   const supabase = {
     auth: {
-      getSession: vi.fn(async () => ({ data: { session: null } })),
+      getSession: vi.fn(async (): Promise<{
+        data: { session: typeof SUPABASE_SESSION | null };
+      }> => ({ data: { session: null } })),
       setSession: vi.fn(async () => ({ data: {}, error: null })),
       signOut: vi.fn(async () => ({ error: null })),
       updateUser: vi.fn(),
@@ -46,7 +41,7 @@ describe('UserApi', () => {
   });
 
   it('signIn calls the API and adopts the returned session into supabase', async () => {
-    vi.stubGlobal('fetch', () => jsonResponse(SESSION));
+    vi.stubGlobal('fetch', () => jsonResponse(SUPABASE_SESSION));
     const { supabase, api } = makeUserApi();
 
     const result = await api.signIn('artist@example.com', 'password123');

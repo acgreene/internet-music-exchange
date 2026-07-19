@@ -10,8 +10,8 @@ export class UsersRouter extends AbstractRouter {
 
   constructor(private readonly authService: AuthService) {
     super();
-    this.register();
     this.authMiddleware = new AuthMiddleware(authService).middleware();
+    this.register();
   }
 
   protected register(): void {

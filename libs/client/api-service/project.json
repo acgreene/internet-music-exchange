@@ -7,7 +7,11 @@
   "tags": ["scope:client", "type:data-access"],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:lint",
+      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }]
+    },
+    "test": {
+      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }]
     }
   }
 }

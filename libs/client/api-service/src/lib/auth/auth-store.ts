@@ -1,6 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import type { User } from '@ime/models';
-import { toUser } from '../user/user-api';
+import type { User } from '@supabase/supabase-js';
 import { getSupabaseClient } from './supabase-client';
 
 /**
@@ -27,7 +26,7 @@ export class AuthStore {
     }
     this.started = true;
     getSupabaseClient().auth.onAuthStateChange((_event, session) => {
-      this.userSignal.set(session ? toUser(session.user) : null);
+      this.userSignal.set(session?.user ?? null);
     });
   }
 }

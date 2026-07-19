@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { jsonResponse } from '@ime/testing';
-import { ApiErrorKind } from './api-error';
+import { ApiErrorKind } from '@ime/models';
 import { ApiTransport } from './api-transport';
 
 const echoSchema = z.object({ id: z.string() });

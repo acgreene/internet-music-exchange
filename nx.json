@@ -16,8 +16,14 @@
   "targetDefaults": {
     "@angular/build:application": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build",
+        { "projects": ["client-env"], "target": "generate-env" }
+      ],
       "inputs": ["production", "^production"]
+    },
+    "@angular/build:dev-server": {
+      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }]
     },
     "@nx/eslint:lint": {
       "cache": true,
@@ -32,6 +38,7 @@
     },
     "@angular/build:unit-test": {
       "cache": true,
+      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }],
       "inputs": ["default", "^production"]
     },
     "@nx/esbuild:esbuild": {

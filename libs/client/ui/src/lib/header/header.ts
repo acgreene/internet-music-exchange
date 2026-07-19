@@ -5,7 +5,8 @@ import {
   output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ApiStatus, type User } from '@ime/models';
+import { ApiStatus } from '@ime/models';
+import type { User } from '@supabase/supabase-js';
 import { RetroTaskbar } from '../taskbar/retro-taskbar';
 
 /**

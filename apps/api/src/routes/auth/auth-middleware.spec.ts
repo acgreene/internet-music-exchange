@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
-import { AuthError, type AuthService } from '@ime/auth';
+import { ApiError, ApiErrorKind } from '@ime/models';
+import type { AuthService } from '@ime/auth';
 import { AuthMiddleware } from './auth-middleware';
 import { RouteUtils } from '../utils';
 
@@ -7,10 +8,10 @@ const mockAuthService = {
   getUser: vi.fn(),
 };
 
-const USER = {
+const SUPABASE_USER = {
   id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
   email: 'artist@example.com',
-  createdAt: '2026-07-17T12:00:00.000Z',
+  created_at: '2026-07-17T12:00:00.000Z',
 };
 
 const authMiddleware = new AuthMiddleware(
@@ -36,7 +37,7 @@ describe('authMiddleware', () => {
 
   it('relays auth service failures for invalid tokens', async () => {
     mockAuthService.getUser.mockRejectedValue(
-      new AuthError(401, 'invalid JWT'),
+      new ApiError(ApiErrorKind.Http, 401, 'invalid JWT'),
     );
 
     const res = await app.request('/protected', {
@@ -48,8 +49,8 @@ describe('authMiddleware', () => {
     expect(body.error).toBe('invalid JWT');
   });
 
-  it('attaches the verified user for downstream handlers', async () => {
-    mockAuthService.getUser.mockResolvedValue(USER);
+  it('attaches the verified supabase user for downstream handlers', async () => {
+    mockAuthService.getUser.mockResolvedValue(SUPABASE_USER);
 
     const res = await app.request('/protected', {
       headers: { Authorization: 'Bearer access123' },
@@ -57,7 +58,7 @@ describe('authMiddleware', () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.id).toBe(USER.id);
+    expect(body).toEqual(SUPABASE_USER);
     expect(mockAuthService.getUser).toHaveBeenCalledWith('access123');
   });
 });

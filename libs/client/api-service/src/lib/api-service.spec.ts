@@ -1,6 +1,6 @@
 import { jsonResponse } from '@ime/testing';
 import { ApiService } from './api-service';
-import { ApiErrorKind } from './api-error';
+import { ApiErrorKind } from '@ime/models';
 
 describe('ApiService', () => {
   afterEach(() => {

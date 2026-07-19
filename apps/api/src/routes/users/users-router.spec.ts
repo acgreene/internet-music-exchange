@@ -1,5 +1,5 @@
-import { ApiRoute } from '@ime/models';
-import { AuthError, type AuthService } from '@ime/auth';
+import { ApiError, ApiErrorKind, ApiRoute } from '@ime/models';
+import type { AuthService } from '@ime/auth';
 import { UsersRouter } from './users-router';
 
 const mockAuthService = {
@@ -11,10 +11,10 @@ const usersRoutes = new UsersRouter(
   mockAuthService as unknown as AuthService,
 ).router;
 
-const USER = {
+const SUPABASE_USER = {
   id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
   email: 'artist@example.com',
-  createdAt: '2026-07-17T12:00:00.000Z',
+  created_at: '2026-07-17T12:00:00.000Z',
 };
 
 describe('user routes', () => {
@@ -29,7 +29,7 @@ describe('user routes', () => {
   });
 
   it('deletes the account behind the bearer token', async () => {
-    mockAuthService.getUser.mockResolvedValue(USER);
+    mockAuthService.getUser.mockResolvedValue(SUPABASE_USER);
     mockAuthService.deleteUser.mockResolvedValue(undefined);
 
     const res = await usersRoutes.request(ApiRoute.Users, {
@@ -38,12 +38,12 @@ describe('user routes', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(mockAuthService.deleteUser).toHaveBeenCalledWith(USER.id);
+    expect(mockAuthService.deleteUser).toHaveBeenCalledWith(SUPABASE_USER.id);
   });
 
   it('relays auth service failures with their status and message', async () => {
     mockAuthService.getUser.mockRejectedValue(
-      new AuthError(401, 'invalid JWT'),
+      new ApiError(ApiErrorKind.Http, 401, 'invalid JWT'),
     );
 
     const res = await usersRoutes.request(ApiRoute.Users, {

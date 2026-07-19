@@ -1,0 +1,21 @@
+{
+  "name": "client-env",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/client/env/src",
+  "projectType": "library",
+  "tags": ["scope:client", "type:util"],
+  "targets": {
+    "generate-env": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{projectRoot}/src/lib/generated-env.ts"],
+      "options": {
+        "command": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/generate-client-env.mjs"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "dependsOn": ["generate-env"]
+    }
+  }
+}

@@ -2,10 +2,10 @@ import { zValidator } from '@hono/zod-validator';
 import type { z } from 'zod';
 import type { Context } from 'hono';
 import { Logger } from '@ime/logger';
-import { AuthError } from '@ime/auth';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 import { HTTPException } from 'hono/http-exception';
-import type { User } from '@ime/models';
+import { ApiError } from '@ime/models';
+import type { User } from '@supabase/supabase-js';
 
 const log = new Logger('api');
 
@@ -35,10 +35,10 @@ export class RouteUtils {
   }
 
   public static errorHandler(error: Error, c: Context): Response {
-    if (error instanceof AuthError) {
+    if (error instanceof ApiError) {
       return c.json(
         { error: error.message },
-        error.status as ContentfulStatusCode,
+        (error.status ?? 500) as ContentfulStatusCode,
       );
     }
     if (error instanceof HTTPException) {

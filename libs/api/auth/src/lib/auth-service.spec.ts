@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ApiError } from '@ime/models';
 import { AuthService } from './auth-service';
-import { AuthError } from './auth-error';
 
 const SUPABASE_USER = {
   id: '5d2b7c9a-8e21-4b6f-8c3d-1a9e8f7b6222',
@@ -38,7 +38,7 @@ function makeService() {
 }
 
 describe('AuthService', () => {
-  it('signIn maps the supabase session to the domain shape', async () => {
+  it('signIn returns the supabase session as-is', async () => {
     const { anon, service } = makeService();
     anon.auth.signInWithPassword.mockResolvedValue({
       data: { session: SUPABASE_SESSION, user: SUPABASE_USER },
@@ -47,7 +47,7 @@ describe('AuthService', () => {
 
     const session = await service.signIn('artist@example.com', 'password123');
 
-    expect(session.accessToken).toBe('access123');
+    expect(session.access_token).toBe('access123');
     expect(session.user.email).toBe('artist@example.com');
   });
 
@@ -90,7 +90,7 @@ describe('AuthService', () => {
 
     await expect(
       service.signUp('artist@example.com', 'password123'),
-    ).rejects.toBeInstanceOf(AuthError);
+    ).rejects.toBeInstanceOf(ApiError);
   });
 
   it('signOut revokes the token through the admin client', async () => {
@@ -102,7 +102,7 @@ describe('AuthService', () => {
     expect(admin.auth.admin.signOut).toHaveBeenCalledWith('access123');
   });
 
-  it('maps the user behind a valid token to the domain shape', async () => {
+  it('returns the supabase user behind a valid token', async () => {
     const { anon, service } = makeService();
     anon.auth.getUser.mockResolvedValue({
       data: { user: SUPABASE_USER },

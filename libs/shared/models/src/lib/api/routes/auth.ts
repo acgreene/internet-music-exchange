@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Session, User } from '../../models';
 
 /**
  * Request body for creating an account.
@@ -28,20 +27,11 @@ export const signInRequestSchema = z.object({
 export type SignInRequest = z.infer<typeof signInRequestSchema>;
 
 /**
- * Wire schema for a user, checked against the domain User type.
+ * Wire schema for the session the auth routes return, which is the session
+ * supabase-js hands back, verbatim. Loose, so supabase's remaining fields
+ * survive parsing: this only pins the tokens the client has to adopt.
  */
-export const userSchema: z.ZodType<User> = z.object({
-  id: z.uuid(),
-  email: z.email(),
-  createdAt: z.iso.datetime({ offset: true }),
-});
-
-/**
- * Wire schema for a session, checked against the domain Session type.
- */
-export const sessionSchema: z.ZodType<Session> = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-  expiresAt: z.number(),
-  user: userSchema,
+export const sessionSchema = z.looseObject({
+  access_token: z.string(),
+  refresh_token: z.string(),
 });
