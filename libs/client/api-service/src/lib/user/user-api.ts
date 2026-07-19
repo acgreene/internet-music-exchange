@@ -1,35 +1,16 @@
 import type { AuthError as SupabaseAuthError, SupabaseClient, User } from '@supabase/supabase-js';
-import { z } from 'zod';
-import { ApiError, ApiErrorKind, ApiRoute, sessionSchema, type UserUpdate } from '@ime/models';
+import {
+  AckResponse,
+  ackSchema,
+  ApiError,
+  ApiErrorKind,
+  ApiRoute,
+  SessionResponse,
+  sessionSchema,
+  type UserUpdate
+} from '@ime/models';
 import type { ApiResult } from '../api-result';
 import type { ApiTransport } from '../api-transport';
-
-/**
- * Body the API returns for actions with no data.
- */
-const ackSchema = z.object({ success: z.literal(true) });
-
-/**
- * A validated acknowledgement.
- */
-type Ack = z.infer<typeof ackSchema>;
-
-/**
- * A session as validated off the wire. Supabase-shaped; the extra fields
- * supabase sends ride along untouched.
- */
-type SessionResponse = z.infer<typeof sessionSchema>;
-
-/**
- * Map a supabase-js auth failure to the SDK's ApiError.
- */
-function toApiError(error: SupabaseAuthError): ApiError {
-  return new ApiError(
-    error.status ? ApiErrorKind.Http : ApiErrorKind.Network,
-    error.status ?? null,
-    error.message,
-  );
-}
 
 /**
  * Account and session operations, exposed as api.user on the ApiService
@@ -92,7 +73,7 @@ export class UserApi {
    * session is cleared even when the server call fails, so the client always
    * signs out.
    */
-  public async signOut(): Promise<ApiResult<Ack>> {
+  public async signOut(): Promise<ApiResult<AckResponse>> {
     const result = await this.transport.post(ApiRoute.SignOut, {}, ackSchema);
     await this.supabase().auth.signOut({ scope: 'local' });
     return result;
@@ -104,7 +85,7 @@ export class UserApi {
   public async update(attributes: UserUpdate): Promise<ApiResult<User>> {
     const { data, error } = await this.supabase().auth.updateUser(attributes);
     if (error) {
-      return { ok: false, error: toApiError(error) };
+      return { ok: false, error: this.toApiError(error) };
     }
     return { ok: true, data: data.user };
   }
@@ -113,7 +94,7 @@ export class UserApi {
    * Permanently delete the signed-in user's account through the API, which
    * holds the service role key, then clear the local session.
    */
-  public async deleteAccount(): Promise<ApiResult<Ack>> {
+  public async deleteAccount(): Promise<ApiResult<AckResponse>> {
     const result = await this.transport.delete(ApiRoute.Users, ackSchema);
     if (result.ok) {
       await this.supabase().auth.signOut({ scope: 'local' });
@@ -131,5 +112,13 @@ export class UserApi {
       access_token: session.access_token,
       refresh_token: session.refresh_token,
     });
+  }
+
+  private toApiError(error: SupabaseAuthError): ApiError {
+    return new ApiError(
+      error.status ? ApiErrorKind.Http : ApiErrorKind.Network,
+      error.status ?? null,
+      error.message,
+    );
   }
 }

@@ -35,3 +35,5 @@ export const sessionSchema = z.looseObject({
   access_token: z.string(),
   refresh_token: z.string(),
 });
+
+export type SessionResponse = z.infer<typeof sessionSchema>;

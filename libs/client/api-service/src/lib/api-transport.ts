@@ -1,14 +1,9 @@
 import { isDevMode } from '@angular/core';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ApiError, ApiErrorKind, apiErrorBodySchema } from '@ime/models';
+import { ApiError, apiErrorBodySchema, ApiErrorKind } from '@ime/models';
 import type { ApiResult } from './api-result';
-
-// Same-origin in development; the dev servers proxy /api to the local API.
-const DEVELOPMENT_BASE_URL = '';
-
-// Placeholder until a production deployment exists; set the real API origin here.
-const PRODUCTION_BASE_URL = '';
+import { clientEnv } from '@ime/client-env';
 
 /**
  * HTTP methods the transport can perform. Values are wire format.
@@ -47,13 +42,13 @@ export class ApiTransport {
    * @private
    */
   private readonly baseUrl = isDevMode()
-    ? DEVELOPMENT_BASE_URL
-    : PRODUCTION_BASE_URL;
+    ? clientEnv.DEVELOPMENT_BASE_URL
+    : clientEnv.PRODUCTION_BASE_URL;
 
   constructor(
     /**
      * Lazy source of the Supabase client, called only when a request needs the
-     * access token so SSR never constructs the client.
+     * access token.
      */
     private readonly supabase: () => SupabaseClient,
   ) {}
@@ -104,8 +99,7 @@ export class ApiTransport {
   }
 
   /**
-   * Perform a request and map every failure mode to a typed ApiError. All verb
-   * methods delegate here so cross-cutting behavior is applied exactly once.
+   * Perform a request and map every failure mode to a typed ApiError.
    * @private
    */
   private async request<T>(

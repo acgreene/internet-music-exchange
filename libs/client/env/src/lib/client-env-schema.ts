@@ -9,6 +9,8 @@ import { z } from 'zod';
 export const clientEnvSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
+  DEVELOPMENT_BASE_URL: z.url(),
+  PRODUCTION_BASE_URL: z.url(),
 });
 
 /**

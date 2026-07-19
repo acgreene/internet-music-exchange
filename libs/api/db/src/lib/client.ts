@@ -9,48 +9,40 @@ import * as schema from './schema';
  */
 export type Db = PostgresJsDatabase<typeof schema>;
 
-// /**
-//  * Create a database handle from a Postgres connection string.
-//  */
-// export function createDb(connectionString: string): Db {
-//   const client = postgres(connectionString, {
-//     prepare: false,
-//     connect_timeout: 5,
-//   });
-//   return drizzle(client, { schema });
-// }
-//
-// /**
-//  * Singleton database instance.
-//  */
-// export const db: Db = createDb(env.DATABASE_URL);
-//
-// /**
-//  * Report whether the database answers a trivial query.
-//  */
-// export async function pingDb(db: Db): Promise<boolean> {
-//   try {
-//     await db.execute(sql`select 1`);
-//     return true;
-//   } catch {
-//     return false;
-//   }
-// }
-
+/**
+ * Owns the database handle and the operations that run against it, so callers
+ * never build a connection themselves.
+ */
 export class DatabaseService {
-  constructor() {
-    this.createDb(env.DATABASE_URL);
+  /**
+   * The database handle every query runs through.
+   */
+  public readonly db: Db;
+
+  constructor(
+    /**
+     * Postgres connection string.
+     */
+    connectionString: string = env.DATABASE_URL,
+  ) {
+    this.db = this.createDb(connectionString);
   }
 
-  public async pingDb(db: Db): Promise<boolean> {
+  /**
+   * Report whether the database answers a trivial query.
+   */
+  public async ping(): Promise<boolean> {
     try {
-      await db.execute(sql`select 1`);
+      await this.db.execute(sql`select 1`);
       return true;
     } catch {
       return false;
     }
   }
 
+  /**
+   * Create a database handle from a Postgres connection string.
+   */
   private createDb(connectionString: string): Db {
     const client = postgres(connectionString, {
       prepare: false,
@@ -60,4 +52,13 @@ export class DatabaseService {
   }
 }
 
-export const db = new DatabaseService();
+/**
+ * Singleton database service, includes higher order convenience methods
+ * to interact with the database. For database queries use the `db` singleton.
+ */
+export const databaseService = new DatabaseService();
+
+/**
+ * Singleton database handle used to interact with and query the database.
+ */
+export const db = databaseService.db;

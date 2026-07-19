@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-// Load .env into process.env before validating. This module initializes on
-// the first import, before any consumer code runs, so every module in the API can
-// count on validated environment variables at construction time.
 try {
   process.loadEnvFile();
 } catch {
