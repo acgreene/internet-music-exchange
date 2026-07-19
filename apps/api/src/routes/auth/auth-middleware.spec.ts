@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { AuthError, type AuthService } from '@ime/auth';
-import { createAuthMiddleware } from './auth-middleware';
+import { AuthMiddleware } from './auth-middleware';
 import { RouteUtils } from '../utils';
 
 const mockAuthService = {
@@ -13,13 +13,10 @@ const USER = {
   createdAt: '2026-07-17T12:00:00.000Z',
 };
 
-/**
- * A minimal protected route that echoes the authenticated user, mounted the
- * same way real routers are: with the shared errorHandler.
- */
-const authMiddleware = createAuthMiddleware(
+const authMiddleware = new AuthMiddleware(
   mockAuthService as unknown as AuthService,
-);
+).middleware();
+
 const app = new Hono().get('/protected', authMiddleware, (c) => {
   const routeUtils = new RouteUtils(c);
   return c.json(routeUtils.getAuthUser());

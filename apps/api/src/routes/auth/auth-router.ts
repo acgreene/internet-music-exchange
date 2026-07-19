@@ -1,22 +1,20 @@
 import type { AuthService } from '@ime/auth';
-import {
-  ApiRoute,
-  signInRequestSchema,
-  signUpRequestSchema,
-} from '@ime/models';
-import { createAuthMiddleware } from './auth-middleware';
+import { ApiRoute, signInRequestSchema, signUpRequestSchema } from '@ime/models';
 import { RouteUtils } from '../utils';
 import { AbstractRouter } from '../abstract-router';
+import { MiddlewareHandler } from 'hono';
+import { AuthMiddleware } from './auth-middleware';
 
 export class AuthRouter extends AbstractRouter {
+  private readonly authMiddleware: MiddlewareHandler;
+
   constructor(private readonly authService: AuthService) {
     super();
     this.register();
+    this.authMiddleware = new AuthMiddleware(authService).middleware();
   }
 
   protected register(): void {
-    const authMiddleware = createAuthMiddleware(this.authService);
-
     this.routes.post(
       ApiRoute.SignUp,
       RouteUtils.validateJsonBody(signUpRequestSchema),
@@ -37,7 +35,7 @@ export class AuthRouter extends AbstractRouter {
       },
     );
 
-    this.routes.post(ApiRoute.SignOut, authMiddleware, async (c) => {
+    this.routes.post(ApiRoute.SignOut, this.authMiddleware, async (c) => {
       const routeUtils = new RouteUtils(c);
       const authToken = routeUtils.getAuthToken();
       await this.authService.signOut(authToken);
