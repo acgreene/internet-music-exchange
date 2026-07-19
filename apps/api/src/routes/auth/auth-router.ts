@@ -1,5 +1,9 @@
 import type { AuthService } from '@ime/auth';
-import { ApiRoute, signInRequestSchema, signUpRequestSchema } from '@ime/models';
+import {
+  ApiRoute,
+  signInRequestSchema,
+  signUpRequestSchema,
+} from '@ime/models';
 import { RouteUtils } from '../utils';
 import { AbstractRouter } from '../abstract-router';
 import { MiddlewareHandler } from 'hono';
