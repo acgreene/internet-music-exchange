@@ -1,14 +1,5 @@
 import type { AuthError as SupabaseAuthError, SupabaseClient, User } from '@supabase/supabase-js';
-import {
-  AckResponse,
-  ackSchema,
-  ApiError,
-  ApiErrorKind,
-  ApiRoute,
-  SessionResponse,
-  sessionSchema,
-  type UserUpdate
-} from '@ime/models';
+import { type AckResponse, ApiError, ApiErrorKind, ApiRoute, type SessionResponse, type UserUpdate } from '@ime/models';
 import type { ApiResult } from '../api-result';
 import type { ApiTransport } from '../api-transport';
 
@@ -39,11 +30,10 @@ export class UserApi {
     email: string,
     password: string,
   ): Promise<ApiResult<SessionResponse>> {
-    const result = await this.transport.post(
-      ApiRoute.SignUp,
-      { email, password },
-      sessionSchema,
-    );
+    const result = await this.transport.post(ApiRoute.SignUp, {
+      email,
+      password,
+    });
     if (result.ok) {
       await this.adoptSession(result.data);
     }
@@ -57,11 +47,10 @@ export class UserApi {
     email: string,
     password: string,
   ): Promise<ApiResult<SessionResponse>> {
-    const result = await this.transport.post(
-      ApiRoute.SignIn,
-      { email, password },
-      sessionSchema,
-    );
+    const result = await this.transport.post(ApiRoute.SignIn, {
+      email,
+      password,
+    });
     if (result.ok) {
       await this.adoptSession(result.data);
     }
@@ -74,7 +63,7 @@ export class UserApi {
    * signs out.
    */
   public async signOut(): Promise<ApiResult<AckResponse>> {
-    const result = await this.transport.post(ApiRoute.SignOut, {}, ackSchema);
+    const result = await this.transport.post(ApiRoute.SignOut);
     await this.supabase().auth.signOut({ scope: 'local' });
     return result;
   }
@@ -95,7 +84,7 @@ export class UserApi {
    * holds the service role key, then clear the local session.
    */
   public async deleteAccount(): Promise<ApiResult<AckResponse>> {
-    const result = await this.transport.delete(ApiRoute.Users, ackSchema);
+    const result = await this.transport.delete(ApiRoute.Users);
     if (result.ok) {
       await this.supabase().auth.signOut({ scope: 'local' });
     }
@@ -103,7 +92,7 @@ export class UserApi {
   }
 
   /**
-   * Hand a session returned by our API to supabase-js so it persists and
+   * Hand a session returned by our API to supabase so it persists and
    * refreshes it from here on.
    * @private
    */

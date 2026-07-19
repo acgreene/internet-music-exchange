@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ApiRoute, type HealthResponse, healthResponseSchema } from '@ime/models';
+import { ApiRoute, type HealthResponse } from '@ime/models';
 import type { ApiResult } from './api-result';
 import { ApiTransport } from './api-transport';
 import { getSupabaseClient } from './auth';
@@ -25,6 +25,6 @@ export class ApiService {
    * Check the health of the API.
    */
   public async health(): Promise<ApiResult<HealthResponse>> {
-    return this.transport.get(ApiRoute.Health, healthResponseSchema);
+    return this.transport.get(ApiRoute.Health);
   }
 }

@@ -4,7 +4,7 @@ import type { AuthService } from '@ime/auth';
 import { RootRouter } from './root-router';
 
 vi.mock('@ime/db', () => ({
-  db: { pingDb: vi.fn() },
+  databaseService: { ping: vi.fn() },
 }));
 
 const mockAuthService = {

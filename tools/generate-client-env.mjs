@@ -27,7 +27,12 @@ try {
   // no .env file; rely on the process environment
 }
 
-const missing = clientEnvVars.filter((name) => !process.env[name]);
+// Undefined means the variable was never set; an empty value is a real value,
+// as for a base URL that is deliberately same-origin. The schema decides
+// whether it is acceptable, not this script.
+const missing = clientEnvVars.filter(
+  (name) => process.env[name] === undefined,
+);
 if (missing.length > 0) {
   throw new Error(
     `Invalid or missing environment variables: ${missing.join(', ')}. ` +

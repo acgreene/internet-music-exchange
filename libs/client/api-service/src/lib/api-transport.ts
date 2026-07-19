@@ -1,34 +1,25 @@
 import { isDevMode } from '@angular/core';
-import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ApiError, apiErrorBodySchema, ApiErrorKind } from '@ime/models';
+import {
+  ApiError,
+  apiErrorBodySchema,
+  ApiErrorKind,
+  type ApiRoute,
+  HttpMethod,
+  type RequestOf,
+  type ResponseOf,
+  responseSchema,
+  type RouteWith
+} from '@ime/models';
 import type { ApiResult } from './api-result';
 import { clientEnv } from '@ime/client-env';
 
 /**
- * HTTP methods the transport can perform. Values are wire format.
+ * The body argument of a route and method: required for the routes that
+ * declare a request schema, absent for the ones that do not.
  */
-enum HttpMethod {
-  /**
-   * Read a resource.
-   */
-  Get = 'GET',
-
-  /**
-   * Create a resource or invoke an action with a JSON body.
-   */
-  Post = 'POST',
-
-  /**
-   * Replace or update a resource with a JSON body.
-   */
-  Put = 'PUT',
-
-  /**
-   * Remove a resource.
-   */
-  Delete = 'DELETE',
-}
+type BodyArgs<R extends RouteWith<M>, M extends HttpMethod> =
+  RequestOf<R, M> extends undefined ? [] : [body: RequestOf<R, M>];
 
 /**
  * Shared HTTP core for the API service. Owns the base URL, performs requests,
@@ -42,8 +33,8 @@ export class ApiTransport {
    * @private
    */
   private readonly baseUrl = isDevMode()
-    ? clientEnv.DEVELOPMENT_BASE_URL
-    : clientEnv.PRODUCTION_BASE_URL;
+    ? clientEnv.DEVELOPMENT_API_BASE_URL
+    : clientEnv.PRODUCTION_API_BASE_URL;
 
   constructor(
     /**
@@ -54,60 +45,56 @@ export class ApiTransport {
   ) {}
 
   /**
-   * Fetch a GET endpoint and validate its body against the given contract schema.
+   * Fetch a GET route and validate its body against the route's contract.
    */
-  public async get<T>(
-    path: string,
-    schema: z.ZodType<T>,
-  ): Promise<ApiResult<T>> {
-    return this.request(HttpMethod.Get, path, schema);
+  public async get<R extends RouteWith<HttpMethod.Get>>(
+    route: R,
+  ): Promise<ApiResult<ResponseOf<R, HttpMethod.Get>>> {
+    return this.request(HttpMethod.Get, route);
   }
 
   /**
-   * Send a JSON body to a POST endpoint and validate the response body against
-   * the given contract schema.
+   * Call a POST route, sending the body its contract declares, and validate
+   * the response against that contract.
    */
-  public async post<T>(
-    path: string,
-    body: unknown,
-    schema: z.ZodType<T>,
-  ): Promise<ApiResult<T>> {
-    return this.request(HttpMethod.Post, path, schema, body);
+  public async post<R extends RouteWith<HttpMethod.Post>>(
+    route: R,
+    ...body: BodyArgs<R, HttpMethod.Post>
+  ): Promise<ApiResult<ResponseOf<R, HttpMethod.Post>>> {
+    return this.request(HttpMethod.Post, route, body[0]);
   }
 
   /**
-   * Send a JSON body to a PUT endpoint and validate the response body against
-   * the given contract schema.
+   * Call a PUT route, sending the body its contract declares, and validate the
+   * response against that contract.
    */
-  public async put<T>(
-    path: string,
-    body: unknown,
-    schema: z.ZodType<T>,
-  ): Promise<ApiResult<T>> {
-    return this.request(HttpMethod.Put, path, schema, body);
+  public async put<R extends RouteWith<HttpMethod.Put>>(
+    route: R,
+    ...body: BodyArgs<R, HttpMethod.Put>
+  ): Promise<ApiResult<ResponseOf<R, HttpMethod.Put>>> {
+    return this.request(HttpMethod.Put, route, body[0]);
   }
 
   /**
-   * Call a DELETE endpoint and validate the response body against the given
-   * contract schema.
+   * Call a DELETE route and validate the response against its contract.
    */
-  public async delete<T>(
-    path: string,
-    schema: z.ZodType<T>,
-  ): Promise<ApiResult<T>> {
-    return this.request(HttpMethod.Delete, path, schema);
+  public async delete<R extends RouteWith<HttpMethod.Delete>>(
+    route: R,
+  ): Promise<ApiResult<ResponseOf<R, HttpMethod.Delete>>> {
+    return this.request(HttpMethod.Delete, route);
   }
 
   /**
    * Perform a request and map every failure mode to a typed ApiError.
    * @private
    */
-  private async request<T>(
-    method: HttpMethod,
-    path: string,
-    schema: z.ZodType<T>,
+  private async request<M extends HttpMethod, R extends RouteWith<M>>(
+    method: M,
+    route: R,
     body?: unknown,
-  ): Promise<ApiResult<T>> {
+  ): Promise<ApiResult<ResponseOf<R, M>>> {
+    const path: ApiRoute = route;
+    const schema = responseSchema(route, method);
     const headers: Record<string, string> = {};
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
