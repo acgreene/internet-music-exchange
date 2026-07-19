@@ -1,4 +1,9 @@
-// Drizzle schema. Tables are defined here as features are implemented;
-// after changing this file, run `pnpm db:generate` then `pnpm db:migrate`.
+/**
+ * Drizzle schema barrel.
+ *
+ * After changing any table, run:
+ *   pnpm db:generate --name=<describe_the_change>
+ *   pnpm db:migrate
+ */
 
-export {};
+export * from './tables';
