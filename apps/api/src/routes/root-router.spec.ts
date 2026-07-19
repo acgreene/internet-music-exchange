@@ -1,10 +1,12 @@
 import { ApiRoute } from '@ime/models';
-import { databaseService } from '@ime/db';
+import { DatabaseService } from '@ime/db';
 import type { AuthService } from '@ime/auth';
 import { RootRouter } from './root-router';
 
+const mockPing = vi.fn();
+
 vi.mock('@ime/db', () => ({
-  databaseService: { ping: vi.fn() },
+  DatabaseService: { getInstance: vi.fn() },
 }));
 
 const mockAuthService = {
@@ -13,9 +15,19 @@ const mockAuthService = {
 
 const createApp = () => new RootRouter(mockAuthService).router;
 
+beforeEach(() => {
+  vi.mocked(DatabaseService.getInstance).mockReturnValue({
+    ping: mockPing,
+  } as unknown as DatabaseService);
+});
+
+afterEach(() => {
+  vi.resetAllMocks();
+});
+
 describe('api', () => {
   it('reports ok when the database is reachable', async () => {
-    vi.mocked(databaseService.ping).mockResolvedValue(true);
+    mockPing.mockResolvedValue(true);
 
     const res = await createApp().request(ApiRoute.Health);
 
@@ -25,7 +37,7 @@ describe('api', () => {
   });
 
   it('reports degraded when the database is unreachable', async () => {
-    vi.mocked(databaseService.ping).mockResolvedValue(false);
+    mockPing.mockResolvedValue(false);
 
     const res = await createApp().request(ApiRoute.Health);
 

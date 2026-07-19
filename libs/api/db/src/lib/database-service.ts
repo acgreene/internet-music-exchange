@@ -7,25 +7,33 @@ import * as schema from './schema';
 /**
  * The Drizzle database handle, typed against the full schema.
  */
-export type Db = PostgresJsDatabase<typeof schema>;
+type Db = PostgresJsDatabase<typeof schema>;
 
 /**
- * Owns the database handle and the operations that run against it, so callers
- * never build a connection themselves.
+ * Singleton database service, creates an instance of the database connection
+ * and provides convenience methods to interact with it.
  */
 export class DatabaseService {
+  /**
+   * The singleton instance of the database service.
+   * @private
+   */
+  private static instance: DatabaseService | null = null;
+
   /**
    * The database handle every query runs through.
    */
   public readonly db: Db;
 
-  constructor(
-    /**
-     * Postgres connection string.
-     */
-    connectionString: string = env.DATABASE_URL,
-  ) {
-    this.db = this.createDb(connectionString);
+  private constructor() {
+    this.db = this.createDb(env.DATABASE_URL);
+  }
+
+  public static getInstance(): DatabaseService {
+    if (!DatabaseService.instance) {
+      DatabaseService.instance = new DatabaseService();
+    }
+    return DatabaseService.instance;
   }
 
   /**
@@ -51,14 +59,3 @@ export class DatabaseService {
     return drizzle(client, { schema });
   }
 }
-
-/**
- * Singleton database service, includes higher order convenience methods
- * to interact with the database. For database queries use the `db` singleton.
- */
-export const databaseService = new DatabaseService();
-
-/**
- * Singleton database handle used to interact with and query the database.
- */
-export const db = databaseService.db;
