@@ -8,6 +8,13 @@
       "when": 1784525931217,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784564526587,
+      "tag": "0001_create_artist_followers_table",
+      "breakpoints": true
     }
   ]
 }
