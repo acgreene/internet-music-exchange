@@ -1,13 +1,14 @@
 import { sql } from 'drizzle-orm';
 import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { authenticatedRole, authUid, authUsers } from 'drizzle-orm/supabase';
+import { anonRole, authenticatedRole, authUid, authUsers } from 'drizzle-orm/supabase';
 
 /**
- * User data for IME users.
+ * Public profile data for IME users.
  *
  * The primary key mirrors the Supabase `auth.users` id rather than being
- * generated here. Rows are created by the `on_auth_user_created` trigger, which
- * is defined by hand in the migration because Drizzle has no trigger API.
+ * generated here. Rows are created by the `on_auth_user_created` trigger.
+ *
+ * Note that user emails can be obtained via the supabase `auth.users` table.
  */
 export const users = pgTable(
   'users',
@@ -19,7 +20,6 @@ export const users = pgTable(
     id: uuid('id')
       .primaryKey()
       .references(() => authUsers.id, { onDelete: 'cascade' }),
-    email: text('email').notNull().unique(),
     username: text('username').unique(),
     name: text('name'),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -27,10 +27,10 @@ export const users = pgTable(
       .notNull(),
   },
   (table) => [
-    pgPolicy('Users can read their own row', {
+    pgPolicy('User profiles are publicly readable', {
       for: 'select',
-      to: authenticatedRole,
-      using: sql`${authUid} = ${table.id}`,
+      to: [anonRole, authenticatedRole],
+      using: sql`true`,
     }),
     pgPolicy('Users can update their own row', {
       for: 'update',

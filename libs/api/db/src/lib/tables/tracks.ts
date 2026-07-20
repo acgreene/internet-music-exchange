@@ -24,10 +24,17 @@ export const tracks = pgTable(
   },
   (table) => [
     index('tracks_artist_id_idx').on(table.artistId),
+    // a track becomes public once it appears in a published release. Tracks
+    // that are unreleased, or only on drafts, stay visible to managers alone
     pgPolicy('Catalog is publicly readable', {
       for: 'select',
       to: [anonRole, authenticatedRole],
-      using: sql`true`,
+      using: sql`EXISTS (
+        SELECT 1
+        FROM public.release_tracks rt
+        JOIN public.releases r ON r.id = rt.release_id
+        WHERE rt.track_id = ${table.id} AND r.status = 'published'
+      )`,
     }),
     pgPolicy('Managers can write tracks', {
       for: 'all',

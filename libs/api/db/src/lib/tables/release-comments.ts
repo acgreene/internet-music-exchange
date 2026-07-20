@@ -58,14 +58,11 @@ export const releaseComments = pgTable(
       using: sql`${authUid} = ${table.userId}`,
       withCheck: sql`${authUid} = ${table.userId}`,
     }),
-    pgPolicy(
-      'Artist managers can remove comments from a release that belongs to an artist they manage',
-      {
-        for: 'delete',
-        to: authenticatedRole,
-        using: sql`public.is_artist_manager((SELECT r.artist_id FROM public.releases r WHERE r.id = ${table.releaseId}))`,
-      },
-    ),
+    pgPolicy('Managers can remove comments on their releases', {
+      for: 'delete',
+      to: authenticatedRole,
+      using: sql`public.is_artist_manager((SELECT r.artist_id FROM public.releases r WHERE r.id = ${table.releaseId}))`,
+    }),
   ],
 );
 

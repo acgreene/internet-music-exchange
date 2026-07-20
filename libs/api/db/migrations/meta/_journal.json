@@ -5,29 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784525931217,
+      "when": 1784575087424,
       "tag": "0000_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1784564526587,
-      "tag": "0001_create_artist_followers_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1784570210414,
-      "tag": "0002_create_release_comments_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1784570257725,
-      "tag": "0003_release_comment_updated_at_trigger",
+      "when": 1784575087761,
+      "tag": "0001_functions_triggers_and_grants",
       "breakpoints": true
     }
   ]

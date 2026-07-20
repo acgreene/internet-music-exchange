@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { date, index, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, date, index, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { artists } from './artists';
 
@@ -20,6 +20,22 @@ export const releaseKindEnum = pgEnum('release_kind', [
 ]);
 
 export type ReleaseKind = (typeof releaseKindEnum.enumValues)[number];
+
+/**
+ * Lifecycle of a release.
+ *
+ * `draft` - visible only to the artist's managers, still being assembled.
+ * `published` - visible to everyone and available to buy.
+ * `archived` - withdrawn from the public catalog. Users who already own it
+ *               keep access; see the entitlement policies.
+ */
+export const releaseStatusEnum = pgEnum('release_status', [
+  'draft',
+  'published',
+  'archived',
+]);
+
+export type ReleaseStatus = (typeof releaseStatusEnum.enumValues)[number];
 
 /**
  * Table of artist releases, could be a single, EP, LP, compilation, or
@@ -45,13 +61,29 @@ export const releases = pgTable(
       .defaultNow()
       .notNull(),
     kind: releaseKindEnum('kind').notNull(),
+
+    /**
+     * New releases start as drafts so nothing reaches the public catalog
+     * before its managers say so.
+     */
+    status: releaseStatusEnum('status').notNull().default('draft'),
+
+    /** When the release first went public. Null while it is still a draft. */
+    publishedAt: timestamp('published_at', { withTimezone: true }),
   },
   (table) => [
     index('releases_artist_id_idx').on(table.artistId),
+    // the public catalog reads by status, so keep that lookup indexed
+    index('releases_status_idx').on(table.status),
+    // a release that claims to be public has to say when it went public
+    check(
+      'releases_published_at_required_when_published',
+      sql`${table.status} <> 'published' OR ${table.publishedAt} IS NOT NULL`,
+    ),
     pgPolicy('Catalog is publicly readable', {
       for: 'select',
       to: [anonRole, authenticatedRole],
-      using: sql`true`,
+      using: sql`${table.status} = 'published'`,
     }),
     pgPolicy('Managers can write releases', {
       for: 'all',

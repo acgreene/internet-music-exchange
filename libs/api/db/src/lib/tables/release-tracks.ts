@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, index, integer, pgPolicy, pgTable, primaryKey, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, index, integer, pgPolicy, pgTable, primaryKey, unique, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { releases } from './releases';
 import { tracks } from './tracks';
@@ -19,6 +19,12 @@ export const releaseTracks = pgTable(
 
     /** The position of the track within the release. */
     position: integer('position').notNull(),
+
+    /**
+     * Whether this track can be streamed without owning the release, letting
+     * an artist put a few tracks up as a preview of the whole.
+     */
+    isPreview: boolean('is_preview').notNull().default(false),
   },
   (table) => [
     // composite primary key
@@ -32,10 +38,12 @@ export const releaseTracks = pgTable(
     index('release_tracks_track_id_idx').on(table.trackId),
     // track positions are 1-based, so 0 and negatives are not valid slots
     check('release_tracks_position_positive', sql`${table.position} >= 1`),
+    // the tracklist follows the visibility of the release it belongs to, so a
+    // draft does not leak its running order
     pgPolicy('Catalog is publicly readable', {
       for: 'select',
       to: [anonRole, authenticatedRole],
-      using: sql`true`,
+      using: sql`EXISTS (SELECT 1 FROM public.releases r WHERE r.id = ${table.releaseId} AND r.status = 'published')`,
     }),
     pgPolicy('Managers can write release tracks', {
       for: 'all',
