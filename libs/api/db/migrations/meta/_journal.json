@@ -15,6 +15,13 @@
       "when": 1784575087761,
       "tag": "0001_functions_triggers_and_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784582986775,
+      "tag": "0002_release_assets_and_track_audio_files",
+      "breakpoints": true
     }
   ]
 }

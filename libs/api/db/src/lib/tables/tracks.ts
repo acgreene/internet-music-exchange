@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, index, integer, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { artists } from './artists';
 
@@ -18,12 +18,19 @@ export const tracks = pgTable(
         // prevent deletion of any artist row who still has tracks pointing at it
         { onDelete: 'restrict' },
       ),
+    /**
+     * Play time in milliseconds. It lives here rather than on the track_audio_files
+     * so a public tracklist can show track lengths without the storage
+     * rows. Null until the first audio file is ingested and probed.
+     */
+    durationMs: integer('duration_ms'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => [
     index('tracks_artist_id_idx').on(table.artistId),
+    check('tracks_duration_ms_positive', sql`${table.durationMs} > 0`),
     // a track becomes public once it appears in a published release. Tracks
     // that are unreleased, or only on drafts, stay visible to managers alone
     pgPolicy('Catalog is publicly readable', {
