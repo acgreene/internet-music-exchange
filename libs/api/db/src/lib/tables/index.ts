@@ -10,3 +10,6 @@ export * from './track-audio-files';
 export * from './release-assets';
 export * from './artist-payout-accounts';
 export * from './release-pricing';
+export * from './stripe-events';
+export * from './purchases';
+export * from './entitlements';

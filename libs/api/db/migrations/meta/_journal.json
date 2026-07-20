@@ -36,6 +36,13 @@
       "when": 1784587062771,
       "tag": "0004_release_pricing_and_artist_currency",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784588416583,
+      "tag": "0005_purchases_entitlements_and_stripe_events",
+      "breakpoints": true
     }
   ]
 }
