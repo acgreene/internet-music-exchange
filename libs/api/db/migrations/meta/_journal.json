@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784490185132,
-      "tag": "0000_create_users_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1784490317882,
-      "tag": "0001_auth_user_trigger",
+      "when": 1784525931217,
+      "tag": "0000_initial_schema",
       "breakpoints": true
     }
   ]

@@ -7,30 +7,31 @@ nvm use          # Node 24 (from .nvmrc)
 pnpm install
 ```
 
-Run the apps (in separate terminals):
+Run the apps:
 
 ```sh
-pnpm nx serve api      # Hono API on http://localhost:3000
+pnpm nx serve api      # API on http://localhost:3000
 pnpm nx serve web      # Web app on http://localhost:4200
 pnpm nx serve mobile   # Mobile app in the browser on http://localhost:4201
 ```
 
-Both client dev servers proxy `/api/*` to the Hono server, so clients use relative URLs.
-
 ## Database
 
-Postgres runs locally through Supabase (requires OrbStack or Docker):
+Postgres runs locally through Supabase. We manage the schema via Drizzle, the tables live in
+`libs/api/db/src/lib/tables/`, and the migrations are at `libs/api/db/migrations/`.
+
+### Local setup
+
+Requires [Docker](https://www.docker.com) or [OrbStack](https://orbstack.dev).
 
 ```sh
-supabase start    # local stack; Postgres on port 54332
-cp .env.example .env
+supabase start              # local stack with Postgres on port 54332
+supabase status             # prints your local keys
+cp .env.example .env        # then paste the keys from the line above
+pnpm db:migrate             # apply migrations to the local database
 ```
 
-The Drizzle schema lives in `libs/api/db` (currently empty, tables land with the first feature). After changing it, run `pnpm db:generate` to create a migration, then `pnpm db:migrate` to apply it. `pnpm db:studio` opens a data browser.
-
-## Mobile (Capacitor)
-
-Mobile UI work happens in the browser via `pnpm nx serve mobile`. To run inside the native shells:
+## Mobile
 
 ```sh
 pnpm nx cap-sync mobile        # build the app and copy assets into ios/ and android/
@@ -50,8 +51,10 @@ pnpm nx graph                # visualize the project dependency graph
 
 ## Generating New Code
 
+[Nx docs library generator reference](https://nx.dev/docs/technologies/typescript/generators#library)
+
 ```sh
-pnpm nx g @nx/angular:library libs/client/feature-storefront   # shared client lib
-pnpm nx g @nx/js:library libs/shared/util-currency             # isomorphic lib
+pnpm nx g @nx/angular:library libs/client/feature-myfeature   # shared client lib
+pnpm nx g @nx/js:library libs/shared/util-currency             # typescript lib
 pnpm nx list                                                   # see installed plugins
 ```
