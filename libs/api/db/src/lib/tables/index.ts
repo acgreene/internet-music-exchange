@@ -8,3 +8,4 @@ export * from './artist-followers';
 export * from './release-comments';
 export * from './track-audio-files';
 export * from './release-assets';
+export * from './artist-payout-accounts';
