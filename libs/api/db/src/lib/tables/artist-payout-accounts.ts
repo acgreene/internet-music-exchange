@@ -1,7 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { boolean, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 import { artists } from './artists';
+
+/**
+ * Currencies the platform supports as lowercase ISO 4217 codes to
+ * match Stripe. Defined here because an artist's currency originates from their
+ * Stripe account.
+ */
+export const currencyEnum = pgEnum('currency', ['usd', 'eur']);
+
+export type Currency = (typeof currencyEnum.enumValues)[number];
 
 /**
  * An artist's connected Stripe account, used to take payment for their releases
@@ -41,6 +50,7 @@ export const artistPayoutAccounts = pgTable(
 
     /** Whether the artist has finished Stripe's onboarding form. */
     detailsSubmitted: boolean('details_submitted').notNull().default(false),
+    defaultCurrency: currencyEnum('default_currency'),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
