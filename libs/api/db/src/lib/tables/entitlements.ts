@@ -1,14 +1,14 @@
 import { sql } from 'drizzle-orm';
 import { index, pgEnum, pgPolicy, pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
-import { purchases } from './purchases';
+import { orderItems } from './order-items';
 import { releases } from './releases';
 import { users } from './users';
 
 /**
  * How a user came to own a release.
  *
- * `purchase` - paid for it, `purchase_id` links the payment.
+ * `purchase` - paid for it, `order_item_id` links the line item that granted it.
  * `free` - acquired a free release, or named a price of zero.
  * `gift` - granted directly by the artist's managers.
  */
@@ -22,7 +22,7 @@ export type EntitlementSource =
   (typeof entitlementSourceEnum.enumValues)[number];
 
 /**
- * A user's ownership of a release, also called their library.
+ * A user's ownership of a digital music release.
  *
  * Granted only by the API under `service_role` after a payment settles, on a
  * free acquisition, or on an artist manager's gift. A refund removes the row.
@@ -43,10 +43,10 @@ export const entitlements = pgTable(
     source: entitlementSourceEnum('source').notNull(),
 
     /**
-     * The purchase that granted this when `source = 'purchase'`, null for free
+     * The line item that granted this when `source = 'purchase'`, null for free
      * and gifted access.
      */
-    purchaseId: uuid('purchase_id').references(() => purchases.id, {
+    orderItemId: uuid('order_item_id').references(() => orderItems.id, {
       onDelete: 'set null',
     }),
 
