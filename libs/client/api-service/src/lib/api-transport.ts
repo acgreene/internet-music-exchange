@@ -22,6 +22,29 @@ type BodyArgs<R extends RouteWith<M>, M extends HttpMethod> =
   RequestOf<R, M> extends undefined ? [] : [body: RequestOf<R, M>];
 
 /**
+ * Values substituted into a route's `:name` placeholders, keyed by placeholder.
+ */
+export type RouteParams = Record<string, string>;
+
+/**
+ * Replace every `:name` placeholder in a route with its encoded value.
+ *
+ * @throws Error when the route still has an unfilled placeholder, so a missing
+ * value fails here rather than as a confusing 404 from the server.
+ */
+function buildPath(route: ApiRoute, params?: RouteParams): string {
+  const path = route.replace(/:([A-Za-z0-9_]+)/g, (_match, name: string) => {
+    const value = params?.[name];
+    if (value === undefined) {
+      throw new Error(`Missing route parameter "${name}" for ${route}`);
+    }
+    return encodeURIComponent(value);
+  });
+
+  return path;
+}
+
+/**
  * Shared HTTP core for the API service. Owns the base URL, performs requests,
  * attaches the Supabase session's bearer token, validates response bodies
  * against contract schemas, and maps every failure mode to a typed ApiError.
@@ -49,8 +72,9 @@ export class ApiTransport {
    */
   public async get<R extends RouteWith<HttpMethod.Get>>(
     route: R,
+    params?: RouteParams,
   ): Promise<ApiResult<ResponseOf<R, HttpMethod.Get>>> {
-    return this.request(HttpMethod.Get, route);
+    return this.request(HttpMethod.Get, route, undefined, params);
   }
 
   /**
@@ -92,8 +116,9 @@ export class ApiTransport {
     method: M,
     route: R,
     body?: unknown,
+    params?: RouteParams,
   ): Promise<ApiResult<ResponseOf<R, M>>> {
-    const path: ApiRoute = route;
+    const path = buildPath(route, params);
     const schema = responseSchema(route, method);
     const headers: Record<string, string> = {};
     if (body !== undefined) {

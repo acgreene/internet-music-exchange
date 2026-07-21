@@ -23,6 +23,7 @@
       "@ime/logger": ["./libs/shared/logger/src/index.ts"],
       "@ime/services": ["./libs/api/services/src/index.ts"],
       "@ime/env": ["./libs/api/env/src/index.ts"],
+      "@ime/client-designer-pages": ["./libs/client/designer-pages/src/index.ts"],
       "@ime/client-env": ["./libs/client/env/src/index.ts"]
     }
   },

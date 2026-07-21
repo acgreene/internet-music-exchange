@@ -1,7 +1,10 @@
 import { Route } from '@angular/router';
 
-/**
- * No routes yet — the UI is a clean slate. Feature routes will be added here as
- * the client is rebuilt.
- */
-export const appRoutes: Route[] = [];
+export const appRoutes: Route[] = [
+  {
+    path: 'designer-pages/releases/:releaseId',
+    loadComponent: () =>
+      import('./designer-page/designer-page').then((m) => m.DesignerPage),
+    title: 'Designer page — Internet Music Exchange',
+  },
+];

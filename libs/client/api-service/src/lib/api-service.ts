@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
-import { ApiRoute, type HealthResponse } from '@ime/models';
+import {
+  ApiRoute,
+  type DesignerPageRenderResponse,
+  type HealthResponse,
+} from '@ime/models';
 import type { ApiResult } from './api-result';
 import { ApiTransport } from './api-transport';
 import { getSupabaseClient } from './auth';
@@ -26,5 +30,15 @@ export class ApiService {
    */
   public async health(): Promise<ApiResult<HealthResponse>> {
     return this.transport.get(ApiRoute.Health);
+  }
+
+  /**
+   * Everything needed to render a release as a designer page: the release data
+   * and a short-lived URL to the design bundle.
+   */
+  public async designerPageForRelease(
+    releaseId: string,
+  ): Promise<ApiResult<DesignerPageRenderResponse>> {
+    return this.transport.get(ApiRoute.DesignerPageForRelease, { releaseId });
   }
 }
