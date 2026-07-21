@@ -1,7 +1,14 @@
 import type { z } from 'zod';
 import { ackSchema } from './general';
 import { HttpMethod } from './http-method';
-import { ApiRoute, healthResponseSchema, sessionSchema, signInRequestSchema, signUpRequestSchema } from './routes';
+import {
+  ApiRoute,
+  designerPageRenderResponseSchema,
+  healthResponseSchema,
+  sessionSchema,
+  signInRequestSchema,
+  signUpRequestSchema,
+} from './routes';
 
 /**
  * What a single route and method exchange: the request body schema, for the
@@ -42,6 +49,9 @@ export const API_CONTRACTS = {
   },
   [ApiRoute.SignOut]: {
     [HttpMethod.Post]: { response: ackSchema },
+  },
+  [ApiRoute.DesignerPageForRelease]: {
+    [HttpMethod.Get]: { response: designerPageRenderResponseSchema },
   },
 } as const satisfies Record<ApiRoute, Partial<Record<HttpMethod, ApiContract>>>;
 

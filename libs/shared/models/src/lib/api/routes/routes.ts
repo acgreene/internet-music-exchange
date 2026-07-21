@@ -27,4 +27,9 @@ export enum ApiRoute {
    * Revoke the caller's session.
    */
   SignOut = '/api/auth/sign-out',
+
+  /**
+   * Everything needed to render a release within a designer page.
+   */
+  DesignerPageForRelease = '/api/designer-pages/releases/:releaseId',
 }
