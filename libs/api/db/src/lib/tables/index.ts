@@ -20,3 +20,5 @@ export * from './product-variants';
 export * from './product-images';
 export * from './product-shipping-rates';
 export * from './fulfillments';
+export * from './artist-pages';
+export * from './release-artist-pages';
