@@ -1,4 +1,4 @@
-import type { AuthService } from '@ime/auth';
+import type { AuthService } from '@ime/services';
 import {
   ApiRoute,
   signInRequestSchema,

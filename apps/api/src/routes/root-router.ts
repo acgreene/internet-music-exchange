@@ -1,5 +1,5 @@
 import { logger } from 'hono/logger';
-import { AuthService } from '@ime/auth';
+import { AuthService } from '@ime/services';
 import { Logger } from '@ime/logger';
 import { UsersRouter } from './users/users-router';
 import { AuthRouter } from './auth';

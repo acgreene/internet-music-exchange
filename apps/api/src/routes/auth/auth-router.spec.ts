@@ -1,5 +1,5 @@
 import { ApiError, ApiErrorKind, ApiRoute } from '@ime/models';
-import type { AuthService } from '@ime/auth';
+import type { AuthService } from '@ime/services';
 import { AuthRouter } from './auth-router';
 
 const mockAuthService = {

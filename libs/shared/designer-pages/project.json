@@ -1,0 +1,9 @@
+{
+  "name": "designer-pages",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/designer-pages/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:models"],
+  "// targets": "to see all targets run: nx show project designer-pages --web",
+  "targets": {}
+}

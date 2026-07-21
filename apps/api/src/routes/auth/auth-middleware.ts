@@ -1,5 +1,5 @@
 import { createMiddleware } from 'hono/factory';
-import type { AuthService } from '@ime/auth';
+import type { AuthService } from '@ime/services';
 import { RouteResponse, RouteUtils } from '../utils';
 
 export class AuthMiddleware {

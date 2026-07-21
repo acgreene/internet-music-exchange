@@ -16,6 +16,12 @@ const envSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+
+  // Cloudflare R2 (S3-compatible object storage).
+  R2_ENDPOINT: z.url(),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,6 +1,6 @@
 import { ApiRoute } from '@ime/models';
 import { DatabaseService } from '@ime/db';
-import type { AuthService } from '@ime/auth';
+import type { AuthService } from '@ime/services';
 import { RootRouter } from './root-router';
 
 const mockPing = vi.fn();
