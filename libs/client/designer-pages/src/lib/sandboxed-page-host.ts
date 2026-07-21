@@ -1,43 +1,43 @@
-import { Component, computed, DestroyRef, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
-import { type DesignerPageRenderPayload, type HostToDesignMessage, isDesignToHostMessage } from '@ime/models';
+import {
+  type DesignerPageRenderPayload,
+  type HostToDesignMessage,
+  isDesignToHostMessage,
+} from '@ime/models';
 
-/**
- * Height the frame starts at before the design reports its own, so the page
- * does not flash at zero height.
- */
 const INITIAL_FRAME_HEIGHT_PX = 640;
 
 /**
- * Renders an untrusted designer page inside a sandboxed iframe and is the only
- * thing that talks to it.
+ * Renders an untrusted design in a sandboxed frame and is the only code that
+ * talks to it.
+ *
+ * The frame is sandboxed with `allow-scripts` and deliberately without
+ * `allow-same-origin`. The design's scripts run, but the frame gets an opaque
+ * origin and cannot reach this document, its cookies, or its storage. Granting
+ * both tokens together would defeat the sandbox.
+ *
+ * A design can only request actions. Acting on a request stays in trusted code.
  */
 @Component({
   selector: 'ime-sandboxed-page-host',
-  template: `
-    <iframe
-      #frame
-      title="Designer page"
-      [src]="safeBundleUrl()"
-      [height]="frameHeight()"
-      sandbox="allow-scripts"
-      referrerpolicy="no-referrer"
-      width="100%"
-      style="border: 0; display: block;"
-    ></iframe>
-  `,
+  templateUrl: './sandboxed-page-host.html',
 })
 export class SandboxedPageHost {
-  /** Short-lived URL of the design bundle, from the API. */
   public readonly bundleUrl = input.required<string>();
-
-  /** Data injected into the design once it reports itself ready. */
   public readonly payload = input.required<DesignerPageRenderPayload>();
 
-  /** The design asked to buy the release. Trusted code decides what happens. */
   public readonly purchaseRequested = output<void>();
-
-  /** The design asked to play a track, by its position in the release. */
   public readonly playRequested = output<number>();
 
   protected readonly frameHeight = signal(INITIAL_FRAME_HEIGHT_PX);
@@ -47,6 +47,7 @@ export class SandboxedPageHost {
 
   private readonly sanitizer = inject(DomSanitizer);
 
+  /** The URL comes from our API, and the sandbox is what contains the frame. */
   protected readonly safeBundleUrl = computed<SafeResourceUrl>(() =>
     this.sanitizer.bypassSecurityTrustResourceUrl(this.bundleUrl()),
   );
@@ -60,8 +61,8 @@ export class SandboxedPageHost {
   }
 
   /**
-   * Handle one message from the sandboxed design, ignoring anything that did
-   * not come from this frame or does not match the protocol.
+   * An opaque origin frame sends `origin: "null"`, so messages are
+   * authenticated against this frame's window rather than by origin.
    */
   private handleMessage(event: MessageEvent): void {
     const frameWindow = this.frame().nativeElement.contentWindow;
@@ -89,15 +90,14 @@ export class SandboxedPageHost {
     }
   }
 
-  /**
-   * Hand the design its data.
-   */
   private sendInit(): void {
     const message: HostToDesignMessage = {
       type: 'designer-page:init',
       payload: this.payload(),
     };
 
+    // An opaque origin frame has no origin to address. The payload is the
+    // public release data the design is about to render.
     this.frame().nativeElement.contentWindow?.postMessage(message, '*');
   }
 }

@@ -4,24 +4,16 @@ import {
   ApiErrorKind,
   type DesignerPageCustomization,
   type DesignerPagePrice,
-  type DesignerPageRenderResponse
+  type DesignerPageRenderResponse,
 } from '@ime/models';
 import { CloudStorageService } from '../storage';
 
-/**
- * Tracer bullet stand in design bundle key.
- */
+/** Placeholder until designs are a stored record with their own bundle keys. */
 export const TRACER_DESIGN_BUNDLE_KEY = 'tracer/sample-design/index.html';
 
-/**
- * How long a bundle URL stays valid.
- */
 const BUNDLE_URL_EXPIRY_SECONDS = 300;
 
-/**
- * A release with no pricing row has not been priced; a design still has to
- * render something, so it reads as free.
- */
+/** A release with no pricing row still has to render as something. */
 const UNPRICED: DesignerPagePrice = {
   mode: 'free',
   currency: null,
@@ -30,9 +22,9 @@ const UNPRICED: DesignerPagePrice = {
 };
 
 /**
- * Assembles everything needed to render a release as a designer page: the
- * release data the design displays, the artist's customization values, and a
- * short-lived URL to the design bundle in object storage.
+ * Assembles what a client needs to render a release as a designer page: the
+ * release data, the artist's customization, and a short-lived URL to the design
+ * bundle in object storage.
  */
 export class DesignerPageService {
   constructor(
@@ -41,8 +33,6 @@ export class DesignerPageService {
   ) {}
 
   /**
-   * Build the render response for a release.
-   *
    * @throws ApiError when the release does not exist.
    */
   public async renderRelease(
@@ -73,8 +63,7 @@ export class DesignerPageService {
           title: release.title,
           artistName: release.artistName,
           tracks: trackRows,
-          // mapped field by field so database columns never leak into the
-          // protocol the design sees
+          // Mapped field by field so database columns never reach the design.
           price: pricing
             ? {
                 mode: pricing.mode,
@@ -84,16 +73,13 @@ export class DesignerPageService {
               }
             : UNPRICED,
         },
-        customization: this.customizationFor(releaseId),
+        customization: this.customization(),
       },
     };
   }
 
-  /**
-   * The artist's custom values for this release designer page.
-   */
-  private customizationFor(releaseId: string): DesignerPageCustomization {
-    void releaseId;
+  /** Fixed until the artist's stored slot values exist. */
+  private customization(): DesignerPageCustomization {
     return { tagline: 'pressed for the internet music exchange' };
   }
 }

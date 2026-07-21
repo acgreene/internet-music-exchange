@@ -1,19 +1,20 @@
 import { eq } from 'drizzle-orm';
 import { DatabaseService } from '../database-service';
-import { artists, releasePricing, type ReleasePricing, releases, releaseTracks, tracks } from '../tables';
+import {
+  artists,
+  releasePricing,
+  type ReleasePricing,
+  releases,
+  releaseTracks,
+  tracks,
+} from '../tables';
 
-/**
- * A release together with the name of the artist who made it.
- */
 export interface ReleaseTitleAndArtist {
   id: string;
   title: string;
   artistName: string;
 }
 
-/**
- * One entry of a release's tracklist, in running order.
- */
 export interface ReleaseTracklistItem {
   position: number;
   title: string;
@@ -21,19 +22,14 @@ export interface ReleaseTracklistItem {
 }
 
 /**
- * Reads and writes for the release aggregate — the release itself, its
- * tracklist and its pricing. Callers get typed results and never write their
- * own SQL, so the same query is not re-derived in every service that needs it.
+ * Queries for the release aggregate: the release, its tracklist and its
+ * pricing. Callers get typed results instead of re-deriving the same SQL.
  */
 export class ReleaseRepository {
   constructor(
     private readonly database: DatabaseService = DatabaseService.getInstance(),
   ) {}
 
-  /**
-   * A single release with its artist's name, or null when no such release
-   * exists.
-   */
   public async getTitleAndArtistName(
     releaseId: string,
   ): Promise<ReleaseTitleAndArtist | null> {
@@ -51,10 +47,7 @@ export class ReleaseRepository {
     return release ?? null;
   }
 
-  /**
-   * A release's tracklist in running order. Empty when the release has no
-   * tracks yet.
-   */
+  /** In running order. */
   public async getTrackList(
     releaseId: string,
   ): Promise<ReleaseTracklistItem[]> {
@@ -70,9 +63,6 @@ export class ReleaseRepository {
       .orderBy(releaseTracks.position);
   }
 
-  /**
-   * A release's pricing, or null when it has not been priced yet.
-   */
   public async getPricing(releaseId: string): Promise<ReleasePricing | null> {
     const [pricing] = await this.database.db
       .select()

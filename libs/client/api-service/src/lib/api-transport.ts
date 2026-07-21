@@ -27,21 +27,17 @@ type BodyArgs<R extends RouteWith<M>, M extends HttpMethod> =
 export type RouteParams = Record<string, string>;
 
 /**
- * Replace every `:name` placeholder in a route with its encoded value.
- *
- * @throws Error when the route still has an unfilled placeholder, so a missing
- * value fails here rather than as a confusing 404 from the server.
+ * @throws Error when a placeholder has no value, so it fails here rather than
+ * as a confusing 404 from the server.
  */
 function buildPath(route: ApiRoute, params?: RouteParams): string {
-  const path = route.replace(/:([A-Za-z0-9_]+)/g, (_match, name: string) => {
+  return route.replace(/:([A-Za-z0-9_]+)/g, (_match, name: string) => {
     const value = params?.[name];
     if (value === undefined) {
       throw new Error(`Missing route parameter "${name}" for ${route}`);
     }
     return encodeURIComponent(value);
   });
-
-  return path;
 }
 
 /**

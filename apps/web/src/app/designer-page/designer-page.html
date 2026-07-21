@@ -1,0 +1,9 @@
+@if (rendered(); as page) {
+  <ime-sandboxed-page-host
+    [bundleUrl]="page.bundleUrl"
+    [payload]="page.payload"
+    (purchaseRequested)="onPurchaseRequested()"
+  />
+} @else if (error(); as message) {
+  <p>{{ message }}</p>
+}
