@@ -57,6 +57,13 @@
       "when": 1784595366732,
       "tag": "0007_products_variants_and_images",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784595924273,
+      "tag": "0008_order_item_variants_and_bundles",
+      "breakpoints": true
     }
   ]
 }

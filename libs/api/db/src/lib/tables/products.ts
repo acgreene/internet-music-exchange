@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, index, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, index, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { artists } from './artists';
 import { currencyEnum } from './artist-payout-accounts';
@@ -70,6 +70,12 @@ export const products = pgTable(
     currency: currencyEnum('currency').notNull(),
 
     /**
+     * Whether buying this product also grants the buyer a digital entitlement to
+     * its linked release, i.e. "buy the vinyl, get the download" bundle.
+     */
+    includesDigital: boolean('includes_digital').notNull().default(false),
+
+    /**
      * Names of three variant axes, such as 'Size', 'Color'. Null means
      * the axis is unused. Each variant fills in the matching value columns.
      */
@@ -93,6 +99,11 @@ export const products = pgTable(
     check(
       'products_option_names_gap_free',
       sql`(${table.option1Name} IS NOT NULL OR ${table.option2Name} IS NULL) AND (${table.option2Name} IS NOT NULL OR ${table.option3Name} IS NULL)`,
+    ),
+    // a bundle needs a release to grant the digital download of
+    check(
+      'products_includes_digital_needs_release',
+      sql`NOT ${table.includesDigital} OR ${table.releaseId} IS NOT NULL`,
     ),
     pgPolicy('Catalog is publicly readable', {
       for: 'select',
