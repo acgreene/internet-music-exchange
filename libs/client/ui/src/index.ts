@@ -1,5 +1,3 @@
-export * from './lib/header/header';
-export * from './lib/marquee/retro-marquee';
-export * from './lib/taskbar/retro-taskbar';
-export * from './lib/window/retro-window';
-export * from './lib/window/window-manager';
+// The UI library is intentionally empty for now — shared client components
+// will be added here as the UI is rebuilt.
+export {};

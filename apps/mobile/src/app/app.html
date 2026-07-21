@@ -1,10 +1,1 @@
-<div class="desktop font-ui flex min-h-screen flex-col">
-  <ime-header
-    [apiStatus]="apiStatus()"
-    [user]="auth.user()"
-    (signOutSelected)="signOut()"
-  />
-  <ime-marquee [items]="tickerItems" />
-
-  <router-outlet></router-outlet>
-</div>
+<router-outlet></router-outlet>

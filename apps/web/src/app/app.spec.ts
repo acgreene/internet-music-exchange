@@ -3,17 +3,12 @@ import { provideRouter } from '@angular/router';
 import { App } from './app';
 
 describe('App', () => {
-  beforeEach(async () => {
+  it('creates', async () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideRouter([])],
     }).compileComponents();
-  });
-
-  it('renders the taskbar with the brand', async () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Internet Music Exchange');
+    expect(fixture.componentInstance).toBeTruthy();
   });
 });

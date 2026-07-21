@@ -23,8 +23,7 @@
       "@ime/logger": ["./libs/shared/logger/src/index.ts"],
       "@ime/auth": ["./libs/api/auth/src/index.ts"],
       "@ime/env": ["./libs/api/env/src/index.ts"],
-      "@ime/client-env": ["./libs/client/env/src/index.ts"],
-      "@ime/feature-auth": ["./libs/client/feature-auth/src/index.ts"]
+      "@ime/client-env": ["./libs/client/env/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
