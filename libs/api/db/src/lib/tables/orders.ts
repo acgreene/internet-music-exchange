@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgPolicy, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, jsonb, pgPolicy, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
 import { users } from './users';
 
@@ -24,6 +24,14 @@ export const orders = pgTable(
     userId: uuid('user_id').references(() => users.id, {
       onDelete: 'set null',
     }),
+
+    /**
+     * Snapshot of the shipping address Stripe collected at checkout, for the
+     * artists to ship to. Null for a fully digital cart. The
+     * `purge_order_pii_on_user_delete` trigger clears it when the buyer's
+     * account is deleted (the same event that nulls `user_id`).
+     */
+    shippingAddress: jsonb('shipping_address'),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()

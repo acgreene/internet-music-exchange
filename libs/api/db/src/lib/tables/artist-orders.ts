@@ -25,13 +25,10 @@ export type ArtistOrderStatus =
 
 /**
  * One artist's portion of an order: everything in a cart from a single artist,
- * paid as one Stripe direct charge to that artist's connected account. Because
- * a multi-artist cart splits into one charge per artist, this is where
- * the amount, the currency, the payment status, and the PaymentIntent
- * live (shipping and fulfillment arrive in a later phase).
+ * paid as one Stripe direct charge to that artist's connected account, and
+ * shipped by that artist as one package.
  *
- * Written only by the API under `service_role`. Buyers can read their own
- * orders, and artist managers can read their artists sales.
+ * Buyers read their own through the parent order; managers read their sales.
  */
 export const artistOrders = pgTable(
   'artist_orders',
@@ -49,8 +46,17 @@ export const artistOrders = pgTable(
 
     status: artistOrderStatusEnum('status').notNull().default('pending'),
 
-    /** Total charged for this artist's items, in minor units (i.e., cents). */
+    /**
+     * Total charged, in minor units: items + shipping + tax. The API keeps it
+     * equal to that sum, item subtotal is `amount - shipping_amount - tax_amount`.
+     */
     amount: integer('amount').notNull(),
+
+    /** Shipping collected, in minor units. Zero for a digital-only order. */
+    shippingAmount: integer('shipping_amount').notNull().default(0),
+
+    /** Tax collected, computed by Stripe Tax and recorded here. */
+    taxAmount: integer('tax_amount').notNull().default(0),
 
     /** The currency of the order. */
     currency: currencyEnum('currency').notNull(),
@@ -79,6 +85,11 @@ export const artistOrders = pgTable(
     // an artist order is a real charge; free acquisitions are entitlements,
     // not orders, so the amount is always positive
     check('artist_orders_amount_positive', sql`${table.amount} > 0`),
+    check(
+      'artist_orders_shipping_not_negative',
+      sql`${table.shippingAmount} >= 0`,
+    ),
+    check('artist_orders_tax_not_negative', sql`${table.taxAmount} >= 0`),
     pgPolicy('Buyers can read their own artist orders', {
       for: 'select',
       to: authenticatedRole,

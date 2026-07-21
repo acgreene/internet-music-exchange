@@ -64,6 +64,20 @@
       "when": 1784595924273,
       "tag": "0008_order_item_variants_and_bundles",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784597397169,
+      "tag": "0009_fulfillment_shipping_and_tax",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784597429791,
+      "tag": "0010_purge_order_pii_on_user_delete",
+      "breakpoints": true
     }
   ]
 }

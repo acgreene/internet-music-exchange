@@ -18,3 +18,5 @@ export * from './entitlements';
 export * from './products';
 export * from './product-variants';
 export * from './product-images';
+export * from './product-shipping-rates';
+export * from './fulfillments';
