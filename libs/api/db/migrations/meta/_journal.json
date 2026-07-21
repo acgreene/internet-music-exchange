@@ -50,6 +50,13 @@
       "when": 1784592138618,
       "tag": "0006_orders_artist_orders_and_order_items",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784595366732,
+      "tag": "0007_products_variants_and_images",
+      "breakpoints": true
     }
   ]
 }

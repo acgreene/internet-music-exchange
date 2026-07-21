@@ -15,3 +15,6 @@ export * from './orders';
 export * from './artist-orders';
 export * from './order-items';
 export * from './entitlements';
+export * from './products';
+export * from './product-variants';
+export * from './product-images';
