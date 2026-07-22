@@ -7,6 +7,8 @@ const mockPing = vi.fn();
 
 vi.mock('@ime/db', () => ({
   DatabaseService: { getInstance: vi.fn() },
+  // Constructed eagerly down the router graph by ArtistPageService.
+  DatabaseRepository: vi.fn(),
 }));
 
 const mockAuthService = {

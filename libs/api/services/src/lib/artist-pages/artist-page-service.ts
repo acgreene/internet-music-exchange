@@ -1,4 +1,4 @@
-import { ReleaseRepository } from '@ime/db';
+import { DatabaseRepository } from '@ime/db';
 import {
   ApiError,
   ApiErrorKind,
@@ -8,8 +8,13 @@ import {
 } from '@ime/models';
 import { CloudStorageService } from '../storage';
 
-/** Placeholder until designs are a stored record with their own bundle keys. */
+/** The design a release falls back to until its artist picks one. */
 export const TRACER_DESIGN_BUNDLE_KEY = 'tracer/sample-design/index.html';
+
+/** The slot values that go with the fallback design. */
+const TRACER_DESIGN_CUSTOMIZATION: ArtistPageCustomization = {
+  tagline: 'pressed for the internet music exchange',
+};
 
 const BUNDLE_URL_EXPIRY_SECONDS = 300;
 
@@ -29,7 +34,7 @@ const UNPRICED: ArtistPagePrice = {
 export class ArtistPageService {
   constructor(
     private readonly storage: CloudStorageService = new CloudStorageService(),
-    private readonly releases: ReleaseRepository = new ReleaseRepository(),
+    private readonly db: DatabaseRepository = new DatabaseRepository(),
   ) {}
 
   /**
@@ -37,21 +42,21 @@ export class ArtistPageService {
    */
   public async renderRelease(
     releaseId: string,
-    bundleKey: string = TRACER_DESIGN_BUNDLE_KEY,
   ): Promise<ArtistPageRenderResponse> {
-    const release = await this.releases.getTitleAndArtistName(releaseId);
+    const release = await this.db.releases.getWithArtist(releaseId);
 
     if (!release) {
       throw new ApiError(ApiErrorKind.Http, 404, 'Release not found.');
     }
 
-    const [trackRows, pricing] = await Promise.all([
-      this.releases.getTrackList(releaseId),
-      this.releases.getPricing(releaseId),
+    const [trackRows, pricing, design] = await Promise.all([
+      this.db.releases.listTracks(releaseId),
+      this.db.releases.getPricing(releaseId),
+      this.db.artistPages.getReleasePage(releaseId),
     ]);
 
     const bundleUrl = await this.storage.getObjectSignedUrl(
-      bundleKey,
+      design?.objectKey ?? TRACER_DESIGN_BUNDLE_KEY,
       BUNDLE_URL_EXPIRY_SECONDS,
     );
 
@@ -62,8 +67,12 @@ export class ArtistPageService {
           id: release.id,
           title: release.title,
           artistName: release.artistName,
-          tracks: trackRows,
           // Mapped field by field so database columns never reach the design.
+          tracks: trackRows.map((track) => ({
+            position: track.position,
+            title: track.title,
+            durationMs: track.durationMs,
+          })),
           price: pricing
             ? {
                 mode: pricing.mode,
@@ -73,13 +82,8 @@ export class ArtistPageService {
               }
             : UNPRICED,
         },
-        customization: this.customization(),
+        customization: design?.customization ?? TRACER_DESIGN_CUSTOMIZATION,
       },
     };
-  }
-
-  /** Fixed until the artist's stored slot values exist. */
-  private customization(): ArtistPageCustomization {
-    return { tagline: 'pressed for the internet music exchange' };
   }
 }

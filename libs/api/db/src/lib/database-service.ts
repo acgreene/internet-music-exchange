@@ -5,9 +5,15 @@ import { env } from '@ime/env';
 import * as schema from './schema';
 
 /**
- * The Drizzle database handle, typed against the full schema.
+ * The Drizzle database handle typed against our full schema.
  */
-type Db = PostgresJsDatabase<typeof schema>;
+export type Db = PostgresJsDatabase<typeof schema>;
+
+/**
+ * The handle a transaction callback runs its queries through. Repository
+ * helpers take one so several writes can share a single transaction.
+ */
+export type DbTransaction = Parameters<Parameters<Db['transaction']>[0]>[0];
 
 /**
  * Singleton database service, creates an instance of the database connection
