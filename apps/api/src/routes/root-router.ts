@@ -1,6 +1,6 @@
 import { logger } from 'hono/logger';
 import { AuthService } from '@ime/services';
-import { Logger } from '@ime/logger';
+import { Logger } from '@ime/utils';
 import { UsersRouter } from './users/users-router';
 import { AuthRouter } from './auth';
 import { ArtistPagesRouter } from './artist-pages';

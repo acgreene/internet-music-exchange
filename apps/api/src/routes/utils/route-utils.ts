@@ -1,7 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import type { z } from 'zod';
 import type { Context } from 'hono';
-import { Logger } from '@ime/logger';
+import { Logger } from '@ime/utils';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 import { HTTPException } from 'hono/http-exception';
 import { ApiError } from '@ime/models';

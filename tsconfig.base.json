@@ -20,11 +20,11 @@
       "@ime/db": ["./libs/api/db/src/index.ts"],
       "@ime/testing": ["./libs/shared/testing/src/index.ts"],
       "@ime/api-client": ["./libs/client/api-client/src/index.ts"],
-      "@ime/logger": ["./libs/shared/logger/src/index.ts"],
       "@ime/services": ["./libs/api/services/src/index.ts"],
       "@ime/env": ["./libs/api/env/src/index.ts"],
       "@ime/client-artist-pages": ["./libs/client/artist-pages/src/index.ts"],
-      "@ime/client-env": ["./libs/client/env/src/index.ts"]
+      "@ime/client-env": ["./libs/client/env/src/index.ts"],
+      "@ime/utils": ["./libs/shared/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

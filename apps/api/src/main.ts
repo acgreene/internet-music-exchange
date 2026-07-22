@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server';
 import { env } from '@ime/env';
-import { Logger } from '@ime/logger';
+import { Logger } from '@ime/utils';
 import { RootRouter } from './routes/root-router';
 
 const log = new Logger('api');
