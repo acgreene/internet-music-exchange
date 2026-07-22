@@ -3,11 +3,11 @@ import { ackSchema } from './general';
 import { HttpMethod } from './http-method';
 import {
   ApiRoute,
-  designerPageRenderResponseSchema,
+  artistPageRenderResponseSchema,
   healthResponseSchema,
   sessionSchema,
   signInRequestSchema,
-  signUpRequestSchema,
+  signUpRequestSchema
 } from './routes';
 
 /**
@@ -50,8 +50,8 @@ export const API_CONTRACTS = {
   [ApiRoute.SignOut]: {
     [HttpMethod.Post]: { response: ackSchema },
   },
-  [ApiRoute.DesignerPageForRelease]: {
-    [HttpMethod.Get]: { response: designerPageRenderResponseSchema },
+  [ApiRoute.ArtistReleasePage]: {
+    [HttpMethod.Get]: { response: artistPageRenderResponseSchema },
   },
 } as const satisfies Record<ApiRoute, Partial<Record<HttpMethod, ApiContract>>>;
 

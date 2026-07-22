@@ -78,6 +78,13 @@
       "when": 1784597429791,
       "tag": "0010_purge_order_pii_on_user_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784683223696,
+      "tag": "0011_init_artist_pages_tables",
+      "breakpoints": true
     }
   ]
 }

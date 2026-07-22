@@ -31,5 +31,5 @@ export enum ApiRoute {
   /**
    * Everything needed to render a release within a designer page.
    */
-  DesignerPageForRelease = '/api/designer-pages/releases/:releaseId',
+  ArtistReleasePage = '/api/artist-pages/releases/:releaseId',
 }

@@ -2,9 +2,9 @@ import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
   {
-    path: 'designer-pages/releases/:releaseId',
+    path: 'artist-pages/releases/:releaseId',
     loadComponent: () =>
-      import('./designer-page/designer-page').then((m) => m.DesignerPage),
-    title: 'Designer page — Internet Music Exchange',
+      import('./artist-page/artist-page.component').then((m) => m.ArtistPage),
+    title: 'Artist page // Internet Music Exchange',
   },
 ];

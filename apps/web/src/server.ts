@@ -15,7 +15,7 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 // This server only serves static assets and renders Angular. REST endpoints
-// belong in apps/api; clients reach them through @ime/api-service.
+// belong in apps/api; clients reach them through @ime/api-client.
 app.use(
   express.static(browserDistFolder, {
     maxAge: '1y',

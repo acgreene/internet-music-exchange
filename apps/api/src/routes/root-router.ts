@@ -3,7 +3,7 @@ import { AuthService } from '@ime/services';
 import { Logger } from '@ime/logger';
 import { UsersRouter } from './users/users-router';
 import { AuthRouter } from './auth';
-import { DesignerPagesRouter } from './designer-pages';
+import { ArtistPagesRouter } from './artist-pages';
 import { HealthRouter } from './health';
 import { AbstractRouter } from './abstract-router';
 
@@ -30,7 +30,7 @@ export class RootRouter extends AbstractRouter {
     const usersRouter = new UsersRouter(this.authService).router;
     this.routes.route('/', usersRouter);
 
-    const designerPagesRouter = new DesignerPagesRouter().router;
+    const designerPagesRouter = new ArtistPagesRouter().router;
     this.routes.route('/', designerPagesRouter);
   }
 }

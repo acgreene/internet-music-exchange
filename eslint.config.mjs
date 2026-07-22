@@ -29,6 +29,7 @@ export default [
               onlyDependOnLibsWithTags: ['scope:shared'],
             },
           ],
+          allowCircularSelfDependency: false,
         },
       ],
     },

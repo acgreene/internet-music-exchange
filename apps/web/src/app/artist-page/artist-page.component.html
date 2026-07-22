@@ -1,0 +1,9 @@
+@if (rendered(); as page) {
+  <artist-page-host
+    (purchaseRequested)="onPurchaseRequested()"
+    [bundleUrl]="page.bundleUrl"
+    [payload]="page.payload"
+  />
+} @else if (error(); as message) {
+  <p>{{ message }}</p>
+}
