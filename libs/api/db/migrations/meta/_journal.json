@@ -99,6 +99,13 @@
       "when": 1792610768227,
       "tag": "0013_api_only_manager_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792611998152,
+      "tag": "0014_designs_versions_and_licenses",
+      "breakpoints": true
     }
   ]
 }

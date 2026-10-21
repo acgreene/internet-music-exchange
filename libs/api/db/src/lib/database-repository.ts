@@ -1,6 +1,6 @@
 import {
-  ArtistPageRepository,
   ArtistRepository,
+  DesignRepository,
   EntitlementRepository,
   ModerationRepository,
   OrderRepository,
@@ -14,8 +14,8 @@ import {
 import { DatabaseService, type Db } from './database-service';
 
 export class DatabaseRepository {
-  public readonly artistPages: ArtistPageRepository;
   public readonly artists: ArtistRepository;
+  public readonly designs: DesignRepository;
   public readonly entitlements: EntitlementRepository;
   public readonly moderation: ModerationRepository;
   public readonly orders: OrderRepository;
@@ -27,8 +27,8 @@ export class DatabaseRepository {
   public readonly users: UserRepository;
 
   constructor(db: Db = DatabaseService.getInstance().db) {
-    this.artistPages = new ArtistPageRepository(db);
     this.artists = new ArtistRepository(db);
+    this.designs = new DesignRepository(db);
     this.entitlements = new EntitlementRepository(db);
     this.moderation = new ModerationRepository(db);
     this.orders = new OrderRepository(db);

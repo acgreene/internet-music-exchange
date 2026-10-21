@@ -1,9 +1,9 @@
 import { and, desc, eq } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
-  type ArtistPayoutAccount,
-  artistPayoutAccounts,
   type Currency,
+  type PayoutAccount,
+  payoutAccounts,
   type StripeEvent,
   stripeEvents,
 } from '../tables';
@@ -24,8 +24,9 @@ export interface ClaimEventParams {
 const DEFAULT_EVENT_LIMIT = 50;
 
 /**
- * Queries for the Stripe edge: each artist's connected account and what it is
- * cleared to do, and the webhook events already handled.
+ * Queries for the Stripe edge: each seller's connected account and what it is
+ * cleared to do, and the webhook events already handled. A seller is an artist
+ * or a designer.
  */
 export class PaymentRepository {
   constructor(private readonly db: Db) {}
@@ -39,11 +40,30 @@ export class PaymentRepository {
    */
   public async getAccountByArtistId(
     artistId: string,
-  ): Promise<ArtistPayoutAccount | null> {
+  ): Promise<PayoutAccount | null> {
     const [account] = await this.db
       .select()
-      .from(artistPayoutAccounts)
-      .where(eq(artistPayoutAccounts.artistId, artistId))
+      .from(payoutAccounts)
+      .where(eq(payoutAccounts.artistId, artistId))
+      .limit(1);
+
+    return account ?? null;
+  }
+
+  /**
+   * Read a designer's connected account and its onboarding state.
+   *
+   * @param designerUserId - The id of the designer.
+   * @returns The payout account row, or null when the designer has not started
+   * onboarding.
+   */
+  public async getAccountByDesignerUserId(
+    designerUserId: string,
+  ): Promise<PayoutAccount | null> {
+    const [account] = await this.db
+      .select()
+      .from(payoutAccounts)
+      .where(eq(payoutAccounts.designerUserId, designerUserId))
       .limit(1);
 
     return account ?? null;
@@ -57,11 +77,11 @@ export class PaymentRepository {
    */
   public async getAccountByStripeAccountId(
     stripeAccountId: string,
-  ): Promise<ArtistPayoutAccount | null> {
+  ): Promise<PayoutAccount | null> {
     const [account] = await this.db
       .select()
-      .from(artistPayoutAccounts)
-      .where(eq(artistPayoutAccounts.stripeAccountId, stripeAccountId))
+      .from(payoutAccounts)
+      .where(eq(payoutAccounts.stripeAccountId, stripeAccountId))
       .limit(1);
 
     return account ?? null;
@@ -75,17 +95,41 @@ export class PaymentRepository {
    * @param stripeAccountId - The connected account identifier from Stripe.
    * @returns The stored payout account row.
    */
-  public async upsertAccount(
+  public async upsertArtistAccount(
     artistId: string,
     stripeAccountId: string,
-  ): Promise<ArtistPayoutAccount> {
+  ): Promise<PayoutAccount> {
     const [account] = await this.db
-      .insert(artistPayoutAccounts)
+      .insert(payoutAccounts)
       .values({ artistId, stripeAccountId })
       // the capability flags stay as Stripe last reported them until it says
       // otherwise
       .onConflictDoUpdate({
-        target: artistPayoutAccounts.artistId,
+        target: payoutAccounts.artistId,
+        set: { stripeAccountId, updatedAt: new Date() },
+      })
+      .returning();
+
+    return account;
+  }
+
+  /**
+   * Record the connected account a designer is onboarding with, replacing the
+   * one they had if they started over.
+   *
+   * @param designerUserId - The id of the designer onboarding.
+   * @param stripeAccountId - The connected account identifier from Stripe.
+   * @returns The stored payout account row.
+   */
+  public async upsertDesignerAccount(
+    designerUserId: string,
+    stripeAccountId: string,
+  ): Promise<PayoutAccount> {
+    const [account] = await this.db
+      .insert(payoutAccounts)
+      .values({ designerUserId, stripeAccountId })
+      .onConflictDoUpdate({
+        target: payoutAccounts.designerUserId,
         set: { stripeAccountId, updatedAt: new Date() },
       })
       .returning();
@@ -105,7 +149,7 @@ export class PaymentRepository {
     params: SyncAccountParams,
   ): Promise<void> {
     await this.db
-      .update(artistPayoutAccounts)
+      .update(payoutAccounts)
       .set({
         chargesEnabled: params.chargesEnabled,
         payoutsEnabled: params.payoutsEnabled,
@@ -113,7 +157,7 @@ export class PaymentRepository {
         defaultCurrency: params.defaultCurrency ?? null,
         updatedAt: new Date(),
       })
-      .where(eq(artistPayoutAccounts.stripeAccountId, stripeAccountId));
+      .where(eq(payoutAccounts.stripeAccountId, stripeAccountId));
   }
 
   /**
@@ -123,14 +167,35 @@ export class PaymentRepository {
    * @returns True when Stripe has cleared their account to accept charges.
    * Payouts being held for review does not stop a sale.
    */
-  public async canSell(artistId: string): Promise<boolean> {
+  public async canArtistSell(artistId: string): Promise<boolean> {
     const [account] = await this.db
-      .select({ artistId: artistPayoutAccounts.artistId })
-      .from(artistPayoutAccounts)
+      .select({ artistId: payoutAccounts.artistId })
+      .from(payoutAccounts)
       .where(
         and(
-          eq(artistPayoutAccounts.artistId, artistId),
-          eq(artistPayoutAccounts.chargesEnabled, true),
+          eq(payoutAccounts.artistId, artistId),
+          eq(payoutAccounts.chargesEnabled, true),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(account);
+  }
+
+  /**
+   * Report whether a designer may take money for paid designs yet.
+   *
+   * @param designerUserId - The id of the designer.
+   * @returns True when Stripe has cleared their account to accept charges.
+   */
+  public async canDesignerSell(designerUserId: string): Promise<boolean> {
+    const [account] = await this.db
+      .select({ id: payoutAccounts.id })
+      .from(payoutAccounts)
+      .where(
+        and(
+          eq(payoutAccounts.designerUserId, designerUserId),
+          eq(payoutAccounts.chargesEnabled, true),
         ),
       )
       .limit(1);

@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { check, index, integer, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
 import { artists } from './artists';
-import { currencyEnum } from './artist-payout-accounts';
+import { currencyEnum } from './payout-accounts';
 import { orders } from './orders';
 
 /**

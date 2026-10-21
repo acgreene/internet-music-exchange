@@ -52,7 +52,7 @@ export class ArtistPageService {
     const [trackRows, pricing, design] = await Promise.all([
       this.db.releases.listTracks(releaseId),
       this.db.releases.getPricing(releaseId),
-      this.db.artistPages.getReleasePage(releaseId),
+      this.db.designs.getReleaseDesign(releaseId),
     ]);
 
     const bundleUrl = await this.storage.getObjectSignedUrl(

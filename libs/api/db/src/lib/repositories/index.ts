@@ -1,5 +1,5 @@
-export * from './artist-page-repository';
 export * from './artist-repository';
+export * from './design-repository';
 export * from './entitlement-repository';
 export * from './moderation-repository';
 export * from './order-repository';
