@@ -7,6 +7,10 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createWriteStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
+import type { Readable } from 'node:stream';
 import { env } from '@ime/env';
 
 /**
@@ -123,6 +127,28 @@ export class CloudStorageService {
         ContentType: contentType,
       }),
     );
+  }
+
+  /**
+   * Download an object to a local file, streaming it so large files never sit
+   * in memory.
+   */
+  public async downloadToFile(key: string, path: string): Promise<void> {
+    const object = await this.client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
+    await pipeline(object.Body as Readable, createWriteStream(path));
+  }
+
+  /**
+   * Upload a local file under a key with the given content type.
+   */
+  public async uploadFile(
+    key: string,
+    path: string,
+    contentType: string,
+  ): Promise<void> {
+    await this.uploadObject(key, await readFile(path), contentType);
   }
 
   /**

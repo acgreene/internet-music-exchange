@@ -1,0 +1,63 @@
+{
+  "name": "transcoder",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/transcoder/src",
+  "projectType": "application",
+  "tags": ["scope:api", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/transcoder",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/transcoder/src/main.ts",
+        "tsConfig": "apps/transcoder/tsconfig.app.json",
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "transcoder:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "transcoder:build:development"
+        },
+        "production": {
+          "buildTarget": "transcoder:build:production"
+        }
+      }
+    },
+    "typecheck": {
+      "options": {
+        "commands": ["tsc --noEmit -p tsconfig.app.json"]
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, ne, notExists } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { Db } from '../database-service';
 import {
   type AudioFormat,
@@ -401,6 +402,43 @@ export class ReleaseAssetRepository {
       .returning();
 
     return audioFile;
+  }
+
+  /**
+   * List lossless originals that have no streaming copy yet, oldest first, for
+   * the transcoding worker. MP3 originals stream as they are and never need
+   * one.
+   *
+   * @param limit - The maximum number of files to return.
+   * @returns The original audio file rows waiting on a copy.
+   */
+  public async listOriginalsNeedingStreamCopy(
+    limit: number,
+  ): Promise<TrackAudioFile[]> {
+    const streamCopies = alias(trackAudioFiles, 'stream_copies');
+
+    return this.db
+      .select()
+      .from(trackAudioFiles)
+      .where(
+        and(
+          eq(trackAudioFiles.variant, 'original'),
+          ne(trackAudioFiles.format, 'mp3'),
+          notExists(
+            this.db
+              .select({ id: streamCopies.id })
+              .from(streamCopies)
+              .where(
+                and(
+                  eq(streamCopies.trackId, trackAudioFiles.trackId),
+                  eq(streamCopies.variant, 'stream'),
+                ),
+              ),
+          ),
+        ),
+      )
+      .orderBy(asc(trackAudioFiles.createdAt))
+      .limit(limit);
   }
 
   /**

@@ -22,6 +22,10 @@ const envSchema = z.object({
   R2_ACCESS_KEY_ID: z.string().min(1),
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET: z.string().min(1),
+
+  // Binaries the transcoding worker runs. Found on PATH unless set.
+  FFMPEG_PATH: z.string().min(1).default('ffmpeg'),
+  FFPROBE_PATH: z.string().min(1).default('ffprobe'),
 });
 
 const parsed = envSchema.safeParse(process.env);

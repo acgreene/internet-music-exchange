@@ -6,3 +6,4 @@ export * from './lib/artists';
 export * from './lib/users';
 export * from './lib/releases';
 export * from './lib/funding';
+export * from './lib/transcoding';
