@@ -24,12 +24,12 @@ All three produce the same thing: permanent ownership.
 ### The library
 
 - A listener has a library of every release they own, newest acquisition first, showing the release, its artist, and how it was acquired.
-- From the library a listener can stream any owned release and download it in full quality.
+- From the library a listener can stream any owned release and download its original files.
 
 ### What ownership unlocks
 
 - **Streaming**: an owner can stream every track on a release, not just its previews.
-- **Downloading**: an owner can download the full-quality master of a release.
+- **Downloading**: an owner can download the original audio files of a release, exactly as the artist uploaded them (see [Releases & Music](./releases.md)).
 - **Gated assets**: an owner can access assets attached to the release that are reserved for buyers (e.g. hi-res liner notes, bonus material).
 
 ### Gifting
@@ -38,14 +38,19 @@ All three produce the same thing: permanent ownership.
 
 ## Mobile app
 
-- A listener has full access to their library: browse owned releases, stream them, and download them for offline listening.
+- A listener has full access to their library: browse owned releases, stream them, and save them for offline listening in the app.
+- Offline listening uses the streaming copy, saved inside the app. Downloading original files is done on the web.
 - Gifting is a manager action and is **not** available on mobile.
 
 ## Rules & constraints
 
-- Ownership is permanent. Archiving or withdrawing a release from sale never removes it from someone who already owns it.
-- A listener owns a release at most once; acquiring it again (e.g. claiming a free copy of something already bought) does not create a second entitlement or disturb the original, the original grant stands, keeping the link to the purchase that paid for it.
-- A refund removes the entitlement that the purchase granted. Ownership acquired for free or as a gift is never touched by a refund.
+- Ownership is permanent. Archiving a release, withdrawing it from sale, or its artist's hosting contributions lapsing never removes it from someone who already owns it. IME keeps owned files online even after a seller leaves (see the ownership guarantee in [Funding](./funding.md)).
+- Ownership is removed in only three cases:
+  - a refund of the purchase that granted it,
+  - a payment dispute the artist loses, which works like a refund,
+  - a final takedown of the release by platform admins, with the purchase refunded (see [Moderation](./moderation.md)).
+- Ownership acquired for free or as a gift is never touched by a refund or dispute.
+- A listener owns a release at most once; acquiring it again (e.g. claiming a free copy of something already bought) does not create a second entitlement or disturb the original. The original grant stands, keeping the link to the purchase that paid for it.
 - Every request to stream, download, or open a gated asset is checked against ownership first.
 
 ## Out of scope / future

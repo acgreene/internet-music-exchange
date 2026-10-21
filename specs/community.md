@@ -42,10 +42,11 @@ Social features connect listeners to the artists and releases they care about. T
 - A listener follows an artist at most once.
 - Comments carry an edited/original distinction so an edited comment can be told apart from its original.
 - Comment authorship is enforced: a listener can only edit or delete their own comments, though managers can remove comments on their artist as moderation.
+- Any signed-in user can report a comment, and platform admins can delete it or suspend its author (see [Moderation](./moderation.md)).
 
 ## Out of scope / future
 
 - Following other listeners, or any listener-to-listener social graph.
 - Replies / threaded comments, likes, or reactions.
-- Notifications and activity feeds beyond new-release following.
+- Notifications and activity feeds beyond new-release following. (Transactional emails, such as receipts and shipping notices, are covered in the domains that send them.)
 - Sharing and reposting.

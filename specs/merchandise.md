@@ -29,7 +29,7 @@ Alongside digital music, artists sell physical goods such as vinyl, CDs, cassett
 
 ### Images
 
-- A product has a gallery of photos, shown in order.
+- A product has a gallery of photos uploaded to IME, shown in order.
 - An image can be general to the product or specific to one variant.
 
 ### Shipping
@@ -54,6 +54,8 @@ Alongside digital music, artists sell physical goods such as vinyl, CDs, cassett
 - Archiving keeps a product and its variants intact for historical orders; it does not delete them. A product or variant that has sold cannot be deleted.
 - Every product is priced in the artist's single selling currency.
 - A digital-bundle product must be tied to the release whose download it grants.
+- A product can only be published once the artist's payment account can accept charges and their hosting costs are covered (see [Getting Paid](./getting-paid.md) and [Funding](./funding.md)).
+- A product comes off sale if its artist's hosting contributions lapse, and can be taken down by platform admins (see [Moderation](./moderation.md)).
 
 ## Out of scope / future
 

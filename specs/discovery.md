@@ -16,7 +16,7 @@ Discovery is how a listener finds something to listen to or buy. It is the liste
 - A listener can search for artists by name and releases by title.
 - Search returns published, publicly available results, with enough context to recognize each one (artist name, release title, cover art).
 - Finding an artist by their exact handle is also supported (see
-  [Accounts & Profiles](./accounts.md)).
+  [Artists & Management](./artists.md)).
 
 ### Browse
 
@@ -35,7 +35,7 @@ Discovery is how a listener finds something to listen to or buy. It is the liste
 
 ## Rules & constraints
 
-- Discovery only ever surfaces public content: published releases and products, and public artist profiles. Drafts and archived items never appear.
+- Discovery only ever surfaces public content: published releases and products, and public artist profiles. Drafts, archived items, items off sale because their hosting contributions lapsed, taken-down content, and suspended artists never appear.
 - Cover art and the artist name are always available for a public release, so discovery surfaces can always render a recognizable result.
 - Preview tracks let a listener sample a release from a discovery surface without owning it (see [Releases & Music](./releases.md)).
 

@@ -2,59 +2,67 @@
 
 ## Purpose
 
-Creative pages are IME's core differentiator. Instead of every artist's music sitting inside one house layout, a marketplace of **designs**, built by independent web developers, lets an artist pull a distinctive design onto a release and fill it with their own words and images. This domain covers the design marketplace, how an artist applies and customizes a design, and the surface designers use to build and publish designs.
+Creative pages are IME's core differentiator. Instead of every artist's music sitting inside one house layout, a marketplace of **designs**, built by independent web developers, lets an artist pull a distinctive design onto a release and fill it with their own words and images, the way vinyl brought musicians together with graphic artists and photographers. This domain covers the design marketplace, how an artist gets and customizes a design, and the surface designers use to build, price, and publish designs.
 
 ## Roles
 
-- **Designers (web developers)** build page designs and publish them to the marketplace.
-- **Managers** browse the marketplace and apply a design to their artist's releases, then fill in its content.
+- **Designers (web developers)** build designs and publish them, publicly on the marketplace or privately for a specific artist. Any signed-in user can be a designer.
+- **Managers** browse the marketplace, get designs for their artist, apply them to releases, and fill in their content.
 - **Listeners** view releases rendered through whichever design the artist chose.
+- **Platform admins** can take down designs that break the rules (see [Moderation](./moderation.md)).
 
 ## Concepts
 
-- A **design** is a self-contained page built by a designer, offered on the marketplace. Each design is built for a particular surface, currently a release page, and exposes named **slots** the artist fills in (text and image overrides).
-- Applying a design to a release stores the artist's slot values (their **customization**) alongside the chosen design. A release with no design applied falls back to a default layout.
-- Designs are third-party code and are rendered in a sandboxed, isolated context; they receive only the release data and the artist's customization, never the platform's internal data.
+- A **design** is a self-contained page built by a designer for a particular surface. At launch the only surface is the **release page**. A design exposes named **slots** the artist fills in with text and images.
+- A design has **versions**. Each published version is fixed; a designer improves a design by publishing a new version, and releases keep using the version they chose until their managers switch.
+- A design is either **public**, listed on the marketplace, or **private**, visible only to the artists the designer grants it to. Private designs are how commissioned work is delivered.
+- A design is priced like a release: **free**, **fixed**, or **name your price**, in the designer's selling currency.
+- Getting a design gives the artist a **license**: permanent use of that design, including every future version, on any of that artist's releases.
+- Applying a design to a release stores the chosen version and the artist's slot values (their **customization**). A release with no design falls back to the default layout.
+- Designs are third-party code. They are rendered in a sandboxed, isolated context and receive only the release's data and the artist's customization, never the platform's internal data.
 
 ## Web app designer surface
 
-- A designer can create a design, giving it a name, a description, and the surface it is built for, and upload its bundle.
-- A design starts as a **draft**, visible only to its creator, and is **published** to appear on the marketplace.
-- A designer can update a design's details and upload a revised bundle.
-- A designer can archive a design to withdraw it from the marketplace. Crucially, releases already using it keep rendering with it, archiving removes a design from sale, not from the pages that depend on it.
-- A designer can see how many releases use a design.
-- A design cannot be deleted while any release still renders with it.
+- A user can create a design, giving it a name, a description, and the surface it is built for, and upload its first version.
+- A design starts as a **draft**, visible only to its creator, and is **published** to make it available.
+- A designer can publish a new version by uploading a revised bundle. Earlier versions keep working for the releases that use them.
+- A designer can update a design's name, description, and price.
+- A designer can make a design private and grant it to specific artists, for example after a commission arranged and paid outside IME.
+- To sell paid designs, a designer connects a payment account the same way an artist does (see [Getting Paid](./getting-paid.md)). Designers are paid directly and IME takes no cut.
+- A designer pays their share of hosting costs at cost, like any seller (see [Funding](./funding.md)).
+- A designer can archive a design to withdraw it from the marketplace. Releases already using it, and artists already licensed for it, are unaffected.
+- A designer can see how many releases use each design and each version, and their design sales.
 
 ## Web app artist surface
 
-- A manager can browse the marketplace of published designs for a given surface, and search it by name.
-- A manager can apply a design to one of their releases.
-- A manager can fill in the design's slots with their own text and image URLs, and update those values later.
+- A manager can browse public designs for a surface and search them by name.
+- A manager can get a design for their artist: claim it if free, or buy it. Designs are bought directly from their marketplace page, not through the listener cart, and paid directly to the designer.
+- Private designs granted to the artist appear alongside the ones they have licensed.
+- A manager can apply a licensed design to one of the artist's releases, using its latest version.
+- A manager can fill in the design's slots with text and with images uploaded to IME, and update them later.
+- When a newer version of an applied design exists, managers are shown it and can switch to it. Nothing changes until they do.
 - A manager can remove a design from a release, returning it to the default layout.
 
 ## Mobile app
 
-- A listener viewing a release sees it rendered through the design the artist applied, with the artist's content, or the default layout when none is applied.
-- Browsing the marketplace, building designs, and applying designs are management/designer concerns and are **not** available on mobile.
+- A listener viewing a release sees it rendered through the design and version the artist applied, with the artist's content, or the default layout when none is applied.
+- Browsing the marketplace, building designs, and applying designs are **not** available on mobile.
 
 ## Rules & constraints
 
-- A design built for one surface can only be applied to that surface, a release-page design cannot be applied as, say, a home-page design.
+- Every design must show the artist name, release title, cover art, tracklist, and a way to buy or claim the release. Designs that hide any of these can be taken down.
+- Buying and claiming always happen in IME's own checkout, never inside a design.
+- A design built for one surface can only be applied to that surface.
 - A release renders with at most one design at a time; applying a new one replaces the previous choice while keeping the release's content.
-- A design in use cannot be pulled out from under the releases using it: it can be archived (hidden from the marketplace) but not deleted while referenced.
-- Rendered designs are untrusted and sandboxed; they are served their content and the design bundle through short-lived, signed access, and cannot reach anything else.
-
-## Open questions / pending decisions
-
-These depend on product and schema decisions not yet made:
-
-- **Home / artist pages.** The design surfaces include an artist **home page**, but only release pages can currently be dressed. Applying a design to an artist's home page needs a decision and supporting data before it can ship.
-- **Marketplace monetization.** Designs are described as offered on a marketplace, but how a designer is compensated, free, one-time purchase, revenue share, is undecided, and there is no purchase/licensing model for designs yet.
-- **Versioning.** Whether updating a published design's bundle should version the design (so artists opt in to updates) or replace it in place for everyone.
-- **Discovery.** Ranking, categories, previews, and featured designs on the marketplace.
+- Images in a design's slots are files uploaded to IME, never outside web addresses. A rendered design cannot reach anything beyond the release data, the artist's customization, and its own bundle, all served through short-lived, signed access.
+- A designer can never pull a design or version out from under the releases using it, and can never revoke a license. Archiving hides a design from the marketplace; a design or version in use cannot be deleted.
+- Only platform admins can remove a design that is in use, and only for breaking the rules. Affected releases fall back to the default layout and their managers are emailed (see [Moderation](./moderation.md)).
+- A license is permanent, like ownership of a release.
 
 ## Out of scope / future
 
-- Designer payouts and licensing (pending the monetization decision above).
+- Designs for artist home pages, music pages, and merch pages.
+- Marketplace categories, previews, ranking, and featured designs.
+- Commissions arranged and paid through IME.
 - Designs that span multiple releases or a full artist storefront.
-- A live design preview/editor inside IME.
+- A live design preview or editor inside IME.

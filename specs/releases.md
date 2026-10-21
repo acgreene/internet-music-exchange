@@ -16,14 +16,22 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 - A manager can create a release with a title and a kind (single, EP, LP, album, compilation, remaster, soundtrack, score, demo, other), and an optional original release date.
 - A new release starts as a **draft**, visible only to the artist's managers.
 - A manager can edit a release's title, kind, and release date.
+- A release is reachable at a readable address under its artist, `/artists/<handle>/<release>`, where the last part is made from the title and is unique within the artist.
 - A manager can delete a draft release. A release that has already sold cannot be deleted (its sales records reference it); it is archived instead.
 
 ### Tracks
 
 - A manager can add tracks to a release and arrange them into a running order.
 - A manager can reorder the tracklist, rename tracks, and remove a track from a release without deleting the track itself.
-- Each track can be marked as a **preview**, letting anyone stream it without owning the release — a way to put a few songs forward as a taste of the whole.
+- Each track can be marked as a **preview**, letting anyone stream it without owning the release: a way to put a few songs forward as a taste of the whole.
 - A track's duration is shown on the tracklist once known.
+
+### Audio
+
+- A manager uploads one audio file per track. Lossless formats (WAV, FLAC, AIFF) are encouraged; MP3 is also accepted.
+- The uploaded file is the track's **original**. It is what owners download, exactly as uploaded.
+- IME makes a **streaming copy** of each lossless upload at 256 kbps AAC. MP3 uploads are streamed as they are, since re-encoding a lossy file only loses quality.
+- The streaming copy is used for streaming and offline listening in the app. It is never offered as a download.
 
 ### Artwork & assets
 
@@ -43,7 +51,9 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 ### Publishing
 
 - A manager publishes a release to make it public and available to buy.
-- A release cannot be published until it has been priced.
+- A release cannot be published until it has cover art and a price.
+- A paid release cannot be published until the artist's payment account can accept charges (see [Getting Paid](./getting-paid.md)).
+- Nothing can be published until the artist's hosting costs are covered by a funded balance (see [Funding](./funding.md)).
 - A manager can archive a release to withdraw it from the public catalog. Listeners who already own it keep their access.
 
 ## Mobile app
@@ -51,19 +61,21 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 - A listener can browse the catalog, view an artist's discography, and open a release page.
 - A listener can stream preview tracks freely, and stream any track on a release they own.
 - A listener can buy or claim a release (see [Buying & Checkout](./buying.md)).
-- A listener can download releases they own in full quality, and play them from their library (see [Library & Ownership](./library.md)).
+- A listener can save releases they own for offline listening in the app (see [Library & Ownership](./library.md)).
 - Authoring, pricing, and publishing are **not** available on mobile.
 
 ## Rules & constraints
 
 - A draft release and its tracklist are visible only to the artist's managers; nothing reaches the public catalog before it is published.
-- A published release must always have a price on record.
+- A published release must always have cover art and a price on record.
 - Archiving is the withdrawal mechanism; deletion is reserved for drafts that have never sold.
 - Preview tracks are the only music a non-owner can stream in full; everything else requires ownership.
-- Streaming and downloading rights follow from entitlements, not from the release itself, see [Library & Ownership](./library.md).
+- Streaming and downloading rights follow from entitlements, not from the release itself (see [Library & Ownership](./library.md)).
+- A release comes off sale if its artist's hosting contributions lapse (see [Funding](./funding.md)), and can be taken down by platform admins (see [Moderation](./moderation.md)).
 
 ## Out of scope / future
 
-- Adaptive / multi-bitrate streaming beyond a single stream quality plus the full-quality master.
+- Adaptive or multi-bitrate streaming beyond the single streaming copy.
+- Downloads converted to other formats than the original upload.
 - Per-track sales (buying an individual song rather than the release).
 - A per-owner download/play log (deferred).
