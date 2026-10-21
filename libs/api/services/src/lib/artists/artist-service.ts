@@ -16,17 +16,13 @@ import {
   toHandle,
 } from '../naming/naming';
 import { CloudStorageService } from '../storage';
+import { FILE_EXTENSIONS, IMAGE_TYPES } from '../storage/media-types';
 
 const NAME_MAX_LENGTH = 100;
 const BIO_MAX_LENGTH = 2000;
 const LINK_LIMIT = 10;
 const LINK_LABEL_MAX_LENGTH = 50;
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-const IMAGE_EXTENSIONS: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
 const IMAGE_URL_EXPIRY_SECONDS = 3600;
 
 export interface CreateArtistInput {
@@ -244,8 +240,7 @@ export class ArtistService {
   ): Promise<string> {
     await this.access.requireManager(userId, artistId);
 
-    const extension = IMAGE_EXTENSIONS[upload.contentType];
-    if (!extension) {
+    if (!IMAGE_TYPES.includes(upload.contentType)) {
       throw new ApiError(
         ApiErrorKind.Http,
         HttpStatus.BadRequest,
@@ -260,7 +255,7 @@ export class ArtistService {
       );
     }
 
-    const objectKey = `artists/${artistId}/${kind}-${randomUUID()}.${extension}`;
+    const objectKey = `artists/${artistId}/${kind}-${randomUUID()}.${FILE_EXTENSIONS[upload.contentType]}`;
     await this.storage.uploadObject(objectKey, upload.body, upload.contentType);
 
     const replaced = await this.db.artists.setImage({

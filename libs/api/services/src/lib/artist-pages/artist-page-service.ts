@@ -39,14 +39,22 @@ export class ArtistPageService {
   ) {}
 
   /**
-   * @throws ApiError when the release does not exist.
+   * @throws ApiError 404 unless the release is published by an artist who is
+   * not suspended or off sale.
    */
   public async renderRelease(
     releaseId: string,
   ): Promise<ArtistPageRenderResponse> {
     const release = await this.db.releases.getWithArtist(releaseId);
+    const artist = release && (await this.db.artists.getById(release.artistId));
 
-    if (!release) {
+    if (
+      !release ||
+      release.status !== 'published' ||
+      !artist ||
+      artist.suspendedAt ||
+      artist.offSaleAt
+    ) {
       throw new ApiError(
         ApiErrorKind.Http,
         HttpStatus.NotFound,
