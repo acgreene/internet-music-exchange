@@ -2,9 +2,10 @@ import { DatabaseRepository } from '@ime/db';
 import {
   ApiError,
   ApiErrorKind,
+  HttpStatus,
   type ArtistPageCustomization,
   type ArtistPagePrice,
-  type ArtistPageRenderResponse
+  type ArtistPageRenderResponse,
 } from '@ime/models';
 import { CloudStorageService } from '../storage';
 
@@ -46,7 +47,11 @@ export class ArtistPageService {
     const release = await this.db.releases.getWithArtist(releaseId);
 
     if (!release) {
-      throw new ApiError(ApiErrorKind.Http, 404, 'Release not found.');
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Release not found.',
+      );
     }
 
     const [trackRows, pricing, design] = await Promise.all([

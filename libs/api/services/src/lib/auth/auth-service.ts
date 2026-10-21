@@ -7,7 +7,7 @@ import {
 } from '@supabase/supabase-js';
 import { DatabaseRepository } from '@ime/db';
 import { env } from '@ime/env';
-import { ApiError, ApiErrorKind } from '@ime/models';
+import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 
 /**
  * Supabase error codes that indicate rate limiting in addition to status 429.
@@ -63,16 +63,20 @@ export class AuthService {
       if (this.isRateLimited(error)) {
         throw new ApiError(
           ApiErrorKind.Http,
-          429,
+          HttpStatus.TooManyRequests,
           'Too many sign-up attempts. Please try again later.',
         );
       }
-      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
+      throw new ApiError(
+        ApiErrorKind.Http,
+        error.status ?? HttpStatus.InternalServerError,
+        error.message,
+      );
     }
     if (!data.session) {
       throw new ApiError(
         ApiErrorKind.Http,
-        500,
+        HttpStatus.InternalServerError,
         'Sign-up did not return a session; is email confirmation enabled?',
       );
     }
@@ -94,11 +98,15 @@ export class AuthService {
       if (this.isRateLimited(error)) {
         throw new ApiError(
           ApiErrorKind.Http,
-          429,
+          HttpStatus.TooManyRequests,
           'Too many login attempts. Please try again later.',
         );
       }
-      throw new ApiError(ApiErrorKind.Http, 401, 'Invalid email or password.');
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Unauthorized,
+        'Invalid email or password.',
+      );
     }
     return data.session;
   }
@@ -109,7 +117,11 @@ export class AuthService {
   public async signOut(accessToken: string): Promise<void> {
     const { error } = await this.adminClient.auth.admin.signOut(accessToken);
     if (error) {
-      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
+      throw new ApiError(
+        ApiErrorKind.Http,
+        error.status ?? HttpStatus.InternalServerError,
+        error.message,
+      );
     }
   }
 
@@ -119,7 +131,11 @@ export class AuthService {
   public async getUser(accessToken: string): Promise<SupabaseUser> {
     const { data, error } = await this.publicClient.auth.getUser(accessToken);
     if (error) {
-      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
+      throw new ApiError(
+        ApiErrorKind.Http,
+        error.status ?? HttpStatus.InternalServerError,
+        error.message,
+      );
     }
     return data.user;
   }
@@ -133,14 +149,18 @@ export class AuthService {
       const names = soleArtists.map((artist) => artist.name).join(', ');
       throw new ApiError(
         ApiErrorKind.Http,
-        409,
+        HttpStatus.Conflict,
         `You are the only manager of ${names}. Add another manager or delete the artist before deleting your account.`,
       );
     }
 
     const { error } = await this.adminClient.auth.admin.deleteUser(userId);
     if (error) {
-      throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
+      throw new ApiError(
+        ApiErrorKind.Http,
+        error.status ?? HttpStatus.InternalServerError,
+        error.message,
+      );
     }
   }
 
@@ -149,7 +169,7 @@ export class AuthService {
    */
   private isRateLimited(error: SupabaseAuthError): boolean {
     return (
-      error.status === 429 ||
+      error.status === HttpStatus.TooManyRequests ||
       (typeof error.code === 'string' && RATE_LIMITED_CODES.has(error.code))
     );
   }

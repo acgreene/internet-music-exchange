@@ -1,6 +1,7 @@
 import { createMiddleware } from 'hono/factory';
 import type { AuthService } from '@ime/services';
-import { RouteResponse, RouteUtils } from '../utils';
+import { HttpStatus } from '@ime/models';
+import { RouteUtils } from '../utils';
 
 export class AuthMiddleware {
   constructor(private readonly authService: AuthService) {}
@@ -11,7 +12,7 @@ export class AuthMiddleware {
       const token = routeUtils.getBearerToken();
       if (!token) {
         return routeUtils.respond(
-          RouteResponse.Unauthorized,
+          HttpStatus.Unauthorized,
           'Authentication token missing.',
         );
       }

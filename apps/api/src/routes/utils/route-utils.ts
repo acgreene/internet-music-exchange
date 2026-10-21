@@ -4,15 +4,10 @@ import type { Context } from 'hono';
 import { Logger } from '@ime/utils';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 import { HTTPException } from 'hono/http-exception';
-import { ApiError } from '@ime/models';
+import { ApiError, HttpStatus } from '@ime/models';
 import type { User } from '@supabase/supabase-js';
 
 const log = new Logger('api');
-
-export enum RouteResponse {
-  BadRequest = 400,
-  Unauthorized = 401,
-}
 
 export class RouteUtils {
   constructor(private readonly context: Context) {}
@@ -25,10 +20,7 @@ export class RouteUtils {
   public static validateJsonBody<T extends z.ZodType>(schema: T) {
     return zValidator('json', schema, (result, c) => {
       if (!result.success) {
-        return c.json(
-          { error: 'Invalid request body' },
-          RouteResponse.BadRequest,
-        );
+        return c.json({ error: 'Invalid request body' }, HttpStatus.BadRequest);
       }
       return undefined;
     });
@@ -38,18 +30,22 @@ export class RouteUtils {
     if (error instanceof ApiError) {
       return c.json(
         { error: error.message },
-        (error.status ?? 500) as ContentfulStatusCode,
+        (error.status ??
+          HttpStatus.InternalServerError) as ContentfulStatusCode,
       );
     }
     if (error instanceof HTTPException) {
       return error.getResponse();
     }
     log.error('Unhandled route error', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    return c.json(
+      { error: 'Internal server error' },
+      HttpStatus.InternalServerError,
+    );
   }
 
-  public respond(kind: RouteResponse, message: string): Response {
-    return this.context.json({ error: message }, kind);
+  public respond(status: HttpStatus, message: string): Response {
+    return this.context.json({ error: message }, status);
   }
 
   public getBearerToken(): string | null {

@@ -1,5 +1,6 @@
 export * from './lib/schema';
 export * from './lib/database-service';
+export * from './lib/postgres-error-code';
 
 /**
  * Only export the master db repository class, which holds instances of all
