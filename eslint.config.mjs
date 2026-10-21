@@ -28,6 +28,21 @@ export default [
               sourceTag: 'scope:shared',
               onlyDependOnLibsWithTags: ['scope:shared'],
             },
+            // the database is reached only through other api libs, never
+            // straight from an app: apps may import every type of lib except
+            // `type:database`. (notDependOnLibsWithTags would also forbid it
+            // transitively, blocking apps from the services that wrap it.)
+            {
+              sourceTag: 'type:app',
+              onlyDependOnLibsWithTags: [
+                'type:data-access',
+                'type:feature',
+                'type:ui',
+                'type:util',
+                'type:models',
+                'type:testing',
+              ],
+            },
           ],
           allowCircularSelfDependency: false,
         },

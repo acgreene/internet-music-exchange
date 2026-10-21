@@ -1,5 +1,5 @@
 import { logger } from 'hono/logger';
-import { AuthService } from '@ime/services';
+import { AuthService, HealthService } from '@ime/services';
 import { Logger } from '@ime/utils';
 import { UsersRouter } from './users/users-router';
 import { AuthRouter } from './auth';
@@ -12,7 +12,10 @@ export class RootRouter extends AbstractRouter {
    * Owns the single auth service for the process and hands it to every router
    * that needs one, so all of them — and their auth middleware — share it.
    */
-  constructor(private readonly authService = new AuthService()) {
+  constructor(
+    private readonly authService = new AuthService(),
+    private readonly healthService = new HealthService(),
+  ) {
     super();
     this.register();
   }
@@ -24,7 +27,7 @@ export class RootRouter extends AbstractRouter {
     const authRouter = new AuthRouter(this.authService).router;
     this.routes.route('/', authRouter);
 
-    const healthRouter = new HealthRouter().router;
+    const healthRouter = new HealthRouter(this.healthService).router;
     this.routes.route('/', healthRouter);
 
     const usersRouter = new UsersRouter(this.authService).router;

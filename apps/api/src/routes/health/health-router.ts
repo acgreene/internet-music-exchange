@@ -1,16 +1,16 @@
 import { ApiRoute, type HealthResponse, HealthStatus } from '@ime/models';
+import type { HealthService } from '@ime/services';
 import { AbstractRouter } from '../abstract-router';
-import { DatabaseService } from '@ime/db';
 
 export class HealthRouter extends AbstractRouter {
-  constructor() {
+  constructor(private readonly healthService: HealthService) {
     super();
     this.register();
   }
 
   protected register() {
     this.routes.get(ApiRoute.Health, async (c) => {
-      const databaseOk = await DatabaseService.getInstance().ping();
+      const databaseOk = await this.healthService.isDatabaseReachable();
       const health: HealthResponse = {
         status: databaseOk ? HealthStatus.Ok : HealthStatus.Degraded,
         timestamp: new Date().toISOString(),
