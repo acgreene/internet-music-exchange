@@ -3,7 +3,7 @@ import {
   createClient,
   type Session as SupabaseSession,
   type SupabaseClient,
-  type User as SupabaseUser
+  type User as SupabaseUser,
 } from '@supabase/supabase-js';
 import { env } from '@ime/env';
 import { ApiError, ApiErrorKind } from '@ime/models';
@@ -31,17 +31,17 @@ export class AuthService {
     /**
      * Client bound to the publishable key for user-scoped operations.
      */
-    private readonly anonClient: SupabaseClient = createClient(
+    private readonly publicClient: SupabaseClient = createClient(
       env.SUPABASE_URL,
-      env.SUPABASE_ANON_KEY,
+      env.SUPABASE_PUBLISHABLE_KEY,
       STATELESS_AUTH_OPTIONS,
     ),
     /**
-     * Client bound to the service role key, for admin operations.
+     * Client bound to the secret key, for admin operations.
      */
     private readonly adminClient: SupabaseClient = createClient(
       env.SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY,
+      env.SUPABASE_SECRET_KEY,
       STATELESS_AUTH_OPTIONS,
     ),
   ) {}
@@ -53,7 +53,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<SupabaseSession> {
-    const { data, error } = await this.anonClient.auth.signUp({
+    const { data, error } = await this.publicClient.auth.signUp({
       email,
       password,
     });
@@ -84,7 +84,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<SupabaseSession> {
-    const { data, error } = await this.anonClient.auth.signInWithPassword({
+    const { data, error } = await this.publicClient.auth.signInWithPassword({
       email,
       password,
     });
@@ -115,7 +115,7 @@ export class AuthService {
    * Fetch the user behind the given access token, validating it in the process.
    */
   public async getUser(accessToken: string): Promise<SupabaseUser> {
-    const { data, error } = await this.anonClient.auth.getUser(accessToken);
+    const { data, error } = await this.publicClient.auth.getUser(accessToken);
     if (error) {
       throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);
     }

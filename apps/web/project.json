@@ -84,6 +84,15 @@
         "staticFilePath": "dist/apps/web/browser",
         "spa": true
       }
+    },
+    "typecheck": {
+      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }],
+      "options": {
+        "commands": [
+          "tsc --noEmit -p tsconfig.app.json",
+          "tsc --noEmit -p tsconfig.spec.json"
+        ]
+      }
     }
   }
 }

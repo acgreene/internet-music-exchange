@@ -15,7 +15,7 @@ const apiBaseUrl = z.union([z.literal(''), z.url()]);
  */
 export const clientEnvSchema = z.object({
   SUPABASE_URL: z.url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
+  SUPABASE_PUBLISHABLE_KEY: z.string().startsWith('sb_publishable_'),
   DEVELOPMENT_API_BASE_URL: apiBaseUrl,
   PRODUCTION_API_BASE_URL: apiBaseUrl,
 });

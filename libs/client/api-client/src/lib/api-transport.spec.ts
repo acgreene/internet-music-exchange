@@ -21,7 +21,7 @@ function makeTransport(accessToken: string | null = null) {
   const supabase = {
     auth: { getSession: async () => ({ data: { session } }) },
   };
-  return new ApiTransport(() => supabase as unknown as SupabaseClient);
+  return new ApiTransport(supabase as unknown as SupabaseClient);
 }
 
 /**

@@ -52,6 +52,15 @@
           "fields": ["extends", "files", "include"]
         }
       ]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "parallel": false
+      }
     }
   },
   "plugins": [

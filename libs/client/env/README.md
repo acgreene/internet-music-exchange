@@ -5,7 +5,7 @@ Validated environment variables for the client apps and libs.
 ```ts
 import { clientEnv } from '@ime/client-env';
 
-createClient(clientEnv.SUPABASE_URL, clientEnv.SUPABASE_ANON_KEY);
+createClient(clientEnv.SUPABASE_URL, clientEnv.SUPABASE_PUBLISHABLE_KEY);
 ```
 
 Browsers cannot read `.env` the way the API does, so the values are baked in at
@@ -29,7 +29,7 @@ so the list lives in exactly one place.
 
 Everything named in `clientEnvSchema` is compiled into the browser bundle and is
 public. `@ime/env` holds the API's variables, including secrets like
-`SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL`, which must never reach a client.
+`SUPABASE_SECRET_KEY` and `DATABASE_URL`, which must never reach a client.
 
 The two schemas are kept apart on purpose: sharing one would make it possible to
 expose a secret by adding a single line, with nothing failing to catch it. The

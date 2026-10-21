@@ -33,7 +33,7 @@ function makeUsersClient() {
       updateUser: vi.fn(),
     },
   };
-  const client = () => supabase as unknown as SupabaseClient;
+  const client = supabase as unknown as SupabaseClient;
   return { supabase, api: new UsersClient(new ApiTransport(client), client) };
 }
 

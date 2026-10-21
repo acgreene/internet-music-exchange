@@ -14,8 +14,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
   SUPABASE_URL: z.url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  SUPABASE_PUBLISHABLE_KEY: z.string().startsWith('sb_publishable_'),
+  SUPABASE_SECRET_KEY: z.string().startsWith('sb_secret_'),
 
   // Cloudflare R2 (S3-compatible object storage).
   R2_ENDPOINT: z.url(),

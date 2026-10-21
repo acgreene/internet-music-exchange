@@ -7,6 +7,6 @@ export function stubApiTestEnv(): void {
   process.env['DATABASE_URL'] ??=
     'postgresql://postgres:postgres@127.0.0.1:54332/postgres';
   process.env['SUPABASE_URL'] ??= 'http://127.0.0.1:54331';
-  process.env['SUPABASE_ANON_KEY'] ??= 'test-anon-key';
-  process.env['SUPABASE_SERVICE_ROLE_KEY'] ??= 'test-service-role-key';
+  process.env['SUPABASE_PUBLISHABLE_KEY'] ??= 'sb_publishable_test';
+  process.env['SUPABASE_SECRET_KEY'] ??= 'sb_secret_test';
 }

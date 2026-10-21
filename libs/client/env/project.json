@@ -16,6 +16,10 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "dependsOn": ["generate-env"]
+    },
+    "typecheck": {
+      "dependsOn": ["generate-env"],
+      "options": { "commands": ["tsc --noEmit -p tsconfig.lib.json"] }
     }
   }
 }

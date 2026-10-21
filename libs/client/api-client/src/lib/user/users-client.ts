@@ -75,7 +75,7 @@ export class UsersClient {
 
   /**
    * Permanently delete the signed-in user's account through the API, which
-   * holds the service role key, then clear the local session.
+   * holds the secret key, then clear the local session.
    */
   public async deleteAccount(): Promise<ApiResult<AckResponse>> {
     const result = await this.transport.delete(ApiRoute.Users);

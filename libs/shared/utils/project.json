@@ -5,5 +5,14 @@
   "projectType": "library",
   "tags": ["scope:shared", "type:util"],
   "// targets": "to see all targets run: nx show project utils --web",
-  "targets": {}
+  "targets": {
+    "typecheck": {
+      "options": {
+        "commands": [
+          "tsc --noEmit -p tsconfig.lib.json",
+          "tsc --noEmit -p tsconfig.spec.json"
+        ]
+      }
+    }
+  }
 }

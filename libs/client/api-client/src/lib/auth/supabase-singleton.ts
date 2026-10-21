@@ -17,7 +17,7 @@ export class SupabaseSingleton {
   private constructor() {
     this.supabase = createClient(
       clientEnv.SUPABASE_URL,
-      clientEnv.SUPABASE_ANON_KEY,
+      clientEnv.SUPABASE_PUBLISHABLE_KEY,
     );
   }
 

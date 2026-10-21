@@ -102,6 +102,14 @@
         "staticFilePath": "dist/apps/mobile/browser",
         "spa": true
       }
+    },
+    "typecheck": {
+      "options": {
+        "commands": [
+          "tsc --noEmit -p tsconfig.app.json",
+          "tsc --noEmit -p tsconfig.spec.json"
+        ]
+      }
     }
   }
 }
