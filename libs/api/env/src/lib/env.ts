@@ -23,6 +23,14 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET: z.string().min(1),
 
+  // Stripe. The secret key is the platform's own; the Connect webhook secret
+  // signs events from sellers' connected accounts.
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  STRIPE_CONNECT_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
+
+  // Where the web app lives, for links that send people back to it.
+  WEB_APP_URL: z.url(),
+
   // Binaries the transcoding worker runs. Found on PATH unless set.
   FFMPEG_PATH: z.string().min(1).default('ffmpeg'),
   FFPROBE_PATH: z.string().min(1).default('ffprobe'),

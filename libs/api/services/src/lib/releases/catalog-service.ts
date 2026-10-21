@@ -57,6 +57,8 @@ export class CatalogService {
    * Read a release page. The public sees published releases from artists in
    * good standing; owners and the artist's managers can always see it.
    *
+   * @param artistHandle
+   * @param slug
    * @param viewerUserId - The signed-in viewer, if any.
    * @throws ApiError 404 when the viewer cannot see the release.
    */
@@ -375,6 +377,7 @@ export class CatalogService {
    * Attach a cover URL to each item in a list, looking the covers up in one
    * query.
    *
+   * @param items
    * @param releaseIdOf - Which release an item is.
    */
   private async withCovers<T>(

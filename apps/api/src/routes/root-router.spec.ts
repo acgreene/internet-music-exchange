@@ -4,7 +4,8 @@ import { RootRouter } from './root-router';
 
 const mockPing = vi.fn();
 
-vi.mock('@ime/db', () => ({
+vi.mock('@ime/db', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   // Constructed eagerly down the router graph by ArtistPageService.
   DatabaseRepository: vi.fn(),
 }));

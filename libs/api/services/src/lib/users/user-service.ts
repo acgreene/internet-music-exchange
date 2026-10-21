@@ -5,7 +5,7 @@ import {
   type User,
 } from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
-import { isValidHandle } from '../naming/naming';
+import { isValidHandle } from '../naming/naming-utils';
 
 const NAME_MAX_LENGTH = 100;
 

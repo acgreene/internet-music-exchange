@@ -13,4 +13,7 @@ export function stubApiTestEnv(): void {
   process.env['R2_ACCESS_KEY_ID'] ??= 'test-access-key-id';
   process.env['R2_SECRET_ACCESS_KEY'] ??= 'test-secret-access-key';
   process.env['R2_BUCKET'] ??= 'test-bucket';
+  process.env['STRIPE_SECRET_KEY'] ??= 'sk_test_stub';
+  process.env['STRIPE_CONNECT_WEBHOOK_SECRET'] ??= 'whsec_test_stub';
+  process.env['WEB_APP_URL'] ??= 'http://localhost:4200';
 }

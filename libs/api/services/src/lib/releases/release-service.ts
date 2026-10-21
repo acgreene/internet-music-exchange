@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import {
+  type Currency,
   DatabaseRepository,
   getPostgresErrorCode,
   PostgresErrorCode,
-  type Currency,
   type PricingMode,
   type Release,
   type ReleaseAsset,
@@ -19,7 +19,7 @@ import {
   isValidSlug,
   SLUG_MAX_LENGTH,
   toSlug,
-} from '../naming/naming';
+} from '../naming/naming-utils';
 import { CloudStorageService } from '../storage';
 import {
   FILE_EXTENSIONS,

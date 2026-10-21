@@ -14,7 +14,7 @@ import {
   HANDLE_MAX_LENGTH,
   isValidHandle,
   toHandle,
-} from '../naming/naming';
+} from '../naming/naming-utils';
 import { CloudStorageService } from '../storage';
 import { FILE_EXTENSIONS, IMAGE_TYPES } from '../storage/media-types';
 

@@ -16,7 +16,7 @@ IME takes no platform fee and never holds a seller's money. Every sale is a dire
 
 - To sell anything paid, an artist must connect a payment account through the platform's payment provider (Stripe Connect, using Standard accounts).
 - A manager begins onboarding from the artist's dashboard; the provider collects the artist's details and banking information directly.
-- An artist has exactly one connected account. If onboarding is abandoned and restarted, the artist's record points at the new account.
+- An artist has exactly one connected account. If onboarding is abandoned, starting again resumes that same account, picking up where the seller left off.
 - The artist's **selling currency** is established from their connected account. This is the currency all of that artist's releases and merch are priced in.
 - Artists manage payouts, refunds, disputes, and tax settings in the provider's own dashboard.
 - A designer connects a payment account the same way to sell paid designs, priced in the designer's selling currency.

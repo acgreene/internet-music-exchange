@@ -28,7 +28,7 @@ export class DatabaseRepository {
   public readonly social: SocialRepository;
   public readonly users: UserRepository;
 
-  constructor(db: Db = DatabaseService.getInstance().db) {
+  constructor(private readonly db: Db = DatabaseService.getInstance().db) {
     this.artists = new ArtistRepository(db);
     this.designs = new DesignRepository(db);
     this.entitlements = new EntitlementRepository(db);
@@ -41,5 +41,17 @@ export class DatabaseRepository {
     this.releases = new ReleaseRepository(db);
     this.social = new SocialRepository(db);
     this.users = new UserRepository(db);
+  }
+
+  /**
+   * Run several repository calls as one transaction: they all apply, or none
+   * do.
+   *
+   * @param work - Gets repositories bound to the transaction.
+   */
+  public transaction<T>(
+    work: (repos: DatabaseRepository) => Promise<T>,
+  ): Promise<T> {
+    return this.db.transaction((tx) => work(new DatabaseRepository(tx)));
   }
 }
