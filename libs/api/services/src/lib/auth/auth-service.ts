@@ -5,6 +5,7 @@ import {
   type SupabaseClient,
   type User as SupabaseUser,
 } from '@supabase/supabase-js';
+import { DatabaseRepository } from '@ime/db';
 import { env } from '@ime/env';
 import { ApiError, ApiErrorKind } from '@ime/models';
 
@@ -44,6 +45,7 @@ export class AuthService {
       env.SUPABASE_SECRET_KEY,
       STATELESS_AUTH_OPTIONS,
     ),
+    private readonly db: DatabaseRepository = new DatabaseRepository(),
   ) {}
 
   /**
@@ -126,6 +128,16 @@ export class AuthService {
    * Permanently delete a user by id. Admin operation.
    */
   public async deleteUser(userId: string): Promise<void> {
+    const soleArtists = await this.db.artists.listSolelyManagedArtists(userId);
+    if (soleArtists.length > 0) {
+      const names = soleArtists.map((artist) => artist.name).join(', ');
+      throw new ApiError(
+        ApiErrorKind.Http,
+        409,
+        `You are the only manager of ${names}. Add another manager or delete the artist before deleting your account.`,
+      );
+    }
+
     const { error } = await this.adminClient.auth.admin.deleteUser(userId);
     if (error) {
       throw new ApiError(ApiErrorKind.Http, error.status ?? 500, error.message);

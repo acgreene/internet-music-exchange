@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
-import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
+import { HANDLE_PATTERN } from './users';
 
 /**
  * Artist profile data.
@@ -10,12 +11,20 @@ export const artists = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
+
+    /** The artist's address on IME, `/artists/<handle>`. Separate from usernames. */
+    handle: text('handle').notNull().unique(),
+
     bio: text('bio'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => [
+    check(
+      'artists_handle_format',
+      sql`${table.handle} ~ '${sql.raw(HANDLE_PATTERN)}'`,
+    ),
     pgPolicy('Catalog is publicly readable', {
       for: 'select',
       to: [anonRole, authenticatedRole],

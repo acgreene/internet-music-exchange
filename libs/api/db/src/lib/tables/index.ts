@@ -22,3 +22,6 @@ export * from './product-shipping-rates';
 export * from './fulfillments';
 export * from './artist-pages';
 export * from './release-artist-pages';
+export * from './artist-images';
+export * from './artist-links';
+export * from './platform-admins';

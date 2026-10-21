@@ -1,17 +1,52 @@
-import { and, asc, eq, exists, ilike, ne } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  eq,
+  exists,
+  getTableColumns,
+  ilike,
+  ne,
+  notExists,
+} from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Db } from '../database-service';
-import { type Artist, artistManagers, artists, users } from '../tables';
+import {
+  type Artist,
+  type ArtistImage,
+  artistImages,
+  type ArtistImageKind,
+  type ArtistLink,
+  artistLinks,
+  artistManagers,
+  artists,
+  users,
+} from '../tables';
 
 export interface CreateArtistParams {
   name: string;
+  handle: string;
   bio?: string | null;
   createdByUserId: string;
 }
 
 export interface UpdateArtistParams {
   name?: string;
+  handle?: string;
   bio?: string | null;
+}
+
+export interface SetArtistImageParams {
+  artistId: string;
+  kind: ArtistImageKind;
+  bucket: string;
+  objectKey: string;
+  mimeType: string;
+  byteSize: number;
+}
+
+export interface ArtistLinkInput {
+  label: string;
+  url: string;
 }
 
 /**
@@ -49,16 +84,59 @@ export class ArtistRepository {
   }
 
   /**
+   * Find an artist profile by its handle, as when resolving `/artists/<handle>`.
+   *
+   * @param handle - The handle to look up.
+   * @returns The artist row, or null when no artist has that handle.
+   */
+  public async getByHandle(handle: string): Promise<Artist | null> {
+    const [artist] = await this.db
+      .select()
+      .from(artists)
+      .where(eq(artists.handle, handle))
+      .limit(1);
+
+    return artist ?? null;
+  }
+
+  /**
+   * Report whether a handle is free to take. The unique constraint on the
+   * column is what actually settles it, since two managers can ask at once.
+   *
+   * @param handle - The handle being considered.
+   * @param excludeArtistId - An artist to ignore, so re-saving an artist's own
+   * profile does not report its handle as taken.
+   * @returns True when no other artist holds that handle.
+   */
+  public async isHandleAvailable(
+    handle: string,
+    excludeArtistId?: string,
+  ): Promise<boolean> {
+    const [taken] = await this.db
+      .select({ id: artists.id })
+      .from(artists)
+      .where(
+        and(
+          eq(artists.handle, handle),
+          excludeArtistId ? ne(artists.id, excludeArtistId) : undefined,
+        ),
+      )
+      .limit(1);
+
+    return !taken;
+  }
+
+  /**
    * Create an artist profile and record its creator as the first manager.
    *
-   * @param params - The artist's name, optional bio, and the id of the user creating it.
+   * @param params - The artist's name, handle, optional bio, and the id of the user creating it.
    * @returns The newly created artist row.
    */
   public async create(params: CreateArtistParams): Promise<Artist> {
     return this.db.transaction(async (tx) => {
       const [artist] = await tx
         .insert(artists)
-        .values({ name: params.name, bio: params.bio })
+        .values({ name: params.name, handle: params.handle, bio: params.bio })
         .returning();
 
       // the on_artist_created trigger reads auth.uid(), which is null under
@@ -134,12 +212,7 @@ export class ArtistRepository {
    */
   public async listManagedArtists(userId: string): Promise<Artist[]> {
     return this.db
-      .select({
-        id: artists.id,
-        name: artists.name,
-        bio: artists.bio,
-        createdAt: artists.createdAt,
-      })
+      .select(getTableColumns(artists))
       .from(artistManagers)
       .innerJoin(artists, eq(artists.id, artistManagers.artistId))
       .where(eq(artistManagers.userId, userId))
@@ -195,29 +268,171 @@ export class ArtistRepository {
   ): Promise<boolean> {
     const otherManagers = alias(artistManagers, 'other_managers');
 
-    const removed = await this.db
-      .delete(artistManagers)
+    return this.db.transaction(async (tx) => {
+      // locking the artist stops two managers removing each other at once
+      await tx
+        .select({ id: artists.id })
+        .from(artists)
+        .where(eq(artists.id, artistId))
+        .for('update');
+
+      const removed = await tx
+        .delete(artistManagers)
+        .where(
+          and(
+            eq(artistManagers.userId, userId),
+            eq(artistManagers.artistId, artistId),
+            // an artist is unmanageable with nobody on it, so the delete only
+            // matches while another manager remains
+            exists(
+              tx
+                .select({ userId: otherManagers.userId })
+                .from(otherManagers)
+                .where(
+                  and(
+                    eq(otherManagers.artistId, artistId),
+                    ne(otherManagers.userId, userId),
+                  ),
+                ),
+            ),
+          ),
+        )
+        .returning({ userId: artistManagers.userId });
+
+      return removed.length > 0;
+    });
+  }
+
+  /**
+   * List the artists a user is the only manager of. Their account cannot be
+   * deleted until each has another manager or is deleted.
+   *
+   * @param userId - The id of the user.
+   * @returns The artists only that user manages, in alphabetical order.
+   */
+  public async listSolelyManagedArtists(userId: string): Promise<Artist[]> {
+    const otherManagers = alias(artistManagers, 'other_managers');
+
+    return this.db
+      .select(getTableColumns(artists))
+      .from(artistManagers)
+      .innerJoin(artists, eq(artists.id, artistManagers.artistId))
       .where(
         and(
           eq(artistManagers.userId, userId),
-          eq(artistManagers.artistId, artistId),
-          // an artist is unmanageable with nobody on it, so the delete only
-          // matches while another manager remains
-          exists(
+          notExists(
             this.db
               .select({ userId: otherManagers.userId })
               .from(otherManagers)
               .where(
                 and(
-                  eq(otherManagers.artistId, artistId),
+                  eq(otherManagers.artistId, artistManagers.artistId),
                   ne(otherManagers.userId, userId),
                 ),
               ),
           ),
         ),
       )
-      .returning({ userId: artistManagers.userId });
+      .orderBy(asc(artists.name));
+  }
 
-    return removed.length > 0;
+  /**
+   * Read an artist's avatar and header images.
+   *
+   * @param artistId - The id of the artist.
+   * @returns Whichever of the two images the artist has.
+   */
+  public async listImages(artistId: string): Promise<ArtistImage[]> {
+    return this.db
+      .select()
+      .from(artistImages)
+      .where(eq(artistImages.artistId, artistId));
+  }
+
+  /**
+   * Set an artist's avatar or header, replacing any existing one.
+   *
+   * @param params - The artist, which image it is, and the uploaded object.
+   * @returns The image it replaced, so its object can be removed from storage,
+   * or null when there was none.
+   */
+  public async setImage(
+    params: SetArtistImageParams,
+  ): Promise<ArtistImage | null> {
+    return this.db.transaction(async (tx) => {
+      const [previous] = await tx
+        .delete(artistImages)
+        .where(
+          and(
+            eq(artistImages.artistId, params.artistId),
+            eq(artistImages.kind, params.kind),
+          ),
+        )
+        .returning();
+
+      await tx.insert(artistImages).values(params);
+
+      return previous ?? null;
+    });
+  }
+
+  /**
+   * Remove an artist's avatar or header.
+   *
+   * @param artistId - The id of the artist.
+   * @param kind - Which image to remove.
+   * @returns The removed image, so its object can be removed from storage, or
+   * null when there was none.
+   */
+  public async removeImage(
+    artistId: string,
+    kind: ArtistImageKind,
+  ): Promise<ArtistImage | null> {
+    const [removed] = await this.db
+      .delete(artistImages)
+      .where(
+        and(eq(artistImages.artistId, artistId), eq(artistImages.kind, kind)),
+      )
+      .returning();
+
+    return removed ?? null;
+  }
+
+  /**
+   * Read the links on an artist's profile.
+   *
+   * @param artistId - The id of the artist.
+   * @returns The artist's links in display order.
+   */
+  public async listLinks(artistId: string): Promise<ArtistLink[]> {
+    return this.db
+      .select()
+      .from(artistLinks)
+      .where(eq(artistLinks.artistId, artistId))
+      .orderBy(asc(artistLinks.position));
+  }
+
+  /**
+   * Replace every link on an artist's profile, as when a manager saves the
+   * profile form.
+   *
+   * @param artistId - The id of the artist.
+   * @param links - The new links, in display order.
+   */
+  public async replaceLinks(
+    artistId: string,
+    links: ArtistLinkInput[],
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(artistLinks).where(eq(artistLinks.artistId, artistId));
+
+      if (links.length === 0) return;
+
+      await tx
+        .insert(artistLinks)
+        .values(
+          links.map((link, position) => ({ artistId, ...link, position })),
+        );
+    });
   }
 }

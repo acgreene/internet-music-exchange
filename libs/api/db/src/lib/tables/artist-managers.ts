@@ -32,19 +32,8 @@ export const artistManagers = pgTable(
       to: authenticatedRole,
       using: sql`${authUid} = ${table.userId} OR public.is_artist_manager(${table.artistId})`,
     }),
-    // only an existing manager can add another.
-    // the first manager is created by the `on_artist_created` trigger
-    pgPolicy('Managers can add managers', {
-      for: 'insert',
-      to: authenticatedRole,
-      withCheck: sql`public.is_artist_manager(${table.artistId})`,
-    }),
-    // a manager can remove themselves as manager or be removed by another manager
-    pgPolicy('Managers can remove managers', {
-      for: 'delete',
-      to: authenticatedRole,
-      using: sql`${authUid} = ${table.userId} OR public.is_artist_manager(${table.artistId})`,
-    }),
+    // adding and removing managers goes through the API only, which keeps an
+    // artist from ever being left with no manager
   ],
 );
 

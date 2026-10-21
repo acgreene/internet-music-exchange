@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, index, pgEnum, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, date, index, pgEnum, pgPolicy, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { artists } from './artists';
 
@@ -46,6 +46,10 @@ export const releases = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     title: text('title').notNull(),
+
+    /** The release's address under its artist, `/artists/<handle>/<slug>`. Made from the title. */
+    slug: text('slug').notNull(),
+
     artistId: uuid('artist_id')
       .notNull()
       .references(
@@ -73,6 +77,12 @@ export const releases = pgTable(
   },
   (table) => [
     index('releases_artist_id_idx').on(table.artistId),
+    unique('releases_artist_id_slug_unique').on(table.artistId, table.slug),
+    // lowercase words joined by single hyphens
+    check(
+      'releases_slug_format',
+      sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(${table.slug}) <= 100`,
+    ),
     // the public catalog reads by status, so keep that lookup indexed
     index('releases_status_idx').on(table.status),
     // a release that claims to be public has to say when it went public

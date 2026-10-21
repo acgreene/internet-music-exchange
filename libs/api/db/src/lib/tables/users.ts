@@ -1,6 +1,13 @@
 import { sql } from 'drizzle-orm';
-import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole, authUid, authUsers } from 'drizzle-orm/supabase';
+
+/**
+ * Usernames and artist handles end up in URLs, so they are lowercase letters,
+ * digits, hyphens, and underscores, 3 to 30 characters, starting and ending
+ * with a letter or digit. Lowercase-only also makes uniqueness case-insensitive.
+ */
+export const HANDLE_PATTERN = '^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$';
 
 /**
  * Public profile data for IME users.
@@ -25,8 +32,15 @@ export const users = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
+
+    /** Set by a platform admin. A suspended user keeps their library but cannot post, publish, or sell. */
+    suspendedAt: timestamp('suspended_at', { withTimezone: true }),
   },
   (table) => [
+    check(
+      'users_username_format',
+      sql`${table.username} ~ '${sql.raw(HANDLE_PATTERN)}'`,
+    ),
     pgPolicy('User profiles are publicly readable', {
       for: 'select',
       to: [anonRole, authenticatedRole],

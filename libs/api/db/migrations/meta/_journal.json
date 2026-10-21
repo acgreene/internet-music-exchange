@@ -85,6 +85,20 @@
       "when": 1784683223696,
       "tag": "0011_init_artist_pages_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792610155675,
+      "tag": "0012_artist_identity_and_admins",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792610768227,
+      "tag": "0013_api_only_manager_changes",
+      "breakpoints": true
     }
   ]
 }

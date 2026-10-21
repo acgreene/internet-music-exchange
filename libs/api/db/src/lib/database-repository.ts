@@ -2,6 +2,7 @@ import {
   ArtistPageRepository,
   ArtistRepository,
   EntitlementRepository,
+  ModerationRepository,
   OrderRepository,
   PaymentRepository,
   ProductRepository,
@@ -16,6 +17,7 @@ export class DatabaseRepository {
   public readonly artistPages: ArtistPageRepository;
   public readonly artists: ArtistRepository;
   public readonly entitlements: EntitlementRepository;
+  public readonly moderation: ModerationRepository;
   public readonly orders: OrderRepository;
   public readonly payments: PaymentRepository;
   public readonly products: ProductRepository;
@@ -28,6 +30,7 @@ export class DatabaseRepository {
     this.artistPages = new ArtistPageRepository(db);
     this.artists = new ArtistRepository(db);
     this.entitlements = new EntitlementRepository(db);
+    this.moderation = new ModerationRepository(db);
     this.orders = new OrderRepository(db);
     this.payments = new PaymentRepository(db);
     this.products = new ProductRepository(db);

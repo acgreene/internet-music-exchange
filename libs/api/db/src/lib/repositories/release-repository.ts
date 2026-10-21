@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, exists, ilike, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, exists, ilike, ne, sql } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   artists,
@@ -11,14 +11,15 @@ import {
   releases,
   releaseTracks,
   type Track,
-  tracks
+  tracks,
 } from '../tables';
 
 /**
- * A release together with the name of the artist that made it.
+ * A release together with the name and handle of the artist that made it.
  */
 export interface ReleaseWithArtist extends Release {
   artistName: string;
+  artistHandle: string;
 }
 
 export interface ReleaseTracklistItem {
@@ -32,12 +33,14 @@ export interface ReleaseTracklistItem {
 export interface CreateReleaseParams {
   artistId: string;
   title: string;
+  slug: string;
   kind: ReleaseKind;
   releasedAt?: string | null;
 }
 
 export interface UpdateReleaseParams {
   title?: string;
+  slug?: string;
   kind?: ReleaseKind;
   releasedAt?: string | null;
 }
@@ -71,6 +74,7 @@ const DEFAULT_SEARCH_LIMIT = 20;
 const releaseWithArtistColumns = {
   id: releases.id,
   title: releases.title,
+  slug: releases.slug,
   artistId: releases.artistId,
   releasedAt: releases.releasedAt,
   createdAt: releases.createdAt,
@@ -78,6 +82,7 @@ const releaseWithArtistColumns = {
   status: releases.status,
   publishedAt: releases.publishedAt,
   artistName: artists.name,
+  artistHandle: artists.handle,
 };
 
 /**
@@ -107,8 +112,8 @@ export class ReleaseRepository {
    * Find a release along with the name of the artist that made it.
    *
    * @param releaseId - The id of the release to look up.
-   * @returns The release row plus its artist name, or null when no release has
-   * that id.
+   * @returns The release row plus its artist name and handle, or null when no
+   * release has that id.
    */
   public async getWithArtist(
     releaseId: string,
@@ -121,6 +126,57 @@ export class ReleaseRepository {
       .limit(1);
 
     return release ?? null;
+  }
+
+  /**
+   * Find a release by its address, `/artists/<handle>/<slug>`.
+   *
+   * @param artistHandle - The handle of the artist that made it.
+   * @param slug - The release's slug within that artist.
+   * @returns The release plus its artist name and handle, or null when there
+   * is no such release.
+   */
+  public async getBySlug(
+    artistHandle: string,
+    slug: string,
+  ): Promise<ReleaseWithArtist | null> {
+    const [release] = await this.db
+      .select(releaseWithArtistColumns)
+      .from(releases)
+      .innerJoin(artists, eq(artists.id, releases.artistId))
+      .where(and(eq(artists.handle, artistHandle), eq(releases.slug, slug)))
+      .limit(1);
+
+    return release ?? null;
+  }
+
+  /**
+   * Report whether a slug is free within an artist's releases.
+   *
+   * @param artistId - The id of the artist.
+   * @param slug - The slug being considered.
+   * @param excludeReleaseId - A release to ignore, so re-saving a release does
+   * not report its own slug as taken.
+   * @returns True when none of the artist's other releases use that slug.
+   */
+  public async isSlugAvailable(
+    artistId: string,
+    slug: string,
+    excludeReleaseId?: string,
+  ): Promise<boolean> {
+    const [taken] = await this.db
+      .select({ id: releases.id })
+      .from(releases)
+      .where(
+        and(
+          eq(releases.artistId, artistId),
+          eq(releases.slug, slug),
+          excludeReleaseId ? ne(releases.id, excludeReleaseId) : undefined,
+        ),
+      )
+      .limit(1);
+
+    return !taken;
   }
 
   /**
@@ -240,7 +296,7 @@ export class ReleaseRepository {
   /**
    * Create a release. It starts as a draft until it is published.
    *
-   * @param params - The owning artist, title, kind and optional release date.
+   * @param params - The owning artist, title, slug, kind and optional release date.
    * @returns The newly created release row.
    */
   public async create(params: CreateReleaseParams): Promise<Release> {
@@ -249,6 +305,7 @@ export class ReleaseRepository {
       .values({
         artistId: params.artistId,
         title: params.title,
+        slug: params.slug,
         kind: params.kind,
         releasedAt: params.releasedAt,
       })

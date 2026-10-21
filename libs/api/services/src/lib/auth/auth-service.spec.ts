@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DatabaseRepository } from '@ime/db';
 import { ApiError } from '@ime/models';
 import { AuthService } from './auth-service';
 
@@ -17,7 +18,7 @@ const SUPABASE_SESSION = {
 };
 
 /**
- * Build an AuthService over hand-made fake supabase clients.
+ * Build an AuthService over hand-made fake supabase clients and database.
  */
 function makeService() {
   const anon = {
@@ -30,11 +31,15 @@ function makeService() {
   const admin = {
     auth: { admin: { signOut: vi.fn(), deleteUser: vi.fn() } },
   };
+  const db = {
+    artists: { listSolelyManagedArtists: vi.fn().mockResolvedValue([]) },
+  };
   const service = new AuthService(
     anon as unknown as SupabaseClient,
     admin as unknown as SupabaseClient,
+    db as unknown as DatabaseRepository,
   );
-  return { anon, admin, service };
+  return { anon, admin, db, service };
 }
 
 describe('AuthService', () => {
@@ -121,5 +126,17 @@ describe('AuthService', () => {
     await service.deleteUser(SUPABASE_USER.id);
 
     expect(admin.auth.admin.deleteUser).toHaveBeenCalledWith(SUPABASE_USER.id);
+  });
+
+  it('refuses to delete the only manager of an artist', async () => {
+    const { admin, db, service } = makeService();
+    db.artists.listSolelyManagedArtists.mockResolvedValue([
+      { name: 'Sunset Cassette' },
+    ]);
+
+    await expect(service.deleteUser(SUPABASE_USER.id)).rejects.toMatchObject({
+      status: 409,
+    });
+    expect(admin.auth.admin.deleteUser).not.toHaveBeenCalled();
   });
 });
