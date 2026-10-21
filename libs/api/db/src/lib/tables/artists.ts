@@ -22,6 +22,12 @@ export const artists = pgTable(
 
     /** Set by a platform admin. A suspended artist is hidden and cannot sell or upload. */
     suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+
+    /**
+     * When the artist came off sale because someone paying its hosting costs
+     * stopped. Its music leaves the catalog and uploads pause; owners keep it.
+     */
+    offSaleAt: timestamp('off_sale_at', { withTimezone: true }),
   },
   (table) => [
     check(

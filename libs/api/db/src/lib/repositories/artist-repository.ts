@@ -20,6 +20,7 @@ import {
   artistLinks,
   artistManagers,
   artists,
+  costShares,
   users,
 } from '../tables';
 
@@ -146,6 +147,14 @@ export class ArtistRepository {
         .insert(artistManagers)
         .values({ userId: params.createdByUserId, artistId: artist.id })
         .onConflictDoNothing();
+
+      // the creator pays all of the artist's hosting costs until the managers
+      // agree on a split
+      await tx.insert(costShares).values({
+        artistId: artist.id,
+        userId: params.createdByUserId,
+        shareBasisPoints: 10000,
+      });
 
       return artist;
     });

@@ -1,6 +1,7 @@
 export * from './artist-repository';
 export * from './design-repository';
 export * from './entitlement-repository';
+export * from './funding-repository';
 export * from './moderation-repository';
 export * from './order-repository';
 export * from './payment-repository';

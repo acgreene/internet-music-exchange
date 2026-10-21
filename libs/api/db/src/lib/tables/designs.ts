@@ -73,6 +73,12 @@ export const designs = pgTable(
     /** When the design first became available. Null while it is a draft. */
     publishedAt: timestamp('published_at', { withTimezone: true }),
 
+    /**
+     * When the design came off sale because its designer stopped paying their
+     * hosting costs. Releases already using it keep it.
+     */
+    offSaleAt: timestamp('off_sale_at', { withTimezone: true }),
+
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),

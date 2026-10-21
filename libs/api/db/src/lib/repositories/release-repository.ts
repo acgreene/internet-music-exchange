@@ -235,7 +235,13 @@ export class ReleaseRepository {
       .select(releaseWithArtistColumns)
       .from(releases)
       .innerJoin(artists, eq(artists.id, releases.artistId))
-      .where(and(eq(releases.status, 'published'), isNull(artists.suspendedAt)))
+      .where(
+        and(
+          eq(releases.status, 'published'),
+          isNull(artists.suspendedAt),
+          isNull(artists.offSaleAt),
+        ),
+      )
       .orderBy(desc(releases.publishedAt))
       .limit(limit)
       .offset(offset);
@@ -260,6 +266,7 @@ export class ReleaseRepository {
         and(
           eq(releases.status, 'published'),
           isNull(artists.suspendedAt),
+          isNull(artists.offSaleAt),
           ilike(releases.title, `%${query}%`),
         ),
       )

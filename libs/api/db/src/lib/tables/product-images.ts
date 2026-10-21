@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, index, integer, pgPolicy, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { bigint, check, index, integer, pgPolicy, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { productVariants } from './product-variants';
 import { products } from './products';
@@ -29,6 +29,8 @@ export const productImages = pgTable(
     bucket: text('bucket').notNull(),
     /** Path of the object within the bucket. */
     objectKey: text('object_key').notNull(),
+    /** Counted toward the artist's storage costs. */
+    byteSize: bigint('byte_size', { mode: 'number' }).notNull(),
 
     /** Alt text for accessibility. */
     altText: text('alt_text'),

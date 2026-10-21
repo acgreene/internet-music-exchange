@@ -116,6 +116,7 @@ const DEFAULT_SEARCH_LIMIT = 20;
 const isListed = and(
   eq(designs.status, 'published'),
   eq(designs.visibility, 'public'),
+  isNull(designs.offSaleAt),
 );
 
 /**

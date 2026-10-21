@@ -117,6 +117,7 @@ export interface AddImageParams {
   productId: string;
   bucket: string;
   objectKey: string;
+  byteSize: number;
   variantId?: string | null;
   altText?: string | null;
   position?: number;

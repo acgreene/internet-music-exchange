@@ -252,6 +252,7 @@ export class SocialRepository {
           eq(artistFollowers.userId, userId),
           eq(releases.status, 'published'),
           isNull(artists.suspendedAt),
+          isNull(artists.offSaleAt),
         ),
       )
       .orderBy(desc(releases.publishedAt))
