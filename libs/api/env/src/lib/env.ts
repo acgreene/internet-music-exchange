@@ -23,10 +23,16 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET: z.string().min(1),
 
-  // Stripe. The secret key is the platform's own; the Connect webhook secret
-  // signs events from sellers' connected accounts.
+  // Stripe. The secret key is the platform's own. One webhook secret signs the
+  // platform's own events (top-ups, donations); the other signs events from
+  // sellers' connected accounts.
   STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
   STRIPE_CONNECT_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
+
+  // Email through Resend. Without a key, emails are logged instead of sent.
+  RESEND_API_KEY: z.string().startsWith('re_').optional(),
+  EMAIL_FROM: z.string().min(1).default('IME <onboarding@resend.dev>'),
 
   // Where the web app lives, for links that send people back to it.
   WEB_APP_URL: z.url(),

@@ -3,6 +3,7 @@ import {
   DesignRepository,
   EntitlementRepository,
   FundingRepository,
+  JobRunRepository,
   ModerationRepository,
   OrderRepository,
   PaymentRepository,
@@ -19,6 +20,7 @@ export class DatabaseRepository {
   public readonly designs: DesignRepository;
   public readonly entitlements: EntitlementRepository;
   public readonly funding: FundingRepository;
+  public readonly jobRuns: JobRunRepository;
   public readonly moderation: ModerationRepository;
   public readonly orders: OrderRepository;
   public readonly payments: PaymentRepository;
@@ -33,6 +35,7 @@ export class DatabaseRepository {
     this.designs = new DesignRepository(db);
     this.entitlements = new EntitlementRepository(db);
     this.funding = new FundingRepository(db);
+    this.jobRuns = new JobRunRepository(db);
     this.moderation = new ModerationRepository(db);
     this.orders = new OrderRepository(db);
     this.payments = new PaymentRepository(db);

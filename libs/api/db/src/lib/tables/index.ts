@@ -39,3 +39,4 @@ export * from './balance-entries';
 export * from './cost-shares';
 export * from './monthly-usage';
 export * from './reserve-entries';
+export * from './job-runs';

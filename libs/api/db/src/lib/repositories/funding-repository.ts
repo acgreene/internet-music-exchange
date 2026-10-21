@@ -12,8 +12,18 @@ import {
   sql,
   sum,
 } from 'drizzle-orm';
+import type { PgColumn } from 'drizzle-orm/pg-core';
 import type { Db } from '../database-service';
 import {
+  artistImages,
+  designVersions,
+  productImages,
+  products,
+  releaseAssets,
+  releaseDesignImages,
+  releases,
+  trackAudioFiles,
+  tracks,
   type AutoTopUpMode,
   type BalanceEntry,
   balanceEntries,
@@ -61,7 +71,8 @@ export interface BillingSettings {
 export interface RecordTopUpParams {
   userId: string;
   amount: number;
-  cardFee: number;
+  /** Null while Stripe has not worked out the fee yet. */
+  cardFee: number | null;
   stripePaymentIntentId: string;
 }
 
@@ -269,6 +280,29 @@ export class FundingRepository {
       .returning();
 
     return entry ?? null;
+  }
+
+  /**
+   * Fill in the card fee of a top-up once Stripe has worked it out. A fee
+   * already on file is left alone.
+   *
+   * @param stripePaymentIntentId - The top-up's payment.
+   * @param cardFee - What the card processor kept, in cents.
+   */
+  public async setTopUpCardFee(
+    stripePaymentIntentId: string,
+    cardFee: number,
+  ): Promise<void> {
+    await this.db
+      .update(balanceEntries)
+      .set({ cardFee })
+      .where(
+        and(
+          eq(balanceEntries.stripePaymentIntentId, stripePaymentIntentId),
+          eq(balanceEntries.kind, 'top_up'),
+          isNull(balanceEntries.cardFee),
+        ),
+      );
   }
 
   /**
@@ -901,4 +935,126 @@ export class FundingRepository {
 
     return rows.map((row) => row.id);
   }
+
+  /**
+   * Total the bytes each artist stores right now: audio, release assets and
+   * design images, merch photos, and profile images.
+   *
+   * @returns One entry per artist storing anything.
+   */
+  public async listStoredBytesByArtist(): Promise<StoredBytes[]> {
+    const byArtist = (owner: PgColumn, byteSize: PgColumn) => ({
+      owner: sql<string>`${owner}`,
+      bytes: sum(byteSize).mapWith(Number),
+    });
+
+    const totals = await Promise.all([
+      this.db
+        .select(byArtist(tracks.artistId, trackAudioFiles.byteSize))
+        .from(trackAudioFiles)
+        .innerJoin(tracks, eq(tracks.id, trackAudioFiles.trackId))
+        .groupBy(tracks.artistId),
+      this.db
+        .select(byArtist(releases.artistId, releaseAssets.byteSize))
+        .from(releaseAssets)
+        .innerJoin(releases, eq(releases.id, releaseAssets.releaseId))
+        .groupBy(releases.artistId),
+      this.db
+        .select(byArtist(releases.artistId, releaseDesignImages.byteSize))
+        .from(releaseDesignImages)
+        .innerJoin(releases, eq(releases.id, releaseDesignImages.releaseId))
+        .groupBy(releases.artistId),
+      this.db
+        .select(byArtist(products.artistId, productImages.byteSize))
+        .from(productImages)
+        .innerJoin(products, eq(products.id, productImages.productId))
+        .groupBy(products.artistId),
+      this.db
+        .select(byArtist(artistImages.artistId, artistImages.byteSize))
+        .from(artistImages)
+        .groupBy(artistImages.artistId),
+    ]);
+
+    return addUp(totals.flat());
+  }
+
+  /**
+   * Total the bytes of each designer's design versions.
+   *
+   * @returns One entry per designer storing anything.
+   */
+  public async listStoredBytesByDesigner(): Promise<StoredBytes[]> {
+    const totals = await this.db
+      .select({
+        owner: designs.designerUserId,
+        bytes: sum(designVersions.byteSize).mapWith(Number),
+      })
+      .from(designVersions)
+      .innerJoin(designs, eq(designs.id, designVersions.designId))
+      .where(isNotNull(designs.designerUserId))
+      .groupBy(designs.designerUserId);
+
+    return addUp(totals as { owner: string; bytes: number }[]);
+  }
+
+  /**
+   * Total the card fees on a seller's top-ups in a span of time.
+   *
+   * @param userId - The id of the seller.
+   * @param from - The start, inclusive.
+   * @param to - The end, exclusive.
+   * @returns The total, in cents. Fees Stripe has not reported yet count as
+   * zero.
+   */
+  public async sumCardFees(
+    userId: string,
+    from: Date,
+    to: Date,
+  ): Promise<number> {
+    const [total] = await this.db
+      .select({ value: sum(balanceEntries.cardFee).mapWith(Number) })
+      .from(balanceEntries)
+      .where(
+        and(
+          eq(balanceEntries.userId, userId),
+          eq(balanceEntries.kind, 'top_up'),
+          gte(balanceEntries.createdAt, from),
+          lt(balanceEntries.createdAt, to),
+        ),
+      );
+
+    return total?.value ?? 0;
+  }
+
+  /**
+   * List every seller's statement for a month, for the public costs page.
+   *
+   * @param month - The first day of the month.
+   */
+  public async listStatementsForMonth(month: string): Promise<Statement[]> {
+    return this.db.select().from(statements).where(eq(statements.month, month));
+  }
+
+  /**
+   * List every artist's cost split, for the monthly close.
+   */
+  public async listAllCostShares(): Promise<CostShare[]> {
+    return this.db.select().from(costShares);
+  }
+}
+
+/**
+ * The bytes one owner stores, as an artist id or a designer's user id.
+ */
+export interface StoredBytes {
+  owner: string;
+  bytes: number;
+}
+
+function addUp(rows: StoredBytes[]): StoredBytes[] {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    totals.set(row.owner, (totals.get(row.owner) ?? 0) + (row.bytes ?? 0));
+  }
+  return [...totals].map(([owner, bytes]) => ({ owner, bytes }));
 }

@@ -8,3 +8,4 @@ export * from './lib/releases';
 export * from './lib/funding';
 export * from './lib/transcoding';
 export * from './lib/payments';
+export * from './lib/email';

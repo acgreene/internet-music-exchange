@@ -1,7 +1,7 @@
 {
-  "name": "transcoder",
+  "name": "worker",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/transcoder/src",
+  "sourceRoot": "apps/worker/src",
   "projectType": "application",
   "tags": ["scope:api", "type:app"],
   "targets": {
@@ -11,11 +11,11 @@
       "defaultConfiguration": "production",
       "options": {
         "platform": "node",
-        "outputPath": "dist/apps/transcoder",
+        "outputPath": "dist/apps/worker",
         "format": ["cjs"],
         "bundle": true,
-        "main": "apps/transcoder/src/main.ts",
-        "tsConfig": "apps/transcoder/tsconfig.app.json",
+        "main": "apps/worker/src/main.ts",
+        "tsConfig": "apps/worker/tsconfig.app.json",
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,
@@ -42,15 +42,15 @@
       "defaultConfiguration": "development",
       "dependsOn": ["build"],
       "options": {
-        "buildTarget": "transcoder:build",
+        "buildTarget": "worker:build",
         "runBuildTargetDependencies": false
       },
       "configurations": {
         "development": {
-          "buildTarget": "transcoder:build:development"
+          "buildTarget": "worker:build:development"
         },
         "production": {
-          "buildTarget": "transcoder:build:production"
+          "buildTarget": "worker:build:production"
         }
       }
     },

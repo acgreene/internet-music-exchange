@@ -1,5 +1,6 @@
 import { and, asc, eq, ilike, inArray, ne } from 'drizzle-orm';
 import type { Db } from '../database-service';
+import { authUsers } from 'drizzle-orm/supabase';
 import { type User, users } from '../tables';
 
 export interface UpdateUserParams {
@@ -119,5 +120,22 @@ export class UserRepository {
       .limit(1);
 
     return !taken;
+  }
+
+  /**
+   * Read the email address a user signed up with, for sending them mail.
+   * Emails live with the account in Supabase auth, not on the public profile.
+   *
+   * @param userId - The id of the user.
+   * @returns Their email, or null when the account has none or is gone.
+   */
+  public async getEmail(userId: string): Promise<string | null> {
+    const [account] = await this.db
+      .select({ email: authUsers.email })
+      .from(authUsers)
+      .where(eq(authUsers.id, userId))
+      .limit(1);
+
+    return account?.email ?? null;
   }
 }

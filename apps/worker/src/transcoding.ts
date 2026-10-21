@@ -6,33 +6,26 @@ import { Logger } from '@ime/utils';
 const IDLE_SECONDS = 30;
 const BATCH_SIZE = 10;
 
-const log = new Logger('transcoder');
-const transcoder = new TranscodeService();
+const log = new Logger('worker').child('transcoding');
 
 /**
- * Files ffmpeg could not read. They are skipped until the worker restarts, so a
- * corrupt upload is not retried every few seconds.
+ * Make streaming copies of lossless uploads until told to stop.
  */
-const failed = new Set<string>();
+export async function runTranscoding(stop: AbortSignal): Promise<void> {
+  const transcoder = new TranscodeService();
+  // files ffmpeg could not read are skipped until the worker restarts, so a
+  // corrupt upload is not retried every few seconds
+  const failed = new Set<string>();
 
-const stop = new AbortController();
-for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.on(signal, () => {
-    log.info(`${signal} received, stopping after the current file`);
-    stop.abort();
-  });
-}
-
-async function main(): Promise<void> {
   log.info('watching for audio that needs a streaming copy');
 
-  while (!stop.signal.aborted) {
+  while (!stop.aborted) {
     const pending = (await transcoder.listPending(BATCH_SIZE)).filter(
       (original) => !failed.has(original.objectKey),
     );
 
     for (const original of pending) {
-      if (stop.signal.aborted) break;
+      if (stop.aborted) break;
       try {
         const kept = await transcoder.transcode(original);
         log.info(
@@ -47,17 +40,9 @@ async function main(): Promise<void> {
     }
 
     if (pending.length === 0) {
-      // a stop signal ends the wait early
-      await sleep(IDLE_SECONDS * 1000, undefined, {
-        signal: stop.signal,
-      }).catch(() => undefined);
+      await sleep(IDLE_SECONDS * 1000, undefined, { signal: stop }).catch(
+        () => undefined,
+      );
     }
   }
-
-  process.exit(0);
 }
-
-main().catch((error) => {
-  log.error('transcoder crashed', error);
-  process.exit(1);
-});

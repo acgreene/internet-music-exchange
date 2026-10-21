@@ -475,7 +475,8 @@ export class ReleaseService {
     trackId: string,
     contentType: string,
   ): Promise<UploadTarget> {
-    await this.requireReleaseManager(userId, releaseId);
+    const release = await this.requireReleaseManager(userId, releaseId);
+    await this.requireUploadsAllowed(release.artistId);
     await this.requireTrackOnRelease(releaseId, trackId);
     if (!TRACK_AUDIO_FORMATS[contentType]) {
       throw new ApiError(
@@ -560,7 +561,8 @@ export class ReleaseService {
     kind: ReleaseAssetKind,
     contentType: string,
   ): Promise<UploadTarget> {
-    await this.requireReleaseManager(userId, releaseId);
+    const release = await this.requireReleaseManager(userId, releaseId);
+    await this.requireUploadsAllowed(release.artistId);
     if (!RELEASE_ASSET_RULES[kind].types.includes(contentType)) {
       throw new ApiError(
         ApiErrorKind.Http,
@@ -770,6 +772,27 @@ export class ReleaseService {
     }
     await this.access.requireManager(userId, release.artistId);
     return release;
+  }
+
+  /**
+   * Uploads pause while an artist is suspended or off sale for unpaid hosting.
+   */
+  private async requireUploadsAllowed(artistId: string): Promise<void> {
+    const artist = await this.db.artists.getById(artistId);
+    if (artist?.suspendedAt) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Forbidden,
+        'This artist is suspended.',
+      );
+    }
+    if (artist?.offSaleAt) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Conflict,
+        'Uploads are paused until the hosting balance is topped up.',
+      );
+    }
   }
 
   private async requireTrackManager(
