@@ -1,4 +1,16 @@
-import { and, count, desc, eq, exists, getTableColumns, ilike, isNull, max, sql } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  exists,
+  getTableColumns,
+  ilike,
+  isNull,
+  max,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   type Currency,
@@ -15,7 +27,7 @@ import {
   type ReleaseDesign,
   type ReleaseDesignImage,
   releaseDesignImages,
-  releaseDesigns
+  releaseDesigns,
 } from '../tables';
 
 /**
@@ -458,6 +470,7 @@ export class DesignRepository {
         and(
           eq(designLicenses.artistId, artistId),
           isNull(designLicenses.refundedAt),
+          ne(designs.status, 'taken_down'),
         ),
       )
       .orderBy(desc(designLicenses.createdAt));
@@ -574,7 +587,13 @@ export class DesignRepository {
         eq(designVersions.id, releaseDesigns.designVersionId),
       )
       .innerJoin(designs, eq(designs.id, designVersions.designId))
-      .where(eq(releaseDesigns.releaseId, releaseId))
+      .where(
+        and(
+          eq(releaseDesigns.releaseId, releaseId),
+          // a taken-down design leaves its releases on the default layout
+          ne(designs.status, 'taken_down'),
+        ),
+      )
       .limit(1);
 
     return details ?? null;

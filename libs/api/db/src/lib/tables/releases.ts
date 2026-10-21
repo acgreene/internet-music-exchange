@@ -28,11 +28,14 @@ export type ReleaseKind = (typeof releaseKindEnum.enumValues)[number];
  * `published` - visible to everyone and available to buy.
  * `archived` - withdrawn from the public catalog. Users who already own it
  *               keep access; see the entitlement policies.
+ * `taken_down` - removed by a platform admin, from the catalog and from every
+ *               library. Restorable until `takedown_final_at` is set.
  */
 export const releaseStatusEnum = pgEnum('release_status', [
   'draft',
   'published',
   'archived',
+  'taken_down',
 ]);
 
 export type ReleaseStatus = (typeof releaseStatusEnum.enumValues)[number];
@@ -74,6 +77,12 @@ export const releases = pgTable(
 
     /** When the release first went public. Null while it is still a draft. */
     publishedAt: timestamp('published_at', { withTimezone: true }),
+
+    /**
+     * When a takedown could no longer be contested. From then on its purchases
+     * are refunded and its files deleted.
+     */
+    takedownFinalAt: timestamp('takedown_final_at', { withTimezone: true }),
   },
   (table) => [
     index('releases_artist_id_idx').on(table.artistId),

@@ -1,4 +1,14 @@
-import { and, asc, desc, eq, exists, ilike, ne, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  ilike,
+  isNull,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   artists,
@@ -81,6 +91,7 @@ const releaseWithArtistColumns = {
   kind: releases.kind,
   status: releases.status,
   publishedAt: releases.publishedAt,
+  takedownFinalAt: releases.takedownFinalAt,
   artistName: artists.name,
   artistHandle: artists.handle,
 };
@@ -224,7 +235,7 @@ export class ReleaseRepository {
       .select(releaseWithArtistColumns)
       .from(releases)
       .innerJoin(artists, eq(artists.id, releases.artistId))
-      .where(eq(releases.status, 'published'))
+      .where(and(eq(releases.status, 'published'), isNull(artists.suspendedAt)))
       .orderBy(desc(releases.publishedAt))
       .limit(limit)
       .offset(offset);
@@ -248,6 +259,7 @@ export class ReleaseRepository {
       .where(
         and(
           eq(releases.status, 'published'),
+          isNull(artists.suspendedAt),
           ilike(releases.title, `%${query}%`),
         ),
       )

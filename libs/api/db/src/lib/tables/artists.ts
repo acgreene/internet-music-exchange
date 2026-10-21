@@ -19,6 +19,9 @@ export const artists = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
+
+    /** Set by a platform admin. A suspended artist is hidden and cannot sell or upload. */
+    suspendedAt: timestamp('suspended_at', { withTimezone: true }),
   },
   (table) => [
     check(
@@ -28,7 +31,7 @@ export const artists = pgTable(
     pgPolicy('Catalog is publicly readable', {
       for: 'select',
       to: [anonRole, authenticatedRole],
-      using: sql`true`,
+      using: sql`${table.suspendedAt} IS NULL`,
     }),
     /**
      * Any signed-in user may create an artist. The `on_artist_created` trigger

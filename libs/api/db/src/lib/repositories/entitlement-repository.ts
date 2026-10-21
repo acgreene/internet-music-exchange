@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   artists,
@@ -42,20 +42,25 @@ export class EntitlementRepository {
   constructor(private readonly db: Db) {}
 
   /**
-   * Report whether a user owns a release.
+   * Report whether a user owns a release they can still play.
    *
    * @param userId - The id of the user to check.
    * @param releaseId - The id of the release being served.
-   * @returns True when the user is entitled to it.
+   * @returns True when the user is entitled to it and it has not been taken
+   * down.
    */
   public async owns(userId: string, releaseId: string): Promise<boolean> {
     const [entitlement] = await this.db
       .select({ userId: entitlements.userId })
       .from(entitlements)
+      .innerJoin(releases, eq(releases.id, entitlements.releaseId))
       .where(
         and(
           eq(entitlements.userId, userId),
           eq(entitlements.releaseId, releaseId),
+          // a takedown removes a release from every library at once, even
+          // before its entitlements are revoked
+          ne(releases.status, 'taken_down'),
         ),
       )
       .limit(1);
@@ -122,7 +127,7 @@ export class EntitlementRepository {
    * @param limit - The maximum number of releases to return.
    * @param offset - How many releases to skip, for paging.
    * @returns One entry per owned release with its artist and how it was
-   * acquired.
+   * acquired. Taken-down releases are left out.
    */
   public async listLibrary(
     userId: string,
@@ -142,7 +147,9 @@ export class EntitlementRepository {
       .from(entitlements)
       .innerJoin(releases, eq(releases.id, entitlements.releaseId))
       .innerJoin(artists, eq(artists.id, releases.artistId))
-      .where(eq(entitlements.userId, userId))
+      .where(
+        and(eq(entitlements.userId, userId), ne(releases.status, 'taken_down')),
+      )
       .orderBy(desc(entitlements.createdAt))
       .limit(limit)
       .offset(offset);

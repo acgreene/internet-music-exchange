@@ -25,12 +25,14 @@ export type ProductType = (typeof productTypeEnum.enumValues)[number];
 /**
  * Lifecycle of a product, `draft` is visible only to the
  * artist's managers, `published` is in the public store, `archived` is pulled
- * from sale but kept for the order records that reference it.
+ * from sale but kept for the order records that reference it, `taken_down` was
+ * removed by a platform admin.
  */
 export const productStatusEnum = pgEnum('product_status', [
   'draft',
   'published',
   'archived',
+  'taken_down',
 ]);
 
 export type ProductStatus = (typeof productStatusEnum.enumValues)[number];

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   artistFollowers,
@@ -251,6 +251,7 @@ export class SocialRepository {
         and(
           eq(artistFollowers.userId, userId),
           eq(releases.status, 'published'),
+          isNull(artists.suspendedAt),
         ),
       )
       .orderBy(desc(releases.publishedAt))

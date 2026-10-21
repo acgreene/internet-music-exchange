@@ -17,11 +17,14 @@ export type DesignSurface = (typeof designSurfaceEnum.enumValues)[number];
  * `published` - available to artists, on the marketplace if public.
  * `archived` - withdrawn from the marketplace. Licenses and the releases
  *   using it are unaffected.
+ * `taken_down` - removed by a platform admin. Releases using it fall back to
+ *   the default layout.
  */
 export const designStatusEnum = pgEnum('design_status', [
   'draft',
   'published',
   'archived',
+  'taken_down',
 ]);
 
 export type DesignStatus = (typeof designStatusEnum.enumValues)[number];

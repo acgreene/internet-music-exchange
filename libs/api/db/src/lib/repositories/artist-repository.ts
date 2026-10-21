@@ -5,6 +5,7 @@ import {
   exists,
   getTableColumns,
   ilike,
+  isNull,
   ne,
   notExists,
 } from 'drizzle-orm';
@@ -177,7 +178,9 @@ export class ArtistRepository {
     return this.db
       .select()
       .from(artists)
-      .where(ilike(artists.name, `%${query}%`))
+      .where(
+        and(ilike(artists.name, `%${query}%`), isNull(artists.suspendedAt)),
+      )
       .orderBy(asc(artists.name))
       .limit(limit);
   }
