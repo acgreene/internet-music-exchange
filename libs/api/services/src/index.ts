@@ -29,7 +29,6 @@ export type {
   ReleaseService,
   TrackInput,
   UpdateReleaseInput,
-  UploadTarget,
 } from './lib/releases/release-service';
 export type {
   CatalogService,
@@ -89,4 +88,5 @@ export type {
   CloudStorageService,
   StoredObject,
 } from './lib/storage/cloud-storage-service';
+export type { UploadTarget } from './lib/storage/upload-service';
 export type { Email, EmailService } from './lib/email/email-service';

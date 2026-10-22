@@ -18,7 +18,7 @@ import {
 import { HealthService } from './health';
 import { PaymentAccountService } from './payments';
 import { CatalogService, ReleaseService } from './releases';
-import { CloudStorageService } from './storage';
+import { CloudStorageService, UploadService } from './storage';
 import { TranscodeService } from './transcoding';
 import { UserService } from './users';
 import { StripeWebhookService } from './webhooks';
@@ -65,12 +65,13 @@ export class ImeServices {
   }: ImeServiceDependencies = {}) {
     const access = new AccessService(db);
     const funding = new FundingService(db);
+    const uploads = new UploadService(storage);
     const webAppUrl = env.WEB_APP_URL;
 
     this.auth = new AuthService(db);
     this.users = new UserService(db);
     this.artists = new ArtistService(db, storage, access);
-    this.releases = new ReleaseService(db, storage, access, funding);
+    this.releases = new ReleaseService(db, storage, access, funding, uploads);
     this.catalog = new CatalogService(db, storage);
     this.artistPages = new ArtistPageService(db, storage);
 

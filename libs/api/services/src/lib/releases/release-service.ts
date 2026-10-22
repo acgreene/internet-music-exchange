@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import {
   type Currency,
   DatabaseRepository,
@@ -20,12 +19,15 @@ import {
   SLUG_MAX_LENGTH,
   toSlug,
 } from '../naming/naming-utils';
-import { CloudStorageService } from '../storage';
 import {
-  FILE_EXTENSIONS,
+  CloudStorageService,
+  UploadService,
+  type UploadTarget,
+} from '../storage';
+import {
   RELEASE_ASSET_RULES,
   TRACK_AUDIO_FORMATS,
-  TRACK_AUDIO_MAX_BYTES,
+  TRACK_AUDIO_RULES,
 } from '../storage/media-types';
 
 const TITLE_MAX_LENGTH = 200;
@@ -70,14 +72,6 @@ export interface AssetChanges {
 }
 
 /**
- * Where a client uploads a file directly, and the key to confirm it with.
- */
-export interface UploadTarget {
-  uploadUrl: string;
-  objectKey: string;
-}
-
-/**
  * Release authoring for an artist's managers: drafts, tracks, audio, artwork,
  * pricing, publishing, and gifting.
  *
@@ -91,6 +85,7 @@ export class ReleaseService {
     private readonly storage: CloudStorageService = new CloudStorageService(),
     private readonly access: AccessService = new AccessService(db),
     private readonly funding: FundingService = new FundingService(db),
+    private readonly uploads: UploadService = new UploadService(storage),
   ) {}
 
   /**
@@ -483,19 +478,12 @@ export class ReleaseService {
     const release = await this.access.requireReleaseManager(userId, releaseId);
     await this.access.requireUploadsAllowed(release.artistId);
     await this.requireTrackOnRelease(releaseId, trackId);
-    if (!TRACK_AUDIO_FORMATS[contentType]) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        'Audio must be WAV, FLAC, AIFF, or MP3.',
-      );
-    }
-
-    const objectKey = `${this.trackPrefix(releaseId, trackId)}original-${randomUUID()}.${FILE_EXTENSIONS[contentType]}`;
-    return {
-      uploadUrl: await this.storage.getUploadSignedUrl(objectKey, contentType),
-      objectKey,
-    };
+    return this.uploads.createTarget(
+      this.trackPrefix(releaseId, trackId),
+      'original',
+      contentType,
+      TRACK_AUDIO_RULES,
+    );
   }
 
   /**
@@ -514,19 +502,12 @@ export class ReleaseService {
     await this.access.requireReleaseManager(userId, releaseId);
     await this.requireTrackOnRelease(releaseId, trackId);
 
-    const stored = await this.requireUpload(
+    const stored = await this.uploads.confirm(
       objectKey,
       this.trackPrefix(releaseId, trackId),
+      TRACK_AUDIO_RULES,
     );
     const format = TRACK_AUDIO_FORMATS[stored.contentType];
-    if (!format || stored.byteSize > TRACK_AUDIO_MAX_BYTES) {
-      await this.storage.deleteObject(objectKey);
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        'Audio must be WAV, FLAC, AIFF, or MP3, and at most 2 GB.',
-      );
-    }
 
     const [previous, stream] = await Promise.all([
       this.db.releaseAssets.getAudioFile(trackId, 'original'),
@@ -569,19 +550,12 @@ export class ReleaseService {
   ): Promise<UploadTarget> {
     const release = await this.access.requireReleaseManager(userId, releaseId);
     await this.access.requireUploadsAllowed(release.artistId);
-    if (!RELEASE_ASSET_RULES[kind].types.includes(contentType)) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        `A ${kind.replace('_', ' ')} cannot be uploaded as ${contentType}.`,
-      );
-    }
-
-    const objectKey = `${this.assetPrefix(releaseId)}${kind}-${randomUUID()}.${FILE_EXTENSIONS[contentType]}`;
-    return {
-      uploadUrl: await this.storage.getUploadSignedUrl(objectKey, contentType),
-      objectKey,
-    };
+    return this.uploads.createTarget(
+      this.assetPrefix(releaseId),
+      kind,
+      contentType,
+      RELEASE_ASSET_RULES[kind],
+    );
   }
 
   /**
@@ -598,22 +572,11 @@ export class ReleaseService {
   ): Promise<ReleaseAsset> {
     await this.access.requireReleaseManager(userId, releaseId);
 
-    const stored = await this.requireUpload(
+    const stored = await this.uploads.confirm(
       input.objectKey,
       this.assetPrefix(releaseId),
+      RELEASE_ASSET_RULES[input.kind],
     );
-    const rules = RELEASE_ASSET_RULES[input.kind];
-    if (
-      !rules.types.includes(stored.contentType) ||
-      stored.byteSize > rules.maxBytes
-    ) {
-      await this.storage.deleteObject(input.objectKey);
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        `That file is not an accepted type or size for a ${input.kind.replace('_', ' ')}.`,
-      );
-    }
 
     const file = {
       bucket: this.storage.bucket,
@@ -776,23 +739,6 @@ export class ReleaseService {
         'That track is not on this release.',
       );
     }
-  }
-
-  /**
-   * Confirm a client uploaded a file under a key this release handed out.
-   */
-  private async requireUpload(objectKey: string, prefix: string) {
-    const stored = objectKey.startsWith(prefix)
-      ? await this.storage.getObjectInfo(objectKey)
-      : null;
-    if (!stored) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        'No upload was found for that key.',
-      );
-    }
-    return stored;
   }
 
   private trackPrefix(releaseId: string, trackId: string): string {
