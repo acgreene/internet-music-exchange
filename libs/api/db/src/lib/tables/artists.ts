@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   check,
+  index,
   pgPolicy,
   pgTable,
   text,
@@ -35,8 +36,26 @@ export const artists = pgTable(
      * stopped. Its music leaves the catalog and uploads pause; owners keep it.
      */
     offSaleAt: timestamp('off_sale_at', { withTimezone: true }),
+
+    /** The city the artist is based in, as they write it. */
+    city: text('city'),
+
+    /** The ISO 3166-1 alpha-2 code of the country the artist is based in. */
+    country: text('country'),
   },
   (table) => [
+    check(
+      'artists_city_length',
+      sql`${table.city} IS NULL OR length(${table.city}) BETWEEN 1 AND 80`,
+    ),
+    check('artists_country_code', sql`${table.country} ~ '^[A-Z]{2}$'`),
+    // a city means little without its country
+    check(
+      'artists_city_needs_country',
+      sql`${table.city} IS NULL OR ${table.country} IS NOT NULL`,
+    ),
+    // search narrows releases to where their artists are based
+    index('artists_country_idx').on(table.country),
     check(
       'artists_handle_format',
       sql`${table.handle} ~ '${sql.raw(HANDLE_PATTERN)}'`,

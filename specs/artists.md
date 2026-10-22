@@ -15,10 +15,10 @@ An artist is the selling identity on IME: the entity that publishes releases, se
 ### Creating and managing an artist
 
 - Any signed-in user can create an artist profile. The creator automatically becomes its first manager.
-- An artist has a **name**, a unique **handle**, and optionally a **bio**, an **avatar**, a **header image**, and a list of **links** (website, social profiles, and so on).
+- An artist has a **name**, a unique **handle**, and optionally a **bio**, an **avatar**, a **header image**, a list of **links** (website, social profiles, and so on), and **where it is based**: a country, and optionally a city in it. Listeners can search and browse by where artists are based (see [Discovery](./discovery.md)).
 - An artist's profile is reachable at `/artists/<handle>`.
 - A handle must be unique among artists. The app tells a manager whether a handle is available before they submit, while still handling the case where two people claim the same one at the same moment.
-- Any manager of an artist can edit its name, handle, bio, avatar, header image, and links.
+- Any manager of an artist can edit its name, handle, bio, where it is based, avatar, header image, and links.
 - A user can manage more than one artist, and can switch between the artists they manage.
 
 ### Managers
@@ -37,7 +37,7 @@ An artist is the selling identity on IME: the entity that publishes releases, se
 
 ## Mobile app
 
-- A listener can view an artist's public profile: name, avatar, header image, bio, links, discography, and merch.
+- A listener can view an artist's public profile: name, where it is based, avatar, header image, bio, links, discography, and merch.
 - A listener can follow and unfollow an artist (see [Community](./community.md)).
 - Artist creation and management are **not** available on mobile.
 

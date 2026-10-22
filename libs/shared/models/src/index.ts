@@ -3,3 +3,4 @@ export * from './lib/api/api-status';
 export * from './lib/api/user';
 export * from './lib/artist-pages';
 export * from './lib/music';
+export * from './lib/places';

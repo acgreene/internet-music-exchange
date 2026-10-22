@@ -28,6 +28,10 @@ export const artistSchema = z.object({
   suspendedAt: timestampSchema.nullable(),
   /** Set while the artist's hosting is unpaid and nothing is for sale. */
   offSaleAt: timestampSchema.nullable(),
+  /** The city the artist is based in. */
+  city: z.string().nullable(),
+  /** The two-letter code of the country the artist is based in. */
+  country: z.string().nullable(),
 });
 
 export type ArtistResponse = z.infer<typeof artistSchema>;
@@ -76,6 +80,8 @@ export const updateArtistRequestSchema = z.object({
   name: z.string().optional(),
   handle: z.string().optional(),
   bio: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
 });
 
 export type UpdateArtistRequest = z.infer<typeof updateArtistRequestSchema>;

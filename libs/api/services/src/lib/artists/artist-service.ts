@@ -6,7 +6,7 @@ import {
   getPostgresErrorCode,
   PostgresErrorCode,
 } from '@ime/db';
-import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
+import { ApiError, ApiErrorKind, HttpStatus, isCountryCode } from '@ime/models';
 import { AccessService } from '../access/access-service';
 import {
   firstAvailable,
@@ -23,6 +23,7 @@ import { ARTIST_IMAGE_RULES } from '../storage/media-types';
 
 const NAME_MAX_LENGTH = 100;
 const BIO_MAX_LENGTH = 2000;
+const CITY_MAX_LENGTH = 80;
 const LINK_LIMIT = 10;
 const LINK_LABEL_MAX_LENGTH = 50;
 const IMAGE_URL_EXPIRY_SECONDS = 3600;
@@ -38,6 +39,9 @@ export interface UpdateArtistInput {
   name?: string;
   handle?: string;
   bio?: string | null;
+  /** Where the artist is based. Give both together; null clears them. */
+  city?: string | null;
+  country?: string | null;
 }
 
 export interface LinkInput {
@@ -165,6 +169,9 @@ export class ArtistService {
     const changes = {
       name: input.name === undefined ? undefined : this.validName(input.name),
       bio: input.bio === undefined ? undefined : this.validBio(input.bio),
+      ...(input.city === undefined && input.country === undefined
+        ? {}
+        : this.validPlace(input)),
       handle:
         input.handle === undefined
           ? undefined
@@ -389,6 +396,36 @@ export class ArtistService {
       );
     }
     return trimmed;
+  }
+
+  private validPlace(input: UpdateArtistInput): {
+    city: string | null;
+    country: string | null;
+  } {
+    const city = input.city?.trim().replace(/\s+/g, ' ') || null;
+    const country = input.country || null;
+    if (country && !isCountryCode(country)) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        'Choose a country from the list.',
+      );
+    }
+    if (city && !country) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        'Choose the country the city is in.',
+      );
+    }
+    if (city && city.length > CITY_MAX_LENGTH) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        `Cities are at most ${CITY_MAX_LENGTH} characters.`,
+      );
+    }
+    return { city, country };
   }
 
   private validLink(link: LinkInput): LinkInput {

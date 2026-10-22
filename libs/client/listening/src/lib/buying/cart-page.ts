@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { form, FormField, required, submit } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
+import { COUNTRIES } from '@ime/models';
 import {
   type CartEntry,
   cartKey,
@@ -23,7 +24,6 @@ import {
   InputDirective,
   MoneyPipe,
 } from '@ime/ui';
-import { COUNTRIES } from './countries';
 
 interface ArtistGroup {
   artistId: string;

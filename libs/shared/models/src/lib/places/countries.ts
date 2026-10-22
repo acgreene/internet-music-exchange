@@ -1,4 +1,4 @@
-/** ISO 3166-1 alpha-2 codes for everywhere an order can ship. */
+/** ISO 3166-1 alpha-2 codes: where artists are based and orders ship. */
 const CODES = `
   AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ
   BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR
@@ -17,9 +17,29 @@ const CODES = `
 const names = new Intl.DisplayNames(['en'], { type: 'region' });
 
 /**
- * Countries for a shipping address, by name, keyed by their two-letter code.
+ * Every country by name, keyed by its two-letter code.
  */
 export const COUNTRIES = CODES.map((code) => ({
   code,
   name: names.of(code) ?? code,
 })).sort((a, b) => a.name.localeCompare(b.name));
+
+const CODE_SET = new Set(CODES);
+
+export function isCountryCode(code: string): boolean {
+  return CODE_SET.has(code);
+}
+
+/** A country's English name, from its two-letter code. */
+export function countryName(code: string): string {
+  return names.of(code) ?? code;
+}
+
+/** Where an artist is based, as a profile or a search shows it. */
+export function placeLabel(
+  city: string | null,
+  country: string | null,
+): string {
+  if (!country) return '';
+  return city ? `${city}, ${countryName(country)}` : countryName(country);
+}
