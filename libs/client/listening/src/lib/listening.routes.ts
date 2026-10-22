@@ -2,6 +2,22 @@ import type { Route } from '@angular/router';
 import { signedInGuard } from '@ime/client-data';
 
 /**
+ * Dig mode, a focused space of its own outside the app's frame.
+ */
+export const digRoutes: Route[] = [
+  {
+    path: 'dig/crates/:crateId',
+    title: 'Dig · IME',
+    loadComponent: () => import('./dig/dig-page').then((m) => m.DigPage),
+  },
+  {
+    path: 'dig/sound',
+    title: 'Dig · IME',
+    loadComponent: () => import('./dig/dig-page').then((m) => m.DigPage),
+  },
+];
+
+/**
  * The listening pages, for an app to place inside its own frame.
  */
 export const listeningRoutes: Route[] = [

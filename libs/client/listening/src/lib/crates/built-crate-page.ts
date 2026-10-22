@@ -145,6 +145,14 @@ const RESULTS_SHOWN = 8;
             </h2>
             <p class="max-w-prose text-ink-muted">{{ crate.reason }}</p>
             <div class="flex flex-wrap items-center gap-3">
+              @if (kind() === 'sound' && crate.items.length) {
+                <a
+                  imeButton
+                  routerLink="/dig/sound"
+                  [queryParams]="{ genre: genre(), tag: tag() }"
+                  >Dig it</a
+                >
+              }
               @if (session.isSignedIn()) {
                 <button
                   imeButton

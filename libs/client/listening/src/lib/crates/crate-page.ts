@@ -130,6 +130,14 @@ import { CrateList } from './crate-list';
               >{{ page.maker.followers }}
               {{ page.maker.followers === 1 ? 'follower' : 'followers' }}</span
             >
+            @if (page.items.length) {
+              <a
+                imeButton
+                size="sm"
+                [routerLink]="['/dig/crates', page.crate.id]"
+                >Dig this crate</a
+              >
+            }
             @if (page.isMine) {
               @if (!editing()) {
                 <button

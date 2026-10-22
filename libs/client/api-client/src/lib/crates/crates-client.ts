@@ -5,6 +5,7 @@ import {
   type CrateCard,
   type CratePage,
   type CreateCrateRequest,
+  type DigSession,
   type MyCrate,
   type PageQuery,
   type UpdateCrateRequest,
@@ -113,6 +114,27 @@ export class CratesClient {
   /** Today's crate from the signed-in listener's library, if they own any. */
   public ofTheDay(): Promise<ApiResult<BuiltCrate | null>> {
     return this.transport.get(ApiRoute.CrateOfTheDay);
+  }
+
+  /** Dig a crate someone made, as deep as the listener chose. */
+  public digCrate(
+    crateId: string,
+    depth: number,
+  ): Promise<ApiResult<DigSession>> {
+    return this.transport.get(ApiRoute.DigCrate, {
+      params: { crateId },
+      query: { depth },
+    });
+  }
+
+  /** Dig a crate IME builds from a genre or a tag. */
+  public digSound(
+    sound: { genre?: string; tag?: string },
+    depth: number,
+  ): Promise<ApiResult<DigSession>> {
+    return this.transport.get(ApiRoute.DigSound, {
+      query: { ...sound, depth },
+    });
   }
 
   /** New public crates by the people the signed-in user follows. */

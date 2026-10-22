@@ -24,9 +24,10 @@ import { releasePriceLabel } from '../releases/release-labels';
         } @else {
           {{ shelf().title }}
         }
-        <span class="ml-1 text-base font-medium tracking-normal text-ink-muted">{{
-          shelf().reason
-        }}</span>
+        <span
+          class="ml-1 text-base font-medium tracking-normal text-ink-muted"
+          >{{ shelf().reason }}</span
+        >
       </h2>
       <ul
         class="-mx-4 grid snap-x auto-cols-[minmax(9.5rem,11rem)] grid-flow-col gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0"
