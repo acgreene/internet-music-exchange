@@ -9,6 +9,7 @@ import { ArtistsClient } from './artists';
 import { CatalogClient } from './catalog';
 import { CommunityClient } from './community';
 import { DesignsClient } from './designs';
+import { FundingClient } from './funding';
 import { MerchClient } from './merch';
 import { OrdersClient } from './orders';
 import { ReleasesClient } from './releases';
@@ -55,6 +56,12 @@ export class ApiClient {
    * designs.
    */
   public readonly designs = new DesignsClient(this.transport);
+
+  /**
+   * Payment accounts, hosting balances, cost splits, donations, and the
+   * public costs page.
+   */
+  public readonly funding = new FundingClient(this.transport);
 
   /**
    * Checkout, purchases, and sales.

@@ -8,12 +8,14 @@ import { AuthRouter } from './auth';
 import { CatalogRouter } from './catalog';
 import { CommunityRouter } from './community';
 import { DesignsRouter } from './designs';
+import { FundingRouter } from './funding';
 import { HealthRouter } from './health';
 import { MerchRouter } from './merch';
 import { OrdersRouter } from './orders';
 import { ReleasesRouter } from './releases';
 import { RouteGuard } from './route-guard';
 import { UsersRouter } from './users';
+import { WebhooksRouter } from './webhooks';
 
 export class RootRouter extends AbstractRouter {
   /**
@@ -52,6 +54,15 @@ export class RootRouter extends AbstractRouter {
         services.sales,
       ),
       new ArtistPagesRouter(guard, services.artistPages),
+      new FundingRouter(
+        guard,
+        services.paymentAccounts,
+        services.billing,
+        services.costShares,
+        services.donations,
+        services.publicCosts,
+      ),
+      new WebhooksRouter(guard, services.stripeWebhooks),
     ];
     for (const router of routers) this.routes.route('/', router.router);
   }

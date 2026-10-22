@@ -321,4 +321,63 @@ export enum ApiRoute {
 
   /** Delete a slot image. */
   DesignImage = '/api/design-images/:imageId',
+
+  // Getting paid and funding
+
+  /** An artist's payment account status. */
+  ArtistPaymentAccount = '/api/artists/:artistId/payment-account',
+
+  /** Start or resume an artist's Stripe onboarding. */
+  ArtistPaymentOnboarding = '/api/artists/:artistId/payment-account/onboarding',
+
+  /** Ask Stripe for an artist's account status now. */
+  ArtistPaymentRefresh = '/api/artists/:artistId/payment-account/refresh',
+
+  /** The signed-in designer's payment account status. */
+  MyPaymentAccount = '/api/me/payment-account',
+
+  /** Start or resume the signed-in designer's Stripe onboarding. */
+  MyPaymentOnboarding = '/api/me/payment-account/onboarding',
+
+  /** Ask Stripe for the signed-in designer's account status now. */
+  MyPaymentRefresh = '/api/me/payment-account/refresh',
+
+  /** The signed-in seller's hosting balance, settings, and statements. */
+  MyBilling = '/api/me/billing',
+
+  /** Start saving a card. */
+  MyBillingCardSetup = '/api/me/billing/card-setup',
+
+  /** PUT saves the card a seller confirmed; DELETE removes it. */
+  MyBillingCard = '/api/me/billing/card',
+
+  /** Change alert and auto top-up settings. */
+  MyBillingSettings = '/api/me/billing/settings',
+
+  /** Top up the hosting balance. */
+  MyBillingTopUps = '/api/me/billing/top-ups',
+
+  /** Refund the unused balance once nothing is on sale. */
+  MyBillingRefund = '/api/me/billing/refund',
+
+  /** GET reads how an artist's costs are split; PUT proposes a new split. */
+  ArtistCostSplit = '/api/artists/:artistId/cost-split',
+
+  /** Accept your share of a proposed split. */
+  ArtistCostSplitAccept = '/api/artists/:artistId/cost-split/accept',
+
+  /** Withdraw a proposed split. */
+  ArtistCostSplitProposal = '/api/artists/:artistId/cost-split/proposal',
+
+  /** Start a donation checkout. */
+  Donations = '/api/donations',
+
+  /** The public costs page. */
+  PublicCosts = '/api/public-costs',
+
+  /** Stripe's events about the platform's own account. */
+  StripeWebhook = '/api/webhooks/stripe',
+
+  /** Stripe's events about sellers' connected accounts. */
+  StripeConnectWebhook = '/api/webhooks/stripe/connect',
 }
