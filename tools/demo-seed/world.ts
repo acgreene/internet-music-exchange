@@ -1692,10 +1692,15 @@ export function buildWorld(options: WorldOptions) {
   );
 
   const suspendedUserIds = [suspendedUser.id];
+  // every other designer takes requests for custom designs
+  const commissionUserIds = designers
+    .filter((_, i) => i % 2 === 0)
+    .map((designer) => designer.id);
 
   return {
     users,
     suspendedUserIds,
+    commissionUserIds,
     rows,
     files,
     ownerArtist: ownerArtist

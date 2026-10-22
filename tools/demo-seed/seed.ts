@@ -153,6 +153,9 @@ async function insertWorld(
     await tx.execute(
       sql`update users set suspended_at = now() - interval '14 days' where id in (select value::uuid from jsonb_array_elements_text(${JSON.stringify(world.suspendedUserIds)}::jsonb))`,
     );
+    await tx.execute(
+      sql`update users set open_to_commissions = true where id in (select value::uuid from jsonb_array_elements_text(${JSON.stringify(world.commissionUserIds)}::jsonb))`,
+    );
 
     const order: [
       Parameters<typeof tx.insert>[0],
