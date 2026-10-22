@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import type * as z from 'zod';
 import type { ApiContract, RouteContracts } from './contract';
 import type { HttpMethod } from './http-method';
 import {

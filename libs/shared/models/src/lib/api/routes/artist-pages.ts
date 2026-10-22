@@ -1,7 +1,7 @@
 import type { RouteContracts } from '../contract';
 import { HttpMethod } from '../http-method';
 import { ApiRoute } from './routes';
-import { z } from 'zod';
+import * as z from 'zod';
 
 const artistPageTrackSchema = z.object({
   position: z.number().int(),

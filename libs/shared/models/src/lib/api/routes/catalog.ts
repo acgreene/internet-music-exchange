@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { RouteContracts } from '../contract';
 import { pageQuerySchema, signedUrlSchema, timestampSchema } from '../general';
 import { HttpMethod } from '../http-method';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * A base URL the client prefixes onto API routes. Empty means same-origin,
