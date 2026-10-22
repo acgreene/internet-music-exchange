@@ -8,6 +8,7 @@ import {
   uploadTargetSchema,
 } from '../general';
 import { HttpMethod } from '../http-method';
+import { GENRE_IDS } from '../../music';
 import { reportReasonSchema } from './moderation';
 import { ApiRoute } from './routes';
 
@@ -67,6 +68,11 @@ export const releaseSchema = z.object({
   /** Set once a takedown can no longer be contested. */
   takedownFinalAt: timestampSchema.nullable(),
   createdAt: timestampSchema,
+  /** Genre ids from IME's list, most fitting first. */
+  genres: z.array(z.string()),
+  tags: z.array(z.string()),
+  /** The track positions where sides B, C, and so on begin. */
+  sideStarts: z.array(z.number().int()),
 });
 
 export type ReleaseResponse = z.infer<typeof releaseSchema>;
@@ -183,6 +189,9 @@ export const updateReleaseRequestSchema = z.object({
   kind: releaseKindSchema.optional(),
   releasedAt: z.iso.date().nullable().optional(),
   slug: z.string().optional(),
+  genres: z.array(z.enum(GENRE_IDS)).optional(),
+  tags: z.array(z.string()).optional(),
+  sideStarts: z.array(z.number().int()).optional(),
 });
 
 export type UpdateReleaseRequest = z.infer<typeof updateReleaseRequestSchema>;

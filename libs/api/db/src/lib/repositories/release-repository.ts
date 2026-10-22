@@ -53,6 +53,9 @@ export interface UpdateReleaseParams {
   slug?: string;
   kind?: ReleaseKind;
   releasedAt?: string | null;
+  genres?: string[];
+  tags?: string[];
+  sideStarts?: number[];
 }
 
 export interface CreateTrackParams {
@@ -92,6 +95,9 @@ const releaseWithArtistColumns = {
   status: releases.status,
   publishedAt: releases.publishedAt,
   takedownFinalAt: releases.takedownFinalAt,
+  genres: releases.genres,
+  tags: releases.tags,
+  sideStarts: releases.sideStarts,
   artistName: artists.name,
   artistHandle: artists.handle,
 };

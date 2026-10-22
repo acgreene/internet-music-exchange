@@ -10,7 +10,17 @@ import {
   type ReleaseKind,
   type Track,
 } from '@ime/db';
-import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
+import {
+  ApiError,
+  ApiErrorKind,
+  HttpStatus,
+  isGenreId,
+  MAX_GENRES,
+  MAX_SIDE_STARTS,
+  MAX_TAG_LENGTH,
+  MAX_TAGS,
+  normalizeTag,
+} from '@ime/models';
 import { AccessService } from '../access/access-service';
 import { ReportService } from '../moderation/report-service';
 import { SellingGateService } from '../selling';
@@ -44,6 +54,9 @@ export interface UpdateReleaseInput {
   kind?: ReleaseKind;
   releasedAt?: string | null;
   slug?: string;
+  genres?: string[];
+  tags?: string[];
+  sideStarts?: number[];
 }
 
 export interface PricingInput {
@@ -161,7 +174,7 @@ export class ReleaseService {
   }
 
   /**
-   * Edit a release's title, kind, release date, or slug.
+   * Edit a release's title, kind, release date, slug, genres, tags, or sides.
    *
    * @throws ApiError 400 for invalid fields, 409 when the slug is taken.
    */
@@ -202,6 +215,15 @@ export class ReleaseService {
         kind: input.kind,
         releasedAt: input.releasedAt,
         slug: input.slug,
+        genres:
+          input.genres === undefined
+            ? undefined
+            : this.validGenres(input.genres),
+        tags: input.tags === undefined ? undefined : this.validTags(input.tags),
+        sideStarts:
+          input.sideStarts === undefined
+            ? undefined
+            : await this.validSideStarts(releaseId, input.sideStarts),
       });
     } catch (error) {
       if (getPostgresErrorCode(error) === PostgresErrorCode.UniqueViolation) {
@@ -761,5 +783,58 @@ export class ReleaseService {
       );
     }
     return trimmed;
+  }
+
+  private validGenres(genres: string[]): string[] {
+    const unique = [...new Set(genres)];
+    if (unique.length > MAX_GENRES) {
+      throw this.badRequest(`Pick up to ${MAX_GENRES} genres.`);
+    }
+    const unknown = unique.find((genre) => !isGenreId(genre));
+    if (unknown) {
+      throw this.badRequest(`"${unknown}" is not on IME's list of genres.`);
+    }
+    return unique;
+  }
+
+  private validTags(tags: string[]): string[] {
+    const normalized = tags.map((raw) => {
+      const tag = normalizeTag(raw);
+      if (!tag) {
+        throw this.badRequest(
+          `"${raw}" can't be a tag. Tags are up to ${MAX_TAG_LENGTH} letters, numbers, spaces, or hyphens.`,
+        );
+      }
+      return tag;
+    });
+    const unique = [...new Set(normalized)];
+    if (unique.length > MAX_TAGS) {
+      throw this.badRequest(`Add up to ${MAX_TAGS} tags.`);
+    }
+    return unique;
+  }
+
+  /** Each side after A has to start on a later track than the one before. */
+  private async validSideStarts(
+    releaseId: string,
+    sideStarts: number[],
+  ): Promise<number[]> {
+    const trackCount = (await this.db.releases.listTracks(releaseId)).length;
+    const ascending = sideStarts.every(
+      (start, i) => i === 0 || start > sideStarts[i - 1],
+    );
+    const inRange = sideStarts.every(
+      (start) => Number.isInteger(start) && start >= 2 && start <= trackCount,
+    );
+    if (!ascending || !inRange || sideStarts.length > MAX_SIDE_STARTS) {
+      throw this.badRequest(
+        'Each side has to start on a later track, after the first and within the tracklist.',
+      );
+    }
+    return sideStarts;
+  }
+
+  private badRequest(message: string): ApiError {
+    return new ApiError(ApiErrorKind.Http, HttpStatus.BadRequest, message);
   }
 }

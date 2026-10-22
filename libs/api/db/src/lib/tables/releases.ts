@@ -3,6 +3,7 @@ import {
   check,
   date,
   index,
+  integer,
   pgEnum,
   pgPolicy,
   pgTable,
@@ -94,6 +95,27 @@ export const releases = pgTable(
      * are refunded and its files deleted.
      */
     takedownFinalAt: timestamp('takedown_final_at', { withTimezone: true }),
+
+    /** Up to three ids from IME's genre list, most fitting first. */
+    genres: text('genres')
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+
+    /** Free-form words for the release's sound and mood, stored lowercase. */
+    tags: text('tags')
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+
+    /**
+     * The track positions where sides B, C, and so on begin, ascending. Empty
+     * when the release is not divided into sides.
+     */
+    sideStarts: integer('side_starts')
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
   },
   (table) => [
     index('releases_artist_id_idx').on(table.artistId),
@@ -103,6 +125,18 @@ export const releases = pgTable(
       'releases_slug_format',
       sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND length(${table.slug}) <= 100`,
     ),
+    check(
+      'releases_genres_at_most_three',
+      sql`cardinality(${table.genres}) <= 3`,
+    ),
+    check('releases_tags_at_most_ten', sql`cardinality(${table.tags}) <= 10`),
+    check(
+      'releases_side_starts_at_most_25',
+      sql`cardinality(${table.sideStarts}) <= 25`,
+    ),
+    // browsing and search find releases by any of their genres or tags
+    index('releases_genres_idx').using('gin', table.genres),
+    index('releases_tags_idx').using('gin', table.tags),
     // the public catalog reads by status, so keep that lookup indexed
     index('releases_status_idx').on(table.status),
     // a release that claims to be public has to say when it went public

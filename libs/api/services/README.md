@@ -54,8 +54,8 @@ Each is a property of `ImeServices`, named in brackets.
 ### Releases and listening
 
 - **`ReleaseService`** (`releases`): a manager's side of releases: drafts,
-  tracks, audio and artwork uploads, pricing, publishing, archiving, and
-  gifting. Use it for every screen where an artist builds or edits a release.
+  tracks and sides, genres and tags, audio and artwork uploads, pricing,
+  publishing, archiving, and gifting. Use it for every screen where an artist builds or edits a release.
 - **`ShelfService`** (`shelves`): the home page's shelves, rows picked by
   recipes over the catalog and the listener's library, rotated daily, plus a
   few designed releases and how much of each format is on offer. Use it for
