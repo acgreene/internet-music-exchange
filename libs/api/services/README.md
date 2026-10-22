@@ -6,7 +6,9 @@ something is published or sold, the money flows, and the work that runs on a
 schedule. Apps (`apps/api`, `apps/worker`) reach the database only through
 these services; importing `@ime/db` from an app is a lint error.
 
-Imported as `@ime/services`. Only what `src/index.ts` lists is public.
+Imported as `@ime/services`. Only what `src/index.ts` lists is public:
+`ImeServices`, a few constants, and types. Services are exported as types
+only, so apps can name them but never build their own.
 
 ## Getting started
 
@@ -18,6 +20,14 @@ client, storage client, and email sender.
 const services = new ImeServices();
 new RootRouter(services);
 await services.fundingJobs.runDaily();
+```
+
+A route or job takes the one service it uses, typed with `import type`:
+
+```ts
+import type { ReleaseService } from '@ime/services';
+
+constructor(private readonly releases: ReleaseService) {}
 ```
 
 Scripts and tests can swap what is shared, for example
@@ -92,8 +102,9 @@ Each is a property of `ImeServices`, named in brackets.
 
 ## Building blocks other services use
 
-Apps rarely need these directly; they are exported for wiring services up by
-hand.
+Apps never use these directly. `CloudStorageService` and `EmailService` are
+exported as types, for writing stand-ins to pass to `ImeServices`; the others
+are internal.
 
 - **`AccessService`**: the shared permission checks: active user, artist
   manager, platform admin, and managing a given release, track, or asset.
@@ -113,8 +124,9 @@ hand.
 - **Permissions first.** A method that acts for someone takes their `userId`
   first and checks it before doing anything.
 - **Dependencies.** Every service takes its dependencies in its constructor,
-  database first, with defaults for normal use. Apps get them wired through
-  `ImeServices`; build one by hand only in a script or test.
+  database first, with defaults for normal use. `ImeServices` is the only
+  place outside this library that builds them; the library's own tests may
+  build one directly from its file.
 - **Transactions.** Writes that must land together go through
   `db.transaction(async (repos) => ...)`. Stripe calls and file deletes stay
   outside it, and files are deleted only after the rows pointing at them.

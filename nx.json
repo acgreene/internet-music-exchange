@@ -18,27 +18,29 @@
       "cache": true,
       "dependsOn": [
         "^build",
-        { "projects": ["client-env"], "target": "generate-env" }
+        {
+          "projects": ["client-env"],
+          "target": "generate-env"
+        }
       ],
       "inputs": ["production", "^production"]
     },
     "@angular/build:dev-server": {
-      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }]
-    },
-    "@nx/eslint:lint": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.mjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
+      "dependsOn": [
+        {
+          "projects": ["client-env"],
+          "target": "generate-env"
+        }
       ]
     },
     "@angular/build:unit-test": {
       "cache": true,
-      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }],
+      "dependsOn": [
+        {
+          "projects": ["client-env"],
+          "target": "generate-env"
+        }
+      ],
       "inputs": ["default", "^production"]
     },
     "@nx/esbuild:esbuild": {
@@ -50,6 +52,21 @@
         {
           "json": "{workspaceRoot}/tsconfig.json",
           "fields": ["extends", "files", "include"]
+        },
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        {
+          "json": "{workspaceRoot}/package.json",
+          "fields": [
+            "packageManager",
+            "pnpm.onlyBuiltDependencies",
+            "pnpm.neverBuiltDependencies",
+            "pnpm.allowBuilds",
+            "pnpm.supportedArchitectures",
+            "pnpm.patchedDependencies"
+          ]
+        },
+        {
+          "runtime": "node -e \"try{console.log('pnpm major '+require('child_process').execSync('pnpm --version',{stdio:['ignore','pipe','ignore']}).toString().trim().split('.')[0])}catch{console.log('pnpm major unavailable')}\""
         }
       ]
     },
@@ -99,5 +116,8 @@
     "@nx/angular:component": {
       "style": "css"
     }
+  },
+  "affected": {
+    "legacy": true
   }
 }

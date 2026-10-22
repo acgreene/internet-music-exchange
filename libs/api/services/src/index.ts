@@ -1,90 +1,92 @@
-// What apps build at startup
+// What apps build at startup. It is the only way to create services, so every
+// service shares one database, Stripe client, storage client, and email sender.
 export { ImeServices, type ImeServiceDependencies } from './lib/ime-services';
 
+// Everything below is a type, for the routes and jobs that take a service
+
 // Accounts and artists
-export { AuthService } from './lib/auth/auth-service';
-export {
+export type { AuthService } from './lib/auth/auth-service';
+export type {
+  UpdateProfileParams,
   UserService,
-  type UpdateProfileParams,
 } from './lib/users/user-service';
-export {
+export type {
+  ArtistProfile,
   ArtistService,
-  type ArtistProfile,
-  type CreateArtistInput,
-  type ImageUpload,
-  type LinkInput,
-  type UpdateArtistInput,
+  CreateArtistInput,
+  ImageUpload,
+  LinkInput,
+  UpdateArtistInput,
 } from './lib/artists/artist-service';
 export { HANDLE_MAX_LENGTH, SLUG_MAX_LENGTH } from './lib/naming/naming-utils';
 
 // Releases and listening
-export {
+export type {
+  AssetChanges,
+  AssetInput,
+  CreateReleaseInput,
+  PricingInput,
   ReleaseService,
-  type AssetChanges,
-  type AssetInput,
-  type CreateReleaseInput,
-  type PricingInput,
-  type TrackInput,
-  type UpdateReleaseInput,
-  type UploadTarget,
+  TrackInput,
+  UpdateReleaseInput,
+  UploadTarget,
 } from './lib/releases/release-service';
-export {
+export type {
   CatalogService,
-  type ReleasePage,
-  type ReleasePageAsset,
+  ReleasePage,
+  ReleasePageAsset,
 } from './lib/releases/catalog-service';
-export { ArtistPageService } from './lib/artist-pages/artist-page-service';
+export type { ArtistPageService } from './lib/artist-pages/artist-page-service';
 
 // Getting paid and funding
-export {
+export { STRIPE_DASHBOARD_URL } from './lib/payments/payment-account-service';
+export type {
   PaymentAccountService,
-  STRIPE_DASHBOARD_URL,
-  type PayoutAccountStatus,
+  PayoutAccountStatus,
 } from './lib/payments/payment-account-service';
-export {
+export { MAX_TOP_UP, MIN_TOP_UP } from './lib/funding/billing-service';
+export type {
+  BillingOverview,
   BillingService,
-  MAX_TOP_UP,
-  MIN_TOP_UP,
-  type BillingOverview,
-  type BillingSettingsInput,
-  type TopUpInput,
-  type TopUpResult,
+  BillingSettingsInput,
+  TopUpInput,
+  TopUpResult,
 } from './lib/funding/billing-service';
-export {
+export type {
+  ArtistCostSplit,
   CostShareService,
-  type ArtistCostSplit,
-  type ShareInput,
+  ShareInput,
 } from './lib/funding/cost-share-service';
-export {
+export type {
+  DonationInput,
   DonationService,
-  type DonationInput,
 } from './lib/funding/donation-service';
-export {
+export type {
+  PublicCostMonth,
+  PublicCosts,
   PublicCostsService,
-  type PublicCostMonth,
-  type PublicCosts,
 } from './lib/funding/public-costs-service';
 export {
   GRACE_DAYS,
-  MonthlyCloseService,
   SHARED_COST_CAP,
-  type CloseSummary,
-  type PeriodRates,
 } from './lib/funding/monthly-close-service';
-export { StripeWebhookService } from './lib/webhooks/stripe-webhook-service';
+export type {
+  CloseSummary,
+  MonthlyCloseService,
+  PeriodRates,
+} from './lib/funding/monthly-close-service';
+export type { StripeWebhookService } from './lib/webhooks/stripe-webhook-service';
 
 // Background work
-export { FundingJobsService } from './lib/funding/funding-jobs-service';
-export { TranscodeService } from './lib/transcoding/transcode-service';
+export type { FundingJobsService } from './lib/funding/funding-jobs-service';
+export type { TranscodeService } from './lib/transcoding/transcode-service';
 
 // Operations
-export { HealthService } from './lib/health/health-service';
+export type { HealthService } from './lib/health/health-service';
 
-// Building blocks, for wiring services up by hand in scripts and tests
-export { AccessService } from './lib/access/access-service';
-export { FundingService } from './lib/funding/funding-service';
-export {
+// Building blocks, for writing stand-ins to pass to ImeServices
+export type {
   CloudStorageService,
-  type StoredObject,
+  StoredObject,
 } from './lib/storage/cloud-storage-service';
-export { EmailService, type Email } from './lib/email/email-service';
+export type { Email, EmailService } from './lib/email/email-service';

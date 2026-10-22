@@ -13,7 +13,7 @@ import {
 } from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
-import { FundingService } from '../funding/funding-service';
+import { FundingService } from '../funding';
 import {
   firstAvailable,
   isValidSlug,
@@ -423,6 +423,8 @@ export class ReleaseService {
   /**
    * Put a release's tracks in a new running order.
    *
+   * @param userId
+   * @param releaseId
    * @param trackIds - Every track on the release, in the new order.
    * @throws ApiError 400 when the ids are not exactly the release's tracks.
    */

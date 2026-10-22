@@ -7,14 +7,39 @@
   "tags": ["scope:client", "type:data-access"],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }]
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ],
+      "dependsOn": [
+        {
+          "projects": ["client-env"],
+          "target": "generate-env"
+        }
+      ]
     },
     "test": {
-      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }]
+      "dependsOn": [
+        {
+          "projects": ["client-env"],
+          "target": "generate-env"
+        }
+      ]
     },
     "typecheck": {
-      "dependsOn": [{ "projects": ["client-env"], "target": "generate-env" }],
+      "dependsOn": [
+        {
+          "projects": ["client-env"],
+          "target": "generate-env"
+        }
+      ],
       "options": {
         "commands": [
           "tsc --noEmit -p tsconfig.lib.json",
