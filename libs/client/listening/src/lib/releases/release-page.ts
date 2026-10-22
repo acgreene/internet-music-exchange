@@ -32,6 +32,7 @@ import { ArtistPageHost } from '@ime/client-artist-pages';
 import { BuyPanel } from '../buying/buy-panel';
 import { MerchGrid } from '../merch/merch-grid';
 import { ReleaseComments } from '../comments/release-comments';
+import { ReportButton } from '../reporting/report-button';
 import { PageMetaService } from '../page-meta';
 import { assetKindLabel, releaseKindLabel } from './release-labels';
 
@@ -53,6 +54,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
     DurationPipe,
     EqualizerComponent,
     ReleaseComments,
+    ReportButton,
     RouterLink,
     SpinnerComponent,
   ],
@@ -84,6 +86,12 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                 <button imeButton (click)="openBuyPanel()">
                   {{ page.pricing?.mode === 'free' ? 'Get it free' : 'Buy' }}
                 </button>
+                <ime-report-button
+                  class="ml-2"
+                  targetType="release"
+                  [targetId]="page.release.id"
+                  [label]="page.release.title"
+                />
               </div>
             }
           </section>
@@ -149,6 +157,13 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                 />
               </section>
             }
+            <div>
+              <ime-report-button
+                targetType="release"
+                [targetId]="page.release.id"
+                [label]="page.release.title"
+              />
+            </div>
           </aside>
 
           <div

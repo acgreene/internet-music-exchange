@@ -74,6 +74,17 @@
     } }
   </header>
 
+  @if (session.user(); as user) { @if (user.suspendedAt) {
+  <p class="border-b border-line bg-danger/10 px-4 py-2 text-sm md:px-8">
+    Your account is suspended by IME's moderators. You can still listen to your
+    library, but cannot comment, report, publish, or sell.
+  </p>
+  } @else if (!user.username) {
+  <p class="border-b border-line bg-marker px-4 py-2 text-sm md:px-8">
+    Choose a username to finish your account.
+    <a class="link font-medium" routerLink="/account">Choose one</a>
+  </p>
+  } }
   <main class="w-full flex-1 px-4 py-8 md:px-8">
     <router-outlet />
   </main>
@@ -128,6 +139,15 @@
     >
       Studio
     </a>
+    @if (session.isAdmin()) {
+    <a
+      cdkMenuItem
+      class="block rounded-control px-3 py-2 text-sm hover:bg-wash"
+      routerLink="/admin"
+    >
+      Admin
+    </a>
+    }
     <a
       cdkMenuItem
       class="block rounded-control px-3 py-2 text-sm hover:bg-wash"

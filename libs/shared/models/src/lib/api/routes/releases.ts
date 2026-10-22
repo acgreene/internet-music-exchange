@@ -8,6 +8,7 @@ import {
   uploadTargetSchema,
 } from '../general';
 import { HttpMethod } from '../http-method';
+import { reportReasonSchema } from './moderation';
 import { ApiRoute } from './routes';
 
 export const currencySchema = z.enum(['usd', 'eur']);
@@ -141,8 +142,25 @@ export type ReleaseAssetResponse = z.infer<typeof releaseAssetSchema>;
 /**
  * Everything a manager edits on a release.
  */
+/**
+ * Why a release was taken down, as its managers see it.
+ */
+export const releaseTakedownSchema = z.object({
+  reason: reportReasonSchema,
+  note: z.string().nullable(),
+  takenDownAt: timestampSchema,
+  /** The last day to contest a copyright takedown, while it can be. */
+  contestBy: timestampSchema.nullable(),
+  /** The managers' contest waiting on an admin. */
+  contestPending: z.boolean(),
+});
+
+export type ReleaseTakedown = z.infer<typeof releaseTakedownSchema>;
+
 export const managedReleaseSchema = z.object({
   release: releaseSchema,
+  /** Set while the release is taken down. */
+  takedown: releaseTakedownSchema.nullable(),
   tracks: z.array(tracklistItemSchema),
   originals: z.array(audioFileSchema),
   streamCopies: z.array(audioFileSchema),

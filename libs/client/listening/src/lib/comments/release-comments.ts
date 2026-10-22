@@ -30,6 +30,7 @@ import {
 const PAGE_SIZE = 20;
 const MAX_LENGTH = 2000;
 
+import { ReportButton } from '../reporting/report-button';
 /**
  * A release's comments, newest first, with a box to add one. Authors edit and
  * delete their own; the artist's managers can delete any.
@@ -44,6 +45,7 @@ const MAX_LENGTH = 2000;
     FieldComponent,
     FormField,
     InputDirective,
+    ReportButton,
     RouterLink,
   ],
   template: `
@@ -162,18 +164,18 @@ const MAX_LENGTH = 2000;
               </form>
             } @else {
               <p class="text-sm whitespace-pre-line">{{ comment.comment }}</p>
-              @if (isMine(comment) || canModerate()) {
-                <div class="flex gap-1">
-                  @if (isMine(comment)) {
-                    <button
-                      imeButton
-                      size="sm"
-                      variant="ghost"
-                      (click)="startEdit(comment)"
-                    >
-                      Edit
-                    </button>
-                  }
+              <div class="flex gap-1">
+                @if (isMine(comment)) {
+                  <button
+                    imeButton
+                    size="sm"
+                    variant="ghost"
+                    (click)="startEdit(comment)"
+                  >
+                    Edit
+                  </button>
+                }
+                @if (isMine(comment) || canModerate()) {
                   <button
                     imeButton
                     size="sm"
@@ -182,8 +184,15 @@ const MAX_LENGTH = 2000;
                   >
                     Delete
                   </button>
-                </div>
-              }
+                }
+                @if (!isMine(comment)) {
+                  <ime-report-button
+                    targetType="comment"
+                    [targetId]="comment.id"
+                    label="this comment"
+                  />
+                }
+              </div>
             }
           </li>
         } @empty {

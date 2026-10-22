@@ -6,6 +6,8 @@ import {
   resource,
 } from '@angular/core';
 import { ApiClient } from '@ime/api-client';
+import { SessionService } from '@ime/client-data';
+import { ReportButton } from '@ime/client-listening';
 import { AlertComponent, SpinnerComponent } from '@ime/ui';
 
 /**
@@ -14,7 +16,7 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
 @Component({
   selector: 'ime-user-profile-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AlertComponent, SpinnerComponent],
+  imports: [AlertComponent, ReportButton, SpinnerComponent],
   template: `
     @if (profile.isLoading()) {
       <ime-spinner />
@@ -26,12 +28,22 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
           {{ user.name || user.username }}
         </h1>
         <p class="text-ink-muted">&#64;{{ user.username }}</p>
+        @if (user.id !== session.user()?.id) {
+          <div class="mt-2">
+            <ime-report-button
+              targetType="user"
+              [targetId]="user.id"
+              [label]="'@' + user.username"
+            />
+          </div>
+        }
       </div>
     }
   `,
 })
 export class UserProfilePage {
   private readonly api = inject(ApiClient);
+  protected readonly session = inject(SessionService);
 
   public readonly username = input.required<string>();
 

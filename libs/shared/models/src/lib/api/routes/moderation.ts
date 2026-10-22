@@ -81,11 +81,29 @@ export const copyrightContestSchema = z.object({
 export type CopyrightContestResponse = z.infer<typeof copyrightContestSchema>;
 
 /**
+ * What a reported item is, for an admin to recognize it.
+ */
+export const moderationSubjectSchema = z.object({
+  /** Its name or title, or an excerpt of a comment. */
+  label: z.string(),
+  /** Who it belongs to or where it appears, when that helps. */
+  context: z.string().nullable(),
+  /** Where it lives in the web app, while it can be seen. */
+  path: z.string().nullable(),
+  /** Taken down or suspended. */
+  down: z.boolean(),
+});
+
+export type ModerationSubject = z.infer<typeof moderationSubjectSchema>;
+
+/**
  * Every open report about one item, as the admin queue shows it.
  */
 export const openReportGroupSchema = z.object({
   targetType: moderationTargetSchema,
   targetId: z.guid(),
+  /** Null once the item is gone for good. */
+  subject: moderationSubjectSchema.nullable(),
   reports: z.number().int(),
   reasons: z.array(reportReasonSchema),
   firstReportedAt: timestampSchema,
@@ -94,6 +112,8 @@ export const openReportGroupSchema = z.object({
 export type OpenReportGroup = z.infer<typeof openReportGroupSchema>;
 
 export const moderationCaseSchema = z.object({
+  /** Null once the item is gone for good, as a deleted comment is. */
+  subject: moderationSubjectSchema.nullable(),
   reports: z.array(reportSchema),
   actions: z.array(moderationActionSchema),
   openContest: copyrightContestSchema.nullable(),

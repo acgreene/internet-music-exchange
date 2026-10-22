@@ -23,6 +23,7 @@ import {
 import { PageMetaService } from '../page-meta';
 import { productTypeLabel } from './merch-labels';
 
+import { ReportButton } from '../reporting/report-button';
 /** The most units of one variant offered at once. */
 const MAX_QUANTITY = 10;
 
@@ -38,6 +39,7 @@ const MAX_QUANTITY = 10;
     ButtonDirective,
     CoverComponent,
     MoneyPipe,
+    ReportButton,
     RouterLink,
     SpinnerComponent,
   ],
@@ -94,6 +96,13 @@ const MAX_QUANTITY = 10;
                 >{{ page.artist.name }}</a
               >
             </p>
+            <div>
+              <ime-report-button
+                targetType="product"
+                [targetId]="page.product.id"
+                [label]="page.product.name"
+              />
+            </div>
           </header>
 
           @if (variant(); as variant) {

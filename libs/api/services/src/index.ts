@@ -99,20 +99,21 @@ export type {
 } from './lib/designs/release-design-service';
 
 // Moderation
+export { CONTEST_DAYS } from './lib/moderation/report-service';
 export type {
   ModerationTargetRef,
+  ReleaseTakedown,
   ReportService,
 } from './lib/moderation/report-service';
-export {
-  CONTEST_DAYS,
-  REPEAT_INFRINGER_TAKEDOWNS,
-} from './lib/moderation/moderation-service';
+export { REPEAT_INFRINGER_TAKEDOWNS } from './lib/moderation/moderation-service';
 export type {
   CopyrightClaimInput,
   ModerationCase,
   ModerationDecision,
   ModerationOutcome,
   ModerationService,
+  ModerationSubject,
+  QueueEntry,
 } from './lib/moderation/moderation-service';
 
 // Getting paid and funding

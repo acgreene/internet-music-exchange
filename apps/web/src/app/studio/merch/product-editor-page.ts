@@ -118,6 +118,13 @@ import { VariantsSection } from './sections/variants-section';
           @if (managed.product.status === 'archived') {
             <ime-alert>Archived: off sale. Past orders keep it.</ime-alert>
           }
+          @if (managed.product.status === 'taken_down') {
+            <ime-alert tone="error"
+              >Taken down by IME's moderators and pulled from the store.
+              Unshipped orders were refunded. The email we sent explains
+              why.</ime-alert
+            >
+          }
           @if (confirmingDelete()) {
             <div
               class="flex flex-wrap items-center gap-3 rounded-card border border-danger/40 bg-danger/10 p-3 text-sm"

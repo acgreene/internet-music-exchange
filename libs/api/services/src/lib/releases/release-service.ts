@@ -12,6 +12,7 @@ import {
 } from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
+import { ReportService } from '../moderation/report-service';
 import { SellingGateService } from '../selling';
 import {
   firstAvailable,
@@ -86,6 +87,7 @@ export class ReleaseService {
     private readonly access: AccessService = new AccessService(db),
     private readonly gate: SellingGateService = new SellingGateService(db),
     private readonly uploads: UploadService = new UploadService(storage),
+    private readonly reports: ReportService = new ReportService(db, access),
   ) {}
 
   /**
@@ -132,21 +134,30 @@ export class ReleaseService {
 
   /**
    * Everything a manager edits on a release: its tracks and their audio, its
-   * price, and its artwork and assets.
+   * price, and its artwork and assets, and why it was taken down if it was.
    */
   public async getForManager(userId: string, releaseId: string) {
     const release = await this.access.requireReleaseManager(userId, releaseId);
 
-    const [tracks, originals, streamCopies, pricing, assets] =
+    const [tracks, originals, streamCopies, pricing, assets, takedown] =
       await Promise.all([
         this.db.releases.listTracks(releaseId),
         this.db.releaseAssets.listAudioFilesForRelease(releaseId, 'original'),
         this.db.releaseAssets.listAudioFilesForRelease(releaseId, 'stream'),
         this.db.releases.getPricing(releaseId),
         this.db.releaseAssets.listAllAssets(releaseId),
+        this.reports.getTakedown(release),
       ]);
 
-    return { release, tracks, originals, streamCopies, pricing, assets };
+    return {
+      release,
+      takedown,
+      tracks,
+      originals,
+      streamCopies,
+      pricing,
+      assets,
+    };
   }
 
   /**

@@ -11,6 +11,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import { currentValue } from '@ime/client-data';
+import { ReportButton } from '@ime/client-listening';
 import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
 import { StudioService } from '../studio.service';
 import { designPriceLabel } from './design-price';
@@ -22,7 +23,13 @@ import { designPriceLabel } from './design-price';
 @Component({
   selector: 'ime-marketplace-design-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AlertComponent, ButtonDirective, RouterLink, SpinnerComponent],
+  imports: [
+    AlertComponent,
+    ButtonDirective,
+    ReportButton,
+    RouterLink,
+    SpinnerComponent,
+  ],
   template: `
     <div class="flex max-w-3xl flex-col gap-6">
       <a class="link text-sm" routerLink="/studio/marketplace">← Marketplace</a>
@@ -36,6 +43,13 @@ import { designPriceLabel } from './design-price';
           <p class="font-mono text-sm">
             {{ price(detail.design) }} · version {{ detail.latestVersion }}
           </p>
+          <div>
+            <ime-report-button
+              targetType="design"
+              [targetId]="detail.design.id"
+              [label]="detail.design.name"
+            />
+          </div>
         </header>
         @if (detail.design.description) {
           <p class="max-w-prose whitespace-pre-line">

@@ -142,11 +142,13 @@ Each is a property of `ImeServices`, named in brackets.
 
 - **`ReportService`** (`reports`): reporting a release, product, comment,
   design, artist, or user, and a manager contesting a copyright takedown. Use
-  it for report buttons and the contest form.
+  it for report buttons and the contest form. Why a release was taken down
+  comes with the managed release from `ReleaseService`.
 - **`ModerationService`** (`moderation`): an admin's queue of open reports,
   dismissing, taking content down and restoring it, suspensions, clearing
-  profiles, recording copyright claims, and deciding contests. Takedowns
-  refund only what was taken down. Use it for the admin tools.
+  profiles, recording copyright claims, and deciding contests. A case says
+  what the reported item is and links to it. Takedowns refund only what was
+  taken down. Use it for the admin tools.
 
 ### Background work (the worker)
 

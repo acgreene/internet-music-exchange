@@ -17,10 +17,7 @@ import { AccessService } from '../access/access-service';
 import { DesignMarketplaceService } from '../designs/design-marketplace-service';
 import { type Email, EmailService, moderationEmails } from '../email';
 import { ReleaseFilesService } from '../releases/release-files-service';
-import type { ModerationTargetRef } from './report-service';
-
-/** How long an artist has to contest a copyright takedown. */
-export const CONTEST_DAYS = 14;
+import { CONTEST_DAYS, type ModerationTargetRef } from './report-service';
 
 /** Final copyright takedowns that make an artist a repeat infringer. */
 export const REPEAT_INFRINGER_TAKEDOWNS = 3;
@@ -44,9 +41,32 @@ export interface CopyrightClaimInput {
 }
 
 /**
+ * What a reported item is, for an admin to recognize it.
+ */
+export interface ModerationSubject {
+  /** Its name or title, or an excerpt of a comment. */
+  label: string;
+  /** Who it belongs to or where it appears, when that helps. */
+  context: string | null;
+  /** Where it lives in the web app, while it can be seen. */
+  path: string | null;
+  /** Taken down or suspended. */
+  down: boolean;
+}
+
+/**
+ * One item in the queue, with what it is.
+ */
+export interface QueueEntry extends OpenReportGroup {
+  subject: ModerationSubject | null;
+}
+
+/**
  * Everything on record about one reported item.
  */
 export interface ModerationCase {
+  /** Null once the item is gone for good, as a deleted comment is. */
+  subject: ModerationSubject | null;
   reports: Report[];
   actions: ModerationAction[];
   /** The artist's contest waiting on a copyright takedown, if any. */
@@ -94,14 +114,24 @@ export class ModerationService {
   ) {}
 
   /**
-   * The queue: every item with open reports, longest waiting first.
+   * The queue: every item with open reports, longest waiting first, with
+   * what each item is.
    */
   public async listQueue(
     adminUserId: string,
     limit?: number,
-  ): Promise<OpenReportGroup[]> {
+  ): Promise<QueueEntry[]> {
     await this.access.requireAdmin(adminUserId);
-    return this.db.moderation.listOpenReportGroups(limit);
+    const groups = await this.db.moderation.listOpenReportGroups(limit);
+    return Promise.all(
+      groups.map(async (group) => ({
+        ...group,
+        subject: await this.describe({
+          type: group.targetType,
+          id: group.targetId,
+        }),
+      })),
+    );
   }
 
   /**
@@ -112,14 +142,15 @@ export class ModerationService {
     target: ModerationTargetRef,
   ): Promise<ModerationCase> {
     await this.access.requireAdmin(adminUserId);
-    const [reports, actions, openContest] = await Promise.all([
+    const [subject, reports, actions, openContest] = await Promise.all([
+      this.describe(target),
       this.db.moderation.listReportsForTarget(target.type, target.id),
       this.db.moderation.listActionsForTarget(target.type, target.id),
       target.type === 'release'
         ? this.db.moderation.getOpenContest(target.id)
         : null,
     ]);
-    return { reports, actions, openContest };
+    return { subject, reports, actions, openContest };
   }
 
   /**
@@ -412,6 +443,96 @@ export class ModerationService {
     await this.releaseFiles.deleteAll(releaseId);
     await this.suspendRepeatInfringer(release.artistId);
     return outcome;
+  }
+
+  private async describe(
+    target: ModerationTargetRef,
+  ): Promise<ModerationSubject | null> {
+    switch (target.type) {
+      case 'release': {
+        const release = await this.db.releases.getById(target.id);
+        if (!release) return null;
+        const artist = await this.db.artists.getById(release.artistId);
+        return {
+          label: release.title,
+          context: artist ? `by ${artist.name}` : null,
+          path:
+            artist && release.status === 'published'
+              ? `/artists/${artist.handle}/${release.slug}`
+              : null,
+          down: release.status === 'taken_down',
+        };
+      }
+      case 'product': {
+        const product = await this.db.products.getById(target.id);
+        if (!product) return null;
+        const artist = await this.db.artists.getById(product.artistId);
+        return {
+          label: product.name,
+          context: artist ? `merch by ${artist.name}` : null,
+          path:
+            artist && product.status === 'published'
+              ? `/artists/${artist.handle}/merch/${product.id}`
+              : null,
+          down: product.status === 'taken_down',
+        };
+      }
+      case 'comment': {
+        const comment = await this.db.social.getCommentById(target.id);
+        if (!comment) return null;
+        const [author, release] = await Promise.all([
+          this.db.users.getById(comment.userId),
+          this.db.releases.getById(comment.releaseId),
+        ]);
+        const artist = release
+          ? await this.db.artists.getById(release.artistId)
+          : null;
+        return {
+          label: comment.comment,
+          context: `@${author?.username ?? 'unknown'} on ${release?.title ?? 'a release'}`,
+          path:
+            artist && release?.status === 'published'
+              ? `/artists/${artist.handle}/${release.slug}`
+              : null,
+          down: false,
+        };
+      }
+      case 'design': {
+        const design = await this.db.designs.getById(target.id);
+        if (!design) return null;
+        const designer = design.designerUserId
+          ? await this.db.users.getById(design.designerUserId)
+          : null;
+        return {
+          label: design.name,
+          context: designer?.username
+            ? `design by @${designer.username}`
+            : null,
+          path: `/studio/marketplace/${design.id}`,
+          down: design.status === 'taken_down',
+        };
+      }
+      case 'artist': {
+        const artist = await this.db.artists.getById(target.id);
+        if (!artist) return null;
+        return {
+          label: artist.name,
+          context: `@${artist.handle}`,
+          path: artist.suspendedAt ? null : `/artists/${artist.handle}`,
+          down: Boolean(artist.suspendedAt),
+        };
+      }
+      case 'user': {
+        const user = await this.db.users.getById(target.id);
+        if (!user) return null;
+        return {
+          label: user.name ?? user.username ?? 'A user with no name',
+          context: user.username ? `@${user.username}` : null,
+          path: user.username ? `/users/${user.username}` : null,
+          down: Boolean(user.suspendedAt),
+        };
+      }
+    }
   }
 
   private async takeDownRelease(

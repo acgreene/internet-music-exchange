@@ -17,6 +17,7 @@ import { DetailsSection } from './sections/details-section';
 import { ExtrasSection } from './sections/extras-section';
 import { GiftSection } from './sections/gift-section';
 import { PricingSection } from './sections/pricing-section';
+import { TakedownNotice } from './sections/takedown-notice';
 import { TracksSection } from './sections/tracks-section';
 import { STATUS_LABELS } from './release-options';
 import { currentValue } from '@ime/client-data';
@@ -39,6 +40,7 @@ import { currentValue } from '@ime/client-data';
     PricingSection,
     RouterLink,
     SpinnerComponent,
+    TakedownNotice,
     TracksSection,
   ],
   template: `
@@ -120,11 +122,12 @@ import { currentValue } from '@ime/client-data';
               keeps it.</ime-alert
             >
           }
-          @if (managed.release.status === 'taken_down') {
-            <ime-alert tone="error"
-              >Taken down by IME's moderators. Owners keep their
-              copies.</ime-alert
-            >
+          @if (managed.takedown; as takedown) {
+            <ime-takedown-notice
+              [releaseId]="managed.release.id"
+              [takedown]="takedown"
+              (changed)="release.reload()"
+            />
           }
           @if (error(); as message) {
             <ime-alert tone="error">{{ message }}</ime-alert>

@@ -2,12 +2,17 @@ import {
   type CopyrightContest,
   DatabaseRepository,
   type ModerationTarget,
+  type Release,
   type Report,
   type ReportReason,
 } from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
 
+/** How long an artist has to contest a copyright takedown. */
+export const CONTEST_DAYS = 14;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 const NOTE_MAX_LENGTH = 1000;
 const STATEMENT_MAX_LENGTH = 5000;
 
@@ -17,6 +22,18 @@ const STATEMENT_MAX_LENGTH = 5000;
 export interface ModerationTargetRef {
   type: ModerationTarget;
   id: string;
+}
+
+/**
+ * Why a release was taken down, and whether its managers can still contest.
+ */
+export interface ReleaseTakedown {
+  reason: ReportReason;
+  note: string | null;
+  takenDownAt: Date;
+  /** The last day to contest a copyright takedown, while it can be. */
+  contestBy: Date | null;
+  contestPending: boolean;
 }
 
 /**
@@ -122,6 +139,34 @@ export class ReportService {
       );
     }
     return contest;
+  }
+
+  /**
+   * Why a release is taken down, for its managers, or null while it is up.
+   * Callers check the user manages the release.
+   */
+  public async getTakedown(release: Release): Promise<ReleaseTakedown | null> {
+    if (release.status !== 'taken_down') return null;
+    const [actions, openContest] = await Promise.all([
+      this.db.moderation.listActionsForTarget('release', release.id),
+      this.db.moderation.getOpenContest(release.id),
+    ]);
+    // newest first, so the takedown in force
+    const takedown = actions.find((action) => action.action === 'take_down');
+    if (!takedown) return null;
+    const contestable =
+      takedown.reason === 'copyright' &&
+      !release.takedownFinalAt &&
+      !openContest;
+    return {
+      reason: takedown.reason ?? 'other',
+      note: takedown.note,
+      takenDownAt: takedown.createdAt,
+      contestBy: contestable
+        ? new Date(takedown.createdAt.getTime() + CONTEST_DAYS * DAY_MS)
+        : null,
+      contestPending: Boolean(openContest),
+    };
   }
 
   private async requireTarget(target: ModerationTargetRef): Promise<void> {

@@ -17,6 +17,7 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { FollowButton } from '../follow/follow-button';
+import { ReportButton } from '../reporting/report-button';
 import { MerchGrid } from '../merch/merch-grid';
 import { PageMetaService } from '../page-meta';
 import { releaseKindLabel } from '../releases/release-labels';
@@ -32,6 +33,7 @@ import { releaseKindLabel } from '../releases/release-labels';
     MerchGrid,
     CoverComponent,
     FollowButton,
+    ReportButton,
     ReleaseCardComponent,
     SpinnerComponent,
   ],
@@ -60,11 +62,18 @@ import { releaseKindLabel } from '../releases/release-labels';
               {{ followerCount() === 1 ? 'follower' : 'followers' }}
             </p>
           </div>
-          <ime-follow-button
-            [artistId]="profile.artist.id"
-            [following]="following()"
-            (followingChange)="onFollowingChange($event)"
-          />
+          <div class="flex items-center gap-1">
+            <ime-follow-button
+              [artistId]="profile.artist.id"
+              [following]="following()"
+              (followingChange)="onFollowingChange($event)"
+            />
+            <ime-report-button
+              targetType="artist"
+              [targetId]="profile.artist.id"
+              [label]="profile.artist.name"
+            />
+          </div>
         </header>
 
         @if (profile.artist.bio || profile.links.length) {

@@ -7,7 +7,7 @@ import {
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '@ime/client-data';
-import { ButtonDirective, WordmarkComponent } from '@ime/ui';
+import { AlertComponent, ButtonDirective, WordmarkComponent } from '@ime/ui';
 import { StudioService } from './studio.service';
 
 /**
@@ -18,6 +18,7 @@ import { StudioService } from './studio.service';
   selector: 'ime-studio-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AlertComponent,
     ButtonDirective,
     CdkMenu,
     CdkMenuItem,
@@ -96,6 +97,13 @@ import { StudioService } from './studio.service';
           </div>
         </nav>
         <main class="min-w-0 flex-[999_1_560px] px-4 py-6 md:px-8">
+          @if (studio.currentArtist()?.suspendedAt) {
+            <ime-alert tone="error" class="mb-6 block max-w-4xl"
+              >{{ studio.currentArtist()?.name }} is suspended by IME's
+              moderators: its page is hidden, nothing is for sale, and uploads
+              are blocked. The email we sent explains why.</ime-alert
+            >
+          }
           <router-outlet />
         </main>
       </div>

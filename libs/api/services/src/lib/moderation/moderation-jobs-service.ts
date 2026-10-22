@@ -1,6 +1,7 @@
 import { DatabaseRepository } from '@ime/db';
 import { Logger } from '@ime/utils';
-import { CONTEST_DAYS, ModerationService } from './moderation-service';
+import { ModerationService } from './moderation-service';
+import { CONTEST_DAYS } from './report-service';
 
 const DAY_MS = 86_400_000;
 
