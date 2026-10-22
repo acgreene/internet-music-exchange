@@ -7,7 +7,8 @@
     "lint:affected": "nx affected -t lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed-demo": "tsx --tsconfig tools/demo-seed/tsconfig.json tools/demo-seed/seed.ts"
   },
   "private": true,
   "dependencies": {
