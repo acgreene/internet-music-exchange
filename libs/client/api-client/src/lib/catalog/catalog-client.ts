@@ -2,6 +2,8 @@ import {
   ApiRoute,
   type CatalogHome,
   type CatalogSearchQuery,
+  type Chart,
+  type ChartQuery,
   type FeedItem,
   type LibraryItem,
   type PlaceCount,
@@ -37,6 +39,13 @@ export class CatalogClient {
    */
   public getHome(): Promise<ApiResult<CatalogHome>> {
     return this.transport.get(ApiRoute.CatalogHome);
+  }
+
+  /**
+   * A chart of releases by how many people bought or claimed them.
+   */
+  public getChart(query: ChartQuery): Promise<ApiResult<Chart>> {
+    return this.transport.get(ApiRoute.Charts, { query });
   }
 
   /**

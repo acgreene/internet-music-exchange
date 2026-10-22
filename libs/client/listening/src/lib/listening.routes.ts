@@ -34,6 +34,12 @@ export const listeningRoutes: Route[] = [
       import('./search/search-page').then((m) => m.SearchPage),
   },
   {
+    path: 'charts',
+    title: 'Charts · IME',
+    loadComponent: () =>
+      import('./charts/charts-page').then((m) => m.ChartsPage),
+  },
+  {
     path: 'crates',
     title: 'Crates · IME',
     loadComponent: () =>
