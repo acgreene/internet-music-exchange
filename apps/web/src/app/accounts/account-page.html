@@ -1,0 +1,144 @@
+<div class="mx-auto flex max-w-xl flex-col gap-10">
+  <h1 class="text-2xl font-semibold tracking-tight">Account settings</h1>
+  @if (needsUsername()) {
+  <ime-alert
+    >Choose a username. It is your address on IME, and how people find
+    you.</ime-alert
+  >
+  }
+
+  <section class="flex flex-col gap-4" aria-labelledby="profile-heading">
+    <div>
+      <h2 id="profile-heading" class="text-lg font-semibold">Profile</h2>
+      <p class="text-sm text-ink-muted">
+        Your username is your address on IME. Your display name is how you
+        appear beside comments and follows.
+      </p>
+    </div>
+    @if (profileSaved()) {
+    <ime-alert tone="success">Your profile is saved.</ime-alert>
+    } @if (profileError(); as message) {
+    <ime-alert tone="error">{{ message }}</ime-alert>
+    }
+    <form class="flex flex-col gap-4" novalidate (submit)="saveProfile($event)">
+      <ime-field
+        label="Username"
+        [hint]="availability() === 'available' ? 'Available.' : 'Lowercase letters, numbers, hyphens, and underscores.'"
+        [errors]="usernameErrors()"
+        [touched]="profileForm.username().touched() || availability() === 'taken'"
+      >
+        <input
+          imeInput
+          autocomplete="username"
+          [formField]="profileForm.username"
+        />
+      </ime-field>
+      <ime-field label="Display name" hint="Optional.">
+        <input imeInput autocomplete="name" [formField]="profileForm.name" />
+      </ime-field>
+      <div>
+        <button
+          imeButton
+          type="submit"
+          [busy]="profileForm().submitting()"
+          [disabled]="availability() === 'taken'"
+        >
+          Save profile
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="flex flex-col gap-4" aria-labelledby="password-heading">
+    <h2 id="password-heading" class="text-lg font-semibold">Password</h2>
+    @if (passwordSaved()) {
+    <ime-alert tone="success">Your password is changed.</ime-alert>
+    } @if (passwordError(); as message) {
+    <ime-alert tone="error">{{ message }}</ime-alert>
+    }
+    <form
+      class="flex flex-col gap-4"
+      novalidate
+      (submit)="savePassword($event)"
+    >
+      <ime-field
+        label="New password"
+        hint="At least 8 characters."
+        [errors]="passwordForm.password().errors()"
+        [touched]="passwordForm.password().touched()"
+      >
+        <input
+          imeInput
+          type="password"
+          autocomplete="new-password"
+          [formField]="passwordForm.password"
+        />
+      </ime-field>
+      <ime-field
+        label="Confirm new password"
+        [errors]="passwordForm.confirm().errors()"
+        [touched]="passwordForm.confirm().touched()"
+      >
+        <input
+          imeInput
+          type="password"
+          autocomplete="new-password"
+          [formField]="passwordForm.confirm"
+        />
+      </ime-field>
+      <div>
+        <button imeButton type="submit" [busy]="passwordForm().submitting()">
+          Change password
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="flex flex-col gap-4" aria-labelledby="delete-heading">
+    <div>
+      <h2 id="delete-heading" class="text-lg font-semibold">Delete account</h2>
+      <p class="text-sm text-ink-muted">
+        This removes your profile, follows, and comments for good. Artists keep
+        the record of what you bought, without your name. Any unused hosting
+        balance is refunded to your card. If you are the only manager of an
+        artist, add another manager first.
+      </p>
+    </div>
+    @if (deleteError(); as message) {
+    <ime-alert tone="error">{{ message }}</ime-alert>
+    } @if (confirmingDelete()) {
+    <div class="flex flex-col gap-3 rounded-card border border-danger/40 p-4">
+      <p class="text-sm font-medium">
+        Delete your account permanently? This cannot be undone.
+      </p>
+      <div class="flex gap-2">
+        <button
+          imeButton
+          variant="danger"
+          [busy]="deleting()"
+          (click)="deleteAccount()"
+        >
+          Delete my account
+        </button>
+        <button
+          imeButton
+          variant="secondary"
+          (click)="confirmingDelete.set(false)"
+        >
+          Keep my account
+        </button>
+      </div>
+    </div>
+    } @else {
+    <div>
+      <button
+        imeButton
+        variant="secondary"
+        (click)="confirmingDelete.set(true)"
+      >
+        Delete account
+      </button>
+    </div>
+    }
+  </section>
+</div>
