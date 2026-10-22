@@ -87,7 +87,7 @@ const PANEL =
       >
         <div
           [class]="panel"
-          class="order-2 bg-canvas text-ink lg:origin-right lg:rotate-y-[14deg] lg:shadow-[inset_-22px_0_22px_-22px_rgba(14,14,16,0.45),-18px_22px_40px_rgba(0,0,0,0.45)]"
+          class="order-2 bg-canvas text-ink lg:origin-right lg:rotate-y-[14deg] lg:shadow-[-18px_22px_40px_rgba(0,0,0,0.45)]"
         >
           <div class="my-auto flex flex-col gap-2.5 short:gap-1.5 lg:my-0">
             <span
@@ -146,7 +146,7 @@ const PANEL =
 
         <div
           [class]="panel"
-          class="relative z-10 order-1 bg-accent text-white lg:p-9 lg:shadow-[0_22px_40px_rgba(0,0,0,0.4)]"
+          class="relative z-10 order-1 bg-accent text-white lg:p-9"
         >
           <h1
             class="my-auto text-[clamp(2.25rem,11vw,3.25rem)] leading-[0.88] font-black tracking-[-0.06em] short:text-[2.25rem] lg:my-0 lg:text-[3.25rem] xl:text-[calc(var(--u)*3.75)]"
@@ -176,7 +176,7 @@ const PANEL =
 
         <div
           [class]="panel"
-          class="order-3 bg-canvas text-ink lg:origin-left lg:-rotate-y-[14deg] lg:shadow-[inset_22px_0_22px_-22px_rgba(14,14,16,0.45),18px_22px_40px_rgba(0,0,0,0.45)]"
+          class="order-3 bg-canvas text-ink lg:origin-left lg:-rotate-y-[14deg] lg:shadow-[18px_22px_40px_rgba(0,0,0,0.45)]"
         >
           <ol class="my-auto flex flex-col gap-2.5 short:gap-1.5 lg:my-0">
             @for (note of notes; track note.title; let i = $index) {
