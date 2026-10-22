@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   Component,
   computed,
   DestroyRef,
@@ -62,15 +63,16 @@ export class ArtistPageHost {
   );
 
   constructor() {
-    // listen to messages from the iframe and handle them
-    window.addEventListener('message', (e: MessageEvent) => {
-      this.handleMessage(e);
+    const destroyRef = inject(DestroyRef);
+    // browser only: a server render has no window, and the frame only ever
+    // loads in the browser
+    afterNextRender(() => {
+      const onMessage = (event: MessageEvent) => this.handleMessage(event);
+      window.addEventListener('message', onMessage);
+      destroyRef.onDestroy(() =>
+        window.removeEventListener('message', onMessage),
+      );
     });
-    inject(DestroyRef).onDestroy(() =>
-      window.removeEventListener('message', (e: MessageEvent) => {
-        this.handleMessage(e);
-      }),
-    );
   }
 
   /**
