@@ -165,15 +165,22 @@ export class MonthlyCloseService {
         });
       }
     }
-    for (const row of usage.filter((u) => u.designerUserId)) {
-      addLine(row.designerUserId as string, {
+    // a designer with a published design is a seller even in a month their
+    // designs used nothing
+    const designers = new Set([
+      ...usage.flatMap((u) => (u.designerUserId ? [u.designerUserId] : [])),
+      ...(await this.db.designs.listPublishingDesigners()),
+    ]);
+    for (const designerUserId of designers) {
+      const row = usage.find((u) => u.designerUserId === designerUserId);
+      addLine(designerUserId, {
         artistId: null,
-        designerUserId: row.designerUserId,
+        designerUserId,
         name: 'Designs',
         shareBasisPoints: WHOLE_SHARE,
-        storageByteDays: row.storageByteDays,
-        requests: row.requests,
-        amount: toCents(costOf(row)),
+        storageByteDays: row?.storageByteDays ?? 0,
+        requests: row?.requests ?? 0,
+        amount: row ? toCents(costOf(row)) : 0,
       });
     }
 

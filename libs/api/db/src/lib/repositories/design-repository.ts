@@ -6,6 +6,7 @@ import {
   exists,
   getTableColumns,
   ilike,
+  isNotNull,
   isNull,
   max,
   ne,
@@ -204,6 +205,23 @@ export class DesignRepository {
       .from(designs)
       .where(eq(designs.designerUserId, designerUserId))
       .orderBy(desc(designs.createdAt));
+  }
+
+  /**
+   * List every designer with at least one published design, public or
+   * private, for the monthly close.
+   *
+   * @returns Their user ids.
+   */
+  public async listPublishingDesigners(): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ designerUserId: designs.designerUserId })
+      .from(designs)
+      .where(
+        and(eq(designs.status, 'published'), isNotNull(designs.designerUserId)),
+      );
+
+    return rows.map((row) => row.designerUserId as string);
   }
 
   /**
