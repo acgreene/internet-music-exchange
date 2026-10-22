@@ -5,5 +5,4 @@ import type { ApiError } from '@ime/models';
  * validated data, false carries a typed ApiError.
  */
 export type ApiResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: ApiError };
+  { ok: true; data: T } | { ok: false; error: ApiError };

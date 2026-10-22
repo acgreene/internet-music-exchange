@@ -1,5 +1,6 @@
 import { ApiError, ApiErrorKind, ApiRoute } from '@ime/models';
-import type { AuthService } from '@ime/services';
+import type { AuthService, UserService } from '@ime/services';
+import { RouteGuard } from '../route-guard';
 import { UsersRouter } from './users-router';
 
 const mockAuthService = {
@@ -7,8 +8,10 @@ const mockAuthService = {
   deleteUser: vi.fn(),
 };
 
+const authService = mockAuthService as unknown as AuthService;
 const usersRoutes = new UsersRouter(
-  mockAuthService as unknown as AuthService,
+  new RouteGuard(authService, {} as UserService),
+  authService,
 ).router;
 
 const SUPABASE_USER = {

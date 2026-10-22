@@ -1,19 +1,20 @@
 import { logger } from 'hono/logger';
 import type { ImeServices } from '@ime/services';
 import { Logger } from '@ime/utils';
-import { UsersRouter } from './users/users-router';
-import { AuthRouter } from './auth';
-import { ArtistPagesRouter } from './artist-pages';
-import { HealthRouter } from './health';
 import { AbstractRouter } from './abstract-router';
+import { ArtistPagesRouter } from './artist-pages';
+import { AuthRouter } from './auth';
+import { HealthRouter } from './health';
+import { RouteGuard } from './route-guard';
+import { UsersRouter } from './users';
 
 export class RootRouter extends AbstractRouter {
   /**
    * Hands each router the services it needs, all from the one set the
-   * process builds at startup.
+   * process builds at startup, and one guard they share.
    */
   constructor(private readonly services: ImeServices) {
-    super();
+    super(new RouteGuard(services.auth, services.users));
     this.register();
   }
 
@@ -21,17 +22,13 @@ export class RootRouter extends AbstractRouter {
     const httpLog = new Logger('api').child('http');
     this.routes.use(logger((line, ...rest) => httpLog.debug(line, ...rest)));
 
-    const authRouter = new AuthRouter(this.services.auth).router;
-    this.routes.route('/', authRouter);
-
-    const healthRouter = new HealthRouter(this.services.health).router;
-    this.routes.route('/', healthRouter);
-
-    const usersRouter = new UsersRouter(this.services.auth).router;
-    this.routes.route('/', usersRouter);
-
-    const designerPagesRouter = new ArtistPagesRouter(this.services.artistPages)
-      .router;
-    this.routes.route('/', designerPagesRouter);
+    const { guard, services } = this;
+    const routers: AbstractRouter[] = [
+      new HealthRouter(guard, services.health),
+      new AuthRouter(guard, services.auth),
+      new UsersRouter(guard, services.auth),
+      new ArtistPagesRouter(guard, services.artistPages),
+    ];
+    for (const router of routers) this.routes.route('/', router.router);
   }
 }

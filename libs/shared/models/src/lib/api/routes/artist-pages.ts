@@ -1,3 +1,6 @@
+import type { RouteContracts } from '../contract';
+import { HttpMethod } from '../http-method';
+import { ApiRoute } from './routes';
 import { z } from 'zod';
 
 const artistPageTrackSchema = z.object({
@@ -29,3 +32,9 @@ export const artistPageRenderResponseSchema = z.object({
     customization: z.record(z.string(), z.string()),
   }),
 });
+
+export const artistPageContracts = {
+  [ApiRoute.ArtistReleasePage]: {
+    [HttpMethod.Get]: { response: artistPageRenderResponseSchema },
+  },
+} as const satisfies Partial<Record<ApiRoute, RouteContracts>>;

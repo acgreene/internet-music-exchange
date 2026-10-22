@@ -13,9 +13,14 @@ export enum HttpMethod {
   Post = 'POST',
 
   /**
-   * Replace or update a resource with a JSON body.
+   * Set a whole value, such as a price or an order, with a JSON body.
    */
   Put = 'PUT',
+
+  /**
+   * Change part of a resource with a JSON body.
+   */
+  Patch = 'PATCH',
 
   /**
    * Remove a resource.

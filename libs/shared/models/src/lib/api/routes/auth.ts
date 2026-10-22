@@ -1,3 +1,7 @@
+import type { RouteContracts } from '../contract';
+import { ackSchema } from '../general';
+import { HttpMethod } from '../http-method';
+import { ApiRoute } from './routes';
 import { z } from 'zod';
 
 /**
@@ -37,3 +41,24 @@ export const sessionSchema = z.looseObject({
 });
 
 export type SessionResponse = z.infer<typeof sessionSchema>;
+
+export const authContracts = {
+  [ApiRoute.Users]: {
+    [HttpMethod.Delete]: { response: ackSchema },
+  },
+  [ApiRoute.SignUp]: {
+    [HttpMethod.Post]: {
+      request: signUpRequestSchema,
+      response: sessionSchema,
+    },
+  },
+  [ApiRoute.SignIn]: {
+    [HttpMethod.Post]: {
+      request: signInRequestSchema,
+      response: sessionSchema,
+    },
+  },
+  [ApiRoute.SignOut]: {
+    [HttpMethod.Post]: { response: ackSchema },
+  },
+} as const satisfies Partial<Record<ApiRoute, RouteContracts>>;

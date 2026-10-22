@@ -5,39 +5,65 @@ import {
   ApiErrorKind,
   type ApiRoute,
   HttpMethod,
+  type ParamsOf,
+  type QueryOf,
   type RequestOf,
   type ResponseOf,
   responseSchema,
-  type RouteWith
+  type RouteWith,
 } from '@ime/models';
 import type { ApiResult } from './api-result';
 import { clientEnv } from '@ime/client-env';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
- * The body argument of a route and method: required for the routes that
- * declare a request schema, absent for the ones that do not.
+ * What a call to a route and method takes: its path params when the route has
+ * placeholders, its body when the contract declares one, and its query string
+ * when it accepts one. Each is required exactly when the route needs it.
  */
-type BodyArgs<R extends RouteWith<M>, M extends HttpMethod> =
-  RequestOf<R, M> extends undefined ? [] : [body: RequestOf<R, M>];
+export type RequestOptions<
+  M extends HttpMethod,
+  R extends RouteWith<M>,
+> = (keyof ParamsOf<R> extends never
+  ? { params?: undefined }
+  : { params: ParamsOf<R> }) &
+  (RequestOf<R, M> extends undefined
+    ? { body?: undefined }
+    : { body: RequestOf<R, M> }) &
+  (QueryOf<R, M> extends undefined
+    ? { query?: undefined }
+    : { query?: QueryOf<R, M> });
 
 /**
- * Values substituted into a route's `:name` placeholders, keyed by placeholder.
+ * The options argument, optional when the route needs nothing.
  */
-export type RouteParams = Record<string, string>;
+type OptionsArgs<M extends HttpMethod, R extends RouteWith<M>> =
+  object extends RequestOptions<M, R>
+    ? [options?: RequestOptions<M, R>]
+    : [options: RequestOptions<M, R>];
 
 /**
  * @throws Error when a placeholder has no value, so it fails here rather than
  * as a confusing 404 from the server.
  */
-function buildPath(route: ApiRoute, params?: RouteParams): string {
-  return route.replace(/:([A-Za-z0-9_]+)/g, (_match, name: string) => {
-    const value = params?.[name];
+function buildPath(route: ApiRoute, params?: object, query?: unknown): string {
+  const values = (params ?? {}) as Record<string, string | undefined>;
+  const path = route.replace(/:([A-Za-z0-9_]+)/g, (_match, name: string) => {
+    const value = values[name];
     if (value === undefined) {
       throw new Error(`Missing route parameter "${name}" for ${route}`);
     }
     return encodeURIComponent(value);
   });
+
+  const search = new URLSearchParams();
+  for (const [name, value] of Object.entries(
+    (query ?? {}) as Record<string, unknown>,
+  )) {
+    if (value !== undefined && value !== null) search.set(name, String(value));
+  }
+  const queryString = search.toString();
+  return queryString ? `${path}?${queryString}` : path;
 }
 
 /**
@@ -59,42 +85,54 @@ export class ApiTransport {
   /**
    * Fetch a GET route and validate its body against the route's contract.
    */
-  public async get<R extends RouteWith<HttpMethod.Get>>(
+  public get<R extends RouteWith<HttpMethod.Get>>(
     route: R,
-    params?: RouteParams,
+    ...options: OptionsArgs<HttpMethod.Get, R>
   ): Promise<ApiResult<ResponseOf<R, HttpMethod.Get>>> {
-    return this.request(HttpMethod.Get, route, undefined, params);
+    return this.request(HttpMethod.Get, route, options[0]);
   }
 
   /**
    * Call a POST route, sending the body its contract declares, and validate
    * the response against that contract.
    */
-  public async post<R extends RouteWith<HttpMethod.Post>>(
+  public post<R extends RouteWith<HttpMethod.Post>>(
     route: R,
-    ...body: BodyArgs<R, HttpMethod.Post>
+    ...options: OptionsArgs<HttpMethod.Post, R>
   ): Promise<ApiResult<ResponseOf<R, HttpMethod.Post>>> {
-    return this.request(HttpMethod.Post, route, body[0]);
+    return this.request(HttpMethod.Post, route, options[0]);
   }
 
   /**
-   * Call a PUT route, sending the body its contract declares, and validate the
-   * response against that contract.
+   * Call a PUT route, sending the value its contract declares, and validate
+   * the response against that contract.
    */
-  public async put<R extends RouteWith<HttpMethod.Put>>(
+  public put<R extends RouteWith<HttpMethod.Put>>(
     route: R,
-    ...body: BodyArgs<R, HttpMethod.Put>
+    ...options: OptionsArgs<HttpMethod.Put, R>
   ): Promise<ApiResult<ResponseOf<R, HttpMethod.Put>>> {
-    return this.request(HttpMethod.Put, route, body[0]);
+    return this.request(HttpMethod.Put, route, options[0]);
+  }
+
+  /**
+   * Call a PATCH route, sending the changes its contract declares, and
+   * validate the response against that contract.
+   */
+  public patch<R extends RouteWith<HttpMethod.Patch>>(
+    route: R,
+    ...options: OptionsArgs<HttpMethod.Patch, R>
+  ): Promise<ApiResult<ResponseOf<R, HttpMethod.Patch>>> {
+    return this.request(HttpMethod.Patch, route, options[0]);
   }
 
   /**
    * Call a DELETE route and validate the response against its contract.
    */
-  public async delete<R extends RouteWith<HttpMethod.Delete>>(
+  public delete<R extends RouteWith<HttpMethod.Delete>>(
     route: R,
+    ...options: OptionsArgs<HttpMethod.Delete, R>
   ): Promise<ApiResult<ResponseOf<R, HttpMethod.Delete>>> {
-    return this.request(HttpMethod.Delete, route);
+    return this.request(HttpMethod.Delete, route, options[0]);
   }
 
   /**
@@ -104,10 +142,10 @@ export class ApiTransport {
   private async request<M extends HttpMethod, R extends RouteWith<M>>(
     method: M,
     route: R,
-    body?: unknown,
-    params?: RouteParams,
+    options?: { params?: object; body?: unknown; query?: unknown },
   ): Promise<ApiResult<ResponseOf<R, M>>> {
-    const path = buildPath(route, params);
+    const path = buildPath(route, options?.params, options?.query);
+    const body = options?.body;
     const schema = responseSchema(route, method);
     const headers: Record<string, string> = {};
     if (body !== undefined) {

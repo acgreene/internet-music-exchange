@@ -23,11 +23,14 @@ export class UserService {
   ) {}
 
   /**
-   * Read the signed-in user's own profile.
+   * Read the signed-in user's own profile, and whether they are a platform
+   * admin, so the app knows to show the admin tools.
    *
    * @throws ApiError 404 when the user has no profile.
    */
-  public async getOwnProfile(userId: string): Promise<User> {
+  public async getOwnProfile(
+    userId: string,
+  ): Promise<User & { isAdmin: boolean }> {
     const user = await this.db.users.getById(userId);
     if (!user)
       throw new ApiError(
@@ -35,7 +38,14 @@ export class UserService {
         HttpStatus.NotFound,
         'User not found.',
       );
-    return user;
+    return { ...user, isAdmin: await this.isAdmin(userId) };
+  }
+
+  /**
+   * Report whether a user is a platform admin.
+   */
+  public isAdmin(userId: string): Promise<boolean> {
+    return this.db.moderation.isAdmin(userId);
   }
 
   /**

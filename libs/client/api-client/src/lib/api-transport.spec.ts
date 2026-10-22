@@ -61,8 +61,7 @@ describe('ApiTransport', () => {
     const fetchSpy = stubFetch(() => jsonResponse(SESSION_BODY));
 
     await makeTransport().post(ApiRoute.SignUp, {
-      email: 'artist@example.com',
-      password: 'password123',
+      body: { email: 'artist@example.com', password: 'password123' },
     });
 
     const [path, init] = fetchSpy.mock.calls[0];

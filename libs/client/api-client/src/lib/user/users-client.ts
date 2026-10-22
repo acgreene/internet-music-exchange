@@ -1,5 +1,16 @@
-import type { AuthError as SupabaseAuthError, SupabaseClient, User } from '@supabase/supabase-js';
-import { type AckResponse, ApiError, ApiErrorKind, ApiRoute, type SessionResponse, type UserUpdate } from '@ime/models';
+import type {
+  AuthError as SupabaseAuthError,
+  SupabaseClient,
+  User,
+} from '@supabase/supabase-js';
+import {
+  type AckResponse,
+  ApiError,
+  ApiErrorKind,
+  ApiRoute,
+  type SessionResponse,
+  type UserUpdate,
+} from '@ime/models';
 import type { ApiResult } from '../api-result';
 import type { ApiTransport } from '../api-transport';
 
@@ -25,8 +36,7 @@ export class UsersClient {
     password: string,
   ): Promise<ApiResult<SessionResponse>> {
     const result = await this.transport.post(ApiRoute.SignUp, {
-      email,
-      password,
+      body: { email, password },
     });
     if (result.ok) {
       await this.adoptSession(result.data);
@@ -42,8 +52,7 @@ export class UsersClient {
     password: string,
   ): Promise<ApiResult<SessionResponse>> {
     const result = await this.transport.post(ApiRoute.SignIn, {
-      email,
-      password,
+      body: { email, password },
     });
     if (result.ok) {
       await this.adoptSession(result.data);

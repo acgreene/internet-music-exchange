@@ -1,3 +1,6 @@
+import type { RouteContracts } from '../contract';
+import { HttpMethod } from '../http-method';
+import { ApiRoute } from './routes';
 import { z } from 'zod';
 
 /**
@@ -27,3 +30,9 @@ export const healthResponseSchema = z.object({
  * A validated health check response.
  */
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+
+export const healthContracts = {
+  [ApiRoute.Health]: {
+    [HttpMethod.Get]: { response: healthResponseSchema },
+  },
+} as const satisfies Partial<Record<ApiRoute, RouteContracts>>;

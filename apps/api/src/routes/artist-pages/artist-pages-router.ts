@@ -1,21 +1,26 @@
-import { ApiRoute } from '@ime/models';
+import { ApiRoute, HttpMethod } from '@ime/models';
 import type { ArtistPageService } from '@ime/services';
 import { AbstractRouter } from '../abstract-router';
+import type { RouteGuard } from '../route-guard';
 
 /**
  * Serves the data a client needs to render a release as an artist page.
  */
 export class ArtistPagesRouter extends AbstractRouter {
-  constructor(private readonly aps: ArtistPageService) {
-    super();
+  constructor(
+    guard: RouteGuard,
+    private readonly artistPages: ArtistPageService,
+  ) {
+    super(guard);
     this.register();
   }
 
   protected register(): void {
-    this.routes.get(ApiRoute.ArtistReleasePage, async (c) => {
-      const releaseId = c.req.param('releaseId');
-      const rendered = await this.aps.renderRelease(releaseId);
-      return c.json(rendered);
-    });
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.ArtistReleasePage,
+      'public',
+      ({ params }) => this.artistPages.renderRelease(params.releaseId),
+    );
   }
 }

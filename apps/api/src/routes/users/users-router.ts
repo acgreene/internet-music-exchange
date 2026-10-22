@@ -1,25 +1,20 @@
+import { ApiRoute, HttpMethod } from '@ime/models';
 import type { AuthService } from '@ime/services';
-import { ApiRoute } from '@ime/models';
-import { AuthMiddleware } from '../auth';
-import { RouteUtils } from '../utils';
 import { AbstractRouter } from '../abstract-router';
-import { MiddlewareHandler } from 'hono';
+import type { RouteGuard } from '../route-guard';
 
 export class UsersRouter extends AbstractRouter {
-  private readonly authMiddleware: MiddlewareHandler;
-
-  constructor(private readonly authService: AuthService) {
-    super();
-    this.authMiddleware = new AuthMiddleware(authService).middleware();
+  constructor(
+    guard: RouteGuard,
+    private readonly auth: AuthService,
+  ) {
+    super(guard);
     this.register();
   }
 
   protected register(): void {
-    this.routes.delete(ApiRoute.Users, this.authMiddleware, async (c) => {
-      const routeUtils = new RouteUtils(c);
-      const authUser = routeUtils.getAuthUser();
-      await this.authService.deleteUser(authUser.id);
-      return c.json({ success: true });
-    });
+    this.handle(HttpMethod.Delete, ApiRoute.Users, 'user', ({ userId }) =>
+      this.auth.deleteUser(userId),
+    );
   }
 }

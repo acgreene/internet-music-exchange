@@ -1,27 +1,18 @@
 import type { z } from 'zod';
-import { ackSchema } from './general';
-import { HttpMethod } from './http-method';
+import type { ApiContract, RouteContracts } from './contract';
+import type { HttpMethod } from './http-method';
 import {
-  ApiRoute,
-  artistPageRenderResponseSchema,
-  healthResponseSchema,
-  sessionSchema,
-  signInRequestSchema,
-  signUpRequestSchema
+  type ApiRoute,
+  artistPageContracts,
+  authContracts,
+  healthContracts,
 } from './routes';
 
-/**
- * What a single route and method exchange: the request body schema, for the
- * ones that take a body, and the response body schema.
- */
-interface ApiContract {
-  readonly request?: z.ZodType;
-  readonly response: z.ZodType;
-}
+export type { ApiContract, RouteContracts } from './contract';
 
 /**
  * The request and response contract of every route the API serves, keyed by
- * route and then method.
+ * route and then method. Each domain declares its own in `routes/`.
  *
  * This is the one place a route's shape is declared. Callers name a route and
  * the schemas follow, so a request body and a response body cannot be
@@ -29,31 +20,10 @@ interface ApiContract {
  * its shape is a type error.
  */
 export const API_CONTRACTS = {
-  [ApiRoute.Health]: {
-    [HttpMethod.Get]: { response: healthResponseSchema },
-  },
-  [ApiRoute.Users]: {
-    [HttpMethod.Delete]: { response: ackSchema },
-  },
-  [ApiRoute.SignUp]: {
-    [HttpMethod.Post]: {
-      request: signUpRequestSchema,
-      response: sessionSchema,
-    },
-  },
-  [ApiRoute.SignIn]: {
-    [HttpMethod.Post]: {
-      request: signInRequestSchema,
-      response: sessionSchema,
-    },
-  },
-  [ApiRoute.SignOut]: {
-    [HttpMethod.Post]: { response: ackSchema },
-  },
-  [ApiRoute.ArtistReleasePage]: {
-    [HttpMethod.Get]: { response: artistPageRenderResponseSchema },
-  },
-} as const satisfies Record<ApiRoute, Partial<Record<HttpMethod, ApiContract>>>;
+  ...healthContracts,
+  ...authContracts,
+  ...artistPageContracts,
+} as const satisfies Record<ApiRoute, RouteContracts>;
 
 /**
  * The declared contracts, as written above.
@@ -94,6 +64,32 @@ export type RequestOf<R extends RouteWith<M>, M extends HttpMethod> =
     : undefined;
 
 /**
+ * The query string a route and method accept, or undefined when they take
+ * none.
+ */
+export type QueryOf<R extends RouteWith<M>, M extends HttpMethod> =
+  ContractOf<R, M> extends { query: infer S extends z.ZodType }
+    ? z.infer<S>
+    : undefined;
+
+/**
+ * The names of a route's `:name` placeholders.
+ */
+type ParamNames<R extends string> =
+  R extends `${string}:${infer Name}/${infer Rest}`
+    ? Name | ParamNames<Rest>
+    : R extends `${string}:${infer Name}`
+      ? Name
+      : never;
+
+/**
+ * The values a route's `:name` placeholders take, keyed by name.
+ */
+export type ParamsOf<R extends ApiRoute> = {
+  [Name in ParamNames<`${R}`>]: string;
+};
+
+/**
  * Look up the contract for a route and method.
  */
 export function apiContract<M extends HttpMethod, R extends RouteWith<M>>(
@@ -111,6 +107,17 @@ export function responseSchema<M extends HttpMethod, R extends RouteWith<M>>(
   method: M,
 ): z.ZodType<ResponseOf<R, M>> {
   return apiContract(route, method).response as z.ZodType<ResponseOf<R, M>>;
+}
+
+/**
+ * The schema a route and method's query string is validated against, or
+ * undefined when the route takes none.
+ */
+export function querySchema<M extends HttpMethod, R extends RouteWith<M>>(
+  route: R,
+  method: M,
+): z.ZodType | undefined {
+  return apiContract(route, method).query;
 }
 
 /**
