@@ -36,4 +36,37 @@ export const listeningRoutes: Route[] = [
     loadComponent: () =>
       import('./releases/release-page').then((m) => m.ReleasePage),
   },
+  {
+    path: 'cart',
+    title: 'Cart · IME',
+    loadComponent: () => import('./buying/cart-page').then((m) => m.CartPage),
+  },
+  {
+    path: 'checkout/:orderId',
+    title: 'Checkout · IME',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./buying/checkout-page').then((m) => m.CheckoutPage),
+  },
+  {
+    path: 'library',
+    title: 'Library · IME',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./buying/library-page').then((m) => m.LibraryPage),
+  },
+  {
+    path: 'purchases',
+    title: 'Purchases · IME',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./buying/purchases-page').then((m) => m.PurchasesPage),
+  },
+  {
+    path: 'purchases/:artistOrderId',
+    title: 'Purchase · IME',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./buying/purchase-page').then((m) => m.PurchasePage),
+  },
 ];

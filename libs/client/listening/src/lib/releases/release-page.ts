@@ -21,9 +21,9 @@ import {
   ButtonDirective,
   CoverComponent,
   DurationPipe,
-  MoneyPipe,
   SpinnerComponent,
 } from '@ime/ui';
+import { BuyPanel } from '../buying/buy-panel';
 import { ReleaseComments } from '../comments/release-comments';
 import { PageMetaService } from '../page-meta';
 import { assetKindLabel, releaseKindLabel } from './release-labels';
@@ -37,11 +37,11 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     AlertComponent,
+    BuyPanel,
     ButtonDirective,
     CoverComponent,
     DatePipe,
     DurationPipe,
-    MoneyPipe,
     ReleaseComments,
     RouterLink,
     SpinnerComponent,
@@ -58,50 +58,11 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
             [alt]="'Cover of ' + page.release.title"
           />
 
-          <div
-            class="flex flex-col gap-2 rounded-card border border-line bg-surface p-4"
-          >
-            @if (owned()) {
-              <p class="font-medium">In your library</p>
-              <p class="text-sm text-ink-muted">
-                Stream every track, any time.
-              </p>
-            } @else if (!page.onSale) {
-              <p class="text-sm text-ink-muted">
-                Not available to buy right now.
-              </p>
-            } @else if (page.pricing; as pricing) {
-              @switch (pricing.mode) {
-                @case ('free') {
-                  <p class="font-medium">Free</p>
-                }
-                @case ('fixed') {
-                  <p class="font-medium">
-                    {{
-                      pricing.minimumPrice | money: pricing.currency ?? 'usd'
-                    }}
-                    <span class="font-normal text-ink-muted">or more</span>
-                  </p>
-                }
-                @case ('name_your_price') {
-                  <p class="font-medium">Name your price</p>
-                  @if (pricing.minimumPrice > 0) {
-                    <p class="text-sm text-ink-muted">
-                      At least
-                      {{
-                        pricing.minimumPrice | money: pricing.currency ?? 'usd'
-                      }}
-                    </p>
-                  }
-                }
-              }
-              @if (pricing.suggestedPrice; as suggested) {
-                <p class="text-sm text-ink-muted">
-                  Suggested {{ suggested | money: pricing.currency ?? 'usd' }}
-                </p>
-              }
-            }
-          </div>
+          <ime-buy-panel
+            [page]="page"
+            [owned]="owned()"
+            (claimed)="viewerPage.reload()"
+          />
         </aside>
 
         <div class="flex min-w-0 flex-col gap-8 md:order-1">

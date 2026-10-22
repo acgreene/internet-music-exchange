@@ -17,6 +17,28 @@
       />
     </form>
     <div class="flex-1"></div>
+    <a
+      class="relative rounded-control p-2 hover:bg-surface-muted"
+      routerLink="/cart"
+      [attr.aria-label]="cartLabel()"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="size-5 fill-none stroke-current stroke-2"
+        aria-hidden="true"
+      >
+        <path d="M3 4h2l2.4 11h11L21 8H6.2" />
+        <circle cx="9" cy="19.5" r="1.5" />
+        <circle cx="17" cy="19.5" r="1.5" />
+      </svg>
+      @if (cart.count()) {
+      <span
+        class="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-accent text-xs font-medium text-accent-ink"
+        aria-hidden="true"
+        >{{ cart.count() }}</span
+      >
+      }
+    </a>
 
     @switch (session.status()) { @case ('signed-in') {
     <button
@@ -90,6 +112,13 @@
       Profile
     </a>
     }
+    <a
+      cdkMenuItem
+      class="block rounded-control px-3 py-2 text-sm hover:bg-surface-muted"
+      routerLink="/purchases"
+    >
+      Purchases
+    </a>
     <a
       cdkMenuItem
       class="block rounded-control px-3 py-2 text-sm hover:bg-surface-muted"

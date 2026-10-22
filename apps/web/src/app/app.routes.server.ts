@@ -9,5 +9,10 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'account', renderMode: RenderMode.Client },
   { path: 'reset-password', renderMode: RenderMode.Client },
   { path: 'following', renderMode: RenderMode.Client },
+  { path: 'cart', renderMode: RenderMode.Client },
+  { path: 'checkout/**', renderMode: RenderMode.Client },
+  { path: 'library', renderMode: RenderMode.Client },
+  { path: 'purchases', renderMode: RenderMode.Client },
+  { path: 'purchases/**', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Server },
 ];

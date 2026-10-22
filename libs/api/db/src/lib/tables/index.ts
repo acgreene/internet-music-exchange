@@ -7,6 +7,7 @@ export * from './release-tracks';
 export * from './artist-followers';
 export * from './release-comments';
 export * from './track-audio-files';
+export * from './release-archives';
 export * from './release-assets';
 export * from './payout-accounts';
 export * from './release-pricing';

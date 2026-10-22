@@ -11,7 +11,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { SessionService } from '@ime/client-data';
+import { CartService, SessionService } from '@ime/client-data';
 import { PlayerBar } from '@ime/client-listening';
 import { ButtonDirective, InputDirective } from '@ime/ui';
 
@@ -37,15 +37,24 @@ import { ButtonDirective, InputDirective } from '@ime/ui';
 })
 export class AppShell {
   protected readonly session = inject(SessionService);
+  protected readonly cart = inject(CartService);
   private readonly router = inject(Router);
 
   protected readonly navigation = computed(() => [
     { label: 'Home', path: '/' },
     { label: 'Search', path: '/search' },
     ...(this.session.isSignedIn()
-      ? [{ label: 'Following', path: '/following' }]
+      ? [
+          { label: 'Library', path: '/library' },
+          { label: 'Following', path: '/following' },
+        ]
       : []),
   ]);
+
+  protected readonly cartLabel = computed(() => {
+    const count = this.cart.count();
+    return count ? `Cart, ${count} ${count === 1 ? 'item' : 'items'}` : 'Cart';
+  });
 
   protected async search(event: Event, query: string): Promise<void> {
     event.preventDefault();
