@@ -57,6 +57,18 @@ export const appRoutes: Route[] = [
           import('./accounts/user-profile-page').then((m) => m.UserProfilePage),
       },
       {
+        path: 'costs',
+        title: 'What it costs to run IME · IME',
+        loadComponent: () =>
+          import('./funding/costs-page').then((m) => m.CostsPage),
+      },
+      {
+        path: 'donate',
+        title: 'Chip in · IME',
+        loadComponent: () =>
+          import('./funding/donate-page').then((m) => m.DonatePage),
+      },
+      {
         path: 'terms',
         title: 'Terms of service · IME',
         data: { heading: 'Terms of service' },

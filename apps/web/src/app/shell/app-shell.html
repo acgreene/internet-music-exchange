@@ -89,6 +89,18 @@
     <router-outlet />
   </main>
 
+  <footer
+    class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line px-4 py-6 text-sm md:px-8"
+  >
+    <span class="text-ink-muted"
+      >Built for, funded by, and hosted by the community, at cost.</span
+    >
+    <a class="link" routerLink="/costs">What it costs</a>
+    <a class="link" routerLink="/donate">Chip in</a>
+    <a class="link" routerLink="/terms">Terms</a>
+    <a class="link" routerLink="/privacy">Privacy</a>
+  </footer>
+
   <div class="sticky bottom-0 z-20">
     <ime-player-bar class="border-t border-line bg-wash empty:hidden" />
 

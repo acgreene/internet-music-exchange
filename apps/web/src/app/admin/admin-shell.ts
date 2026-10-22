@@ -4,7 +4,8 @@ import { SessionService } from '@ime/client-data';
 import { ButtonDirective, WordmarkComponent } from '@ime/ui';
 
 /**
- * The admin tools' frame: the moderation queue and recording claims.
+ * The admin tools' frame: the moderation queue, recording claims, and the
+ * monthly billing close.
  */
 @Component({
   selector: 'ime-admin-shell',
@@ -65,5 +66,6 @@ export class AdminShell {
   protected readonly sections = [
     { label: 'Reports', path: '/admin' },
     { label: 'Copyright claim', path: '/admin/claims/new' },
+    { label: 'Billing months', path: '/admin/billing' },
   ];
 }

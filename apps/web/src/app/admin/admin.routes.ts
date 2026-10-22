@@ -21,6 +21,12 @@ export const adminRoutes: Route[] = [
         loadComponent: () => import('./case-page').then((m) => m.CasePage),
       },
       {
+        path: 'billing',
+        title: 'Billing months · Admin · IME',
+        loadComponent: () =>
+          import('./billing-month-page').then((m) => m.BillingMonthPage),
+      },
+      {
         path: 'claims/new',
         title: 'Copyright claim · Admin · IME',
         loadComponent: () =>
