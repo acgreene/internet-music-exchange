@@ -6,25 +6,61 @@ import {
   signal,
 } from '@angular/core';
 import { ApiClient, type ApiResult } from '@ime/api-client';
-import type { Currency, StartedCheckout } from '@ime/models';
+import type {
+  CartItem as CheckoutItem,
+  Currency,
+  ShippingAddress,
+  StartedCheckout,
+} from '@ime/models';
+
+/**
+ * Who sells a cart item, since each artist is paid on their own.
+ */
+interface CartSeller {
+  artistId: string;
+  artistName: string;
+  artistHandle: string;
+  currency: Currency;
+}
 
 /**
  * A release in the cart, with what the cart page shows beside it.
  */
-export interface CartRelease {
+export interface CartRelease extends CartSeller {
+  kind: 'release';
   releaseId: string;
-  artistId: string;
-  artistName: string;
-  artistHandle: string;
   title: string;
   slug: string;
   coverUrl: string | null;
-  currency: Currency;
   /** What the buyer chose to pay, in minor units. */
   amount: number;
   /** The least they may pay. */
   minimumPrice: number;
 }
+
+/**
+ * Units of one merch variant in the cart.
+ */
+export interface CartMerch extends CartSeller {
+  kind: 'merch';
+  variantId: string;
+  productId: string;
+  name: string;
+  /** The variant's options, such as `L / Black`, when it has any. */
+  variantLabel: string | null;
+  imageUrl: string | null;
+  /** The variant's price when added; checkout charges the current one. */
+  unitPrice: number;
+  quantity: number;
+  /** The stock when added, so the cart does not offer more. */
+  stock: number;
+}
+
+export type CartEntry = CartRelease | CartMerch;
+
+/** What identifies an entry: its release or its variant. */
+export const cartKey = (entry: CartEntry): string =>
+  entry.kind === 'merch' ? entry.variantId : entry.releaseId;
 
 /**
  * A checkout whose payments the buyer is making one artist at a time.
@@ -49,47 +85,75 @@ const KEPT_CHECKOUTS = 5;
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private readonly api = inject(ApiClient);
-  private readonly entries = signal<CartRelease[]>([]);
+  private readonly entries = signal<CartEntry[]>([]);
 
   public readonly items = this.entries.asReadonly();
-  public readonly count = computed(() => this.entries().length);
+  public readonly count = computed(() =>
+    this.entries().reduce(
+      (count, entry) => count + (entry.kind === 'merch' ? entry.quantity : 1),
+      0,
+    ),
+  );
+  /** Something in the cart has to be shipped. */
+  public readonly needsShipping = computed(() =>
+    this.entries().some((entry) => entry.kind === 'merch'),
+  );
 
   constructor() {
     // read after the first render, so a server-rendered page hydrates as drawn
     afterNextRender(() => {
-      this.entries.set(read<CartRelease[]>(CART_KEY) ?? []);
+      this.entries.set(stored());
       window.addEventListener('storage', (event) => {
-        if (event.key === CART_KEY) {
-          this.entries.set(read<CartRelease[]>(CART_KEY) ?? []);
-        }
+        if (event.key === CART_KEY) this.entries.set(stored());
       });
     });
   }
 
-  public has(releaseId: string): boolean {
-    return this.entries().some((item) => item.releaseId === releaseId);
-  }
-
   /**
-   * Add a release, or update what the buyer chose to pay for it.
+   * Add a release, replacing what the buyer chose to pay for it, or add
+   * units of a variant to any already in the cart.
    */
-  public add(item: CartRelease): void {
+  public add(item: CartEntry): void {
+    const key = cartKey(item);
+    const existing = this.entries().find((entry) => cartKey(entry) === key);
+    const added =
+      item.kind === 'merch' && existing?.kind === 'merch'
+        ? {
+            ...item,
+            quantity: Math.min(existing.quantity + item.quantity, item.stock),
+          }
+        : item;
     this.save([
-      ...this.entries().filter((entry) => entry.releaseId !== item.releaseId),
-      item,
+      ...this.entries().filter((entry) => cartKey(entry) !== key),
+      added,
     ]);
   }
 
   public setAmount(releaseId: string, amount: number): void {
     this.save(
       this.entries().map((item) =>
-        item.releaseId === releaseId ? { ...item, amount } : item,
+        item.kind === 'release' && item.releaseId === releaseId
+          ? { ...item, amount }
+          : item,
       ),
     );
   }
 
-  public remove(releaseId: string): void {
-    this.save(this.entries().filter((item) => item.releaseId !== releaseId));
+  public setQuantity(variantId: string, quantity: number): void {
+    this.save(
+      this.entries().map((item) =>
+        item.kind === 'merch' && item.variantId === variantId
+          ? { ...item, quantity }
+          : item,
+      ),
+    );
+  }
+
+  /**
+   * Take out a release or a variant, by its id.
+   */
+  public remove(key: string): void {
+    this.save(this.entries().filter((item) => cartKey(item) !== key));
   }
 
   /**
@@ -97,12 +161,16 @@ export class CartService {
    * something to pay for gets a payment. The checkout is remembered here so
    * its page can walk the buyer through the payments.
    */
-  public async checkout(): Promise<ApiResult<StartedCheckout>> {
+  public async checkout(
+    shippingAddress?: ShippingAddress,
+  ): Promise<ApiResult<StartedCheckout>> {
     const result = await this.api.orders.checkout({
-      items: this.entries().map(({ releaseId, amount }) => ({
-        releaseId,
-        amount,
-      })),
+      items: this.entries().map((item): CheckoutItem =>
+        item.kind === 'merch'
+          ? { variantId: item.variantId, quantity: item.quantity }
+          : { releaseId: item.releaseId, amount: item.amount },
+      ),
+      shippingAddress: this.needsShipping() ? shippingAddress : undefined,
     });
     if (result.ok) {
       this.save([]);
@@ -165,10 +233,19 @@ export class CartService {
     );
   }
 
-  private save(items: CartRelease[]): void {
+  private save(items: CartEntry[]): void {
     this.entries.set(items);
     write(CART_KEY, items);
   }
+}
+
+/**
+ * The stored cart. Entries saved before merch could be added are releases.
+ */
+function stored(): CartEntry[] {
+  return (read<CartEntry[]>(CART_KEY) ?? []).map((entry) =>
+    entry.kind ? entry : { ...(entry as CartRelease), kind: 'release' },
+  );
 }
 
 function read<T>(key: string): T | null {

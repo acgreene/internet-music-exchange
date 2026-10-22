@@ -123,6 +123,7 @@ export class StudioShell {
     const base = `/studio/artists/${this.studio.currentArtist()?.id}`;
     return [
       { label: 'Releases', path: base, exact: true },
+      { label: 'Merch', path: `${base}/merch`, exact: false },
       { label: 'Sales', path: `${base}/sales`, exact: false },
       { label: 'Getting paid', path: `${base}/payments`, exact: false },
       { label: 'Hosting costs', path: `${base}/costs`, exact: false },

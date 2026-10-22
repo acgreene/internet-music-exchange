@@ -17,17 +17,19 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { FollowButton } from '../follow/follow-button';
+import { MerchGrid } from '../merch/merch-grid';
 import { PageMetaService } from '../page-meta';
 import { releaseKindLabel } from '../releases/release-labels';
 
 /**
- * An artist's public profile, `/artists/<handle>`: who they are and their
- * discography.
+ * An artist's public profile, `/artists/<handle>`: who they are, their
+ * discography, and their merch.
  */
 @Component({
   selector: 'ime-artist-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    MerchGrid,
     CoverComponent,
     FollowButton,
     ReleaseCardComponent,
@@ -117,6 +119,16 @@ import { releaseKindLabel } from '../releases/release-labels';
             <ime-spinner />
           }
         </section>
+
+        @if (store().length) {
+          <section class="flex flex-col gap-4" aria-labelledby="merch-heading">
+            <h2 id="merch-heading" class="text-lg font-semibold">Merch</h2>
+            <ime-merch-grid
+              [items]="store()"
+              [handle]="profile.artist.handle"
+            />
+          </section>
+        }
       </div>
     } @else if (profile.error(); as error) {
       <div class="flex flex-col gap-2">
@@ -149,6 +161,16 @@ export class ArtistPage {
     loader: async ({ params }) =>
       unwrap(await this.api.artists.getProfile(params)),
   });
+
+  private readonly storeResource = resource({
+    id: 'artist-store',
+    params: () => this.handle(),
+    loader: async ({ params }) =>
+      unwrap(await this.api.merch.listStore(params)),
+  });
+  protected readonly store = computed(
+    () => currentValue(this.storeResource) ?? [],
+  );
 
   protected readonly discography = resource({
     id: 'artist-discography',

@@ -10,7 +10,11 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient } from '@ime/api-client';
-import { CartService, SessionService } from '@ime/client-data';
+import {
+  type CartRelease,
+  CartService,
+  SessionService,
+} from '@ime/client-data';
 import type { ReleasePageResponse, TracklistItem } from '@ime/models';
 import { AlertComponent, ButtonDirective, MoneyPipe } from '@ime/ui';
 
@@ -174,7 +178,10 @@ export class BuyPanel {
     const pricing = this.page().pricing;
     const inCart = this.cart
       .items()
-      .find((item) => item.releaseId === this.page().release.id);
+      .find(
+        (item): item is CartRelease =>
+          item.kind === 'release' && item.releaseId === this.page().release.id,
+      );
     const amount =
       inCart?.amount ?? pricing?.suggestedPrice ?? pricing?.minimumPrice ?? 0;
     return (amount / 100).toFixed(2);
@@ -190,7 +197,12 @@ export class BuyPanel {
   });
 
   protected readonly inCart = computed(() =>
-    this.cart.items().some((item) => item.releaseId === this.page().release.id),
+    this.cart
+      .items()
+      .some(
+        (item) =>
+          item.kind === 'release' && item.releaseId === this.page().release.id,
+      ),
   );
 
   protected onDraft(event: Event): void {
@@ -202,6 +214,7 @@ export class BuyPanel {
     const amount = this.amount();
     if (amount === null || !page.pricing) return;
     this.cart.add({
+      kind: 'release',
       releaseId: page.release.id,
       artistId: page.artist.id,
       artistName: page.artist.name,

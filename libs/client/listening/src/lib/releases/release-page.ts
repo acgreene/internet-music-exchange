@@ -25,6 +25,7 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { BuyPanel } from '../buying/buy-panel';
+import { MerchGrid } from '../merch/merch-grid';
 import { ReleaseComments } from '../comments/release-comments';
 import { PageMetaService } from '../page-meta';
 import { assetKindLabel, releaseKindLabel } from './release-labels';
@@ -39,6 +40,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
   imports: [
     AlertComponent,
     BuyPanel,
+    MerchGrid,
     ButtonDirective,
     CoverComponent,
     DatePipe,
@@ -64,6 +66,19 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
             [owned]="owned()"
             (claimed)="viewerPage.reload()"
           />
+          @if (editions().length) {
+            <section
+              class="flex flex-col gap-3"
+              aria-labelledby="editions-heading"
+            >
+              <h2 id="editions-heading" class="font-semibold">Also on</h2>
+              <ime-merch-grid
+                compact
+                [items]="editions()"
+                [handle]="page.artist.handle"
+              />
+            </section>
+          }
         </aside>
 
         <div class="flex min-w-0 flex-col gap-8 md:order-1">
@@ -238,6 +253,16 @@ export class ReleasePage {
     loader: async ({ params }) =>
       unwrap(await this.api.catalog.getReleasePage(params.handle, params.slug)),
   });
+
+  private readonly editionsResource = resource({
+    id: 'release-editions',
+    params: () => currentValue(this.page)?.release.id,
+    loader: async ({ params }) =>
+      unwrap(await this.api.merch.listEditions(params)),
+  });
+  protected readonly editions = computed(
+    () => currentValue(this.editionsResource) ?? [],
+  );
 
   private readonly managedArtists = resource({
     params: () => this.session.user()?.id,

@@ -47,6 +47,12 @@ export const studioRoutes: Route[] = [
               import('./artists/managers-page').then((m) => m.ManagersPage),
           },
           {
+            path: 'merch',
+            title: 'Merch · Studio · IME',
+            loadComponent: () =>
+              import('./merch/merch-page').then((m) => m.MerchPage),
+          },
+          {
             path: 'sales',
             title: 'Sales · Studio · IME',
             loadComponent: () =>
@@ -77,6 +83,14 @@ export const studioRoutes: Route[] = [
               import('./artists/followers-page').then((m) => m.FollowersPage),
           },
         ],
+      },
+      {
+        path: 'products/:productId',
+        title: 'Product · Studio · IME',
+        loadComponent: () =>
+          import('./merch/product-editor-page').then(
+            (m) => m.ProductEditorPage,
+          ),
       },
       {
         path: 'billing',

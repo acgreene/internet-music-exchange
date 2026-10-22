@@ -37,6 +37,12 @@ export const listeningRoutes: Route[] = [
       import('./releases/release-page').then((m) => m.ReleasePage),
   },
   {
+    path: 'artists/:handle/merch/:productId',
+    title: 'Merch · IME',
+    loadComponent: () =>
+      import('./merch/product-page').then((m) => m.ProductPage),
+  },
+  {
     path: 'cart',
     title: 'Cart · IME',
     loadComponent: () => import('./buying/cart-page').then((m) => m.CartPage),
