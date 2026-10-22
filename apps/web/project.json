@@ -41,7 +41,13 @@
               "maximumError": "8kb"
             }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "security": {
+            "allowedHosts": [
+              "internetmusicexchange.com",
+              "www.internetmusicexchange.com"
+            ]
+          }
         },
         "development": {
           "optimization": false,
