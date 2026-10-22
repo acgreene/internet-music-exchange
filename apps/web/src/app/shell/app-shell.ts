@@ -48,6 +48,7 @@ export class AppShell {
   protected readonly navigation = computed(() => [
     { label: 'Discover', path: '/' },
     { label: 'Crates', path: '/crates' },
+    { label: 'Charts', path: '/charts' },
     { label: 'Designs', path: '/designs' },
     ...(this.session.isSignedIn()
       ? [
@@ -58,8 +59,9 @@ export class AppShell {
   ]);
 
   /**
-   * Phones search from a tab, since the header has no room for the box, and
-   * keep to four tabs so each stays easy to hit.
+   * Below the desktop layout the main links move to a tab bar of four, so
+   * each stays easy to hit. Phones also search from a tab, since their
+   * header has no room for the box.
    */
   protected readonly mobileNavigation = computed(() => [
     { label: 'Discover', path: '/' },

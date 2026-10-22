@@ -46,7 +46,7 @@ const NOT_TAKEN = [
  * wide screens they are square like a record sleeve.
  */
 const PANEL =
-  'flex w-[min(86%,26rem)] shrink-0 snap-center flex-col justify-between gap-5 overflow-y-auto p-6 [scrollbar-width:none] h-[calc(100svh-8.5rem)] max-h-[38rem] md:h-[calc(100svh-6rem)] short:gap-3 short:p-4 lg:order-none lg:h-auto lg:max-h-none lg:min-h-[30rem] lg:w-auto lg:overflow-visible lg:p-7 xl:aspect-square xl:min-h-0';
+  'flex w-[min(86%,26rem)] shrink-0 snap-center flex-col justify-between gap-5 overflow-y-auto p-6 [scrollbar-width:none] h-[calc(100svh-8.5rem)] max-h-[38rem] short:gap-3 short:p-4 lg:order-none lg:h-auto lg:max-h-none lg:min-h-[30rem] lg:w-auto lg:overflow-visible lg:p-7 xl:aspect-square xl:min-h-0';
 
 /**
  * The top of the home page: an opened gatefold sleeve. The front says what

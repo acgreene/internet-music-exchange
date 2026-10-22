@@ -10,7 +10,7 @@
 
     <div class="flex-1"></div>
 
-    <nav class="hidden items-center gap-5 md:flex" aria-label="Main">
+    <nav class="hidden items-center gap-4 lg:flex xl:gap-5" aria-label="Main">
       @for (item of navigation(); track item.path) {
       <a
         class="link text-[15px]"
@@ -75,7 +75,7 @@
     <ime-player-bar class="border-t border-line bg-wash empty:hidden" />
 
     <nav
-      class="flex border-t border-line bg-surface md:hidden"
+      class="flex border-t border-line bg-surface lg:hidden"
       aria-label="Main"
     >
       @for (item of mobileNavigation(); track item.path) {
