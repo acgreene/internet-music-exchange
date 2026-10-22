@@ -6,6 +6,7 @@ import {
 import type { CatalogHome, Shelf, ShelfItem } from '@ime/models';
 import { CloudStorageService } from '../storage';
 import { CatalogCards } from './catalog-cards';
+import { dailyRank } from './daily-rank';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -135,7 +136,7 @@ export class ShelfService {
     const day = now.toISOString().slice(0, 10);
     const personal = userId ? this.recipes.filter((r) => r.personal) : [];
     const daily = (group: Recipe[]) =>
-      group.sort((a, b) => rotation(day, a.id) - rotation(day, b.id));
+      group.sort((a, b) => dailyRank(day, a.id) - dailyRank(day, b.id));
     const records = daily(
       this.recipes.filter((r) => !r.personal && 'releases' in r),
     );
@@ -181,13 +182,4 @@ export class ShelfService {
   private daysAgo(days: number): Date {
     return new Date(Date.now() - days * DAY_MS);
   }
-}
-
-/** A stable shuffle key for a shelf on a given day. */
-function rotation(day: string, id: string): number {
-  let hash = 2166136261;
-  for (const char of `${day}:${id}`) {
-    hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-  }
-  return hash >>> 0;
 }

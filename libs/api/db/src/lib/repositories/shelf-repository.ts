@@ -1,5 +1,6 @@
 import {
   and,
+  arrayOverlaps,
   count,
   countDistinct,
   desc,
@@ -13,6 +14,7 @@ import {
   min,
   ne,
   notExists,
+  or,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -159,6 +161,48 @@ export class ShelfRepository {
         ),
       ),
     )
+      .orderBy(desc(releases.publishedAt))
+      .limit(limit);
+  }
+
+  /**
+   * Releases on sale among some ids, in no particular order.
+   */
+  public async listOnSaleByIds(ids: string[]): Promise<ShelfRelease[]> {
+    if (ids.length === 0) return [];
+    return this.releaseShelf(inArray(releases.id, ids));
+  }
+
+  /**
+   * Releases on sale that share a genre or a tag with the given ones, with
+   * their own genres and tags to score how much they share.
+   */
+  public async listSoundAlike(
+    genres: string[],
+    tags: string[],
+    limit: number,
+  ): Promise<
+    { id: string; artistId: string; genres: string[]; tags: string[] }[]
+  > {
+    if (genres.length === 0 && tags.length === 0) return [];
+    return this.db
+      .select({
+        id: releases.id,
+        artistId: releases.artistId,
+        genres: releases.genres,
+        tags: releases.tags,
+      })
+      .from(releases)
+      .innerJoin(artists, eq(artists.id, releases.artistId))
+      .where(
+        and(
+          onSale,
+          or(
+            genres.length ? arrayOverlaps(releases.genres, genres) : undefined,
+            tags.length ? arrayOverlaps(releases.tags, tags) : undefined,
+          ),
+        ),
+      )
       .orderBy(desc(releases.publishedAt))
       .limit(limit);
   }

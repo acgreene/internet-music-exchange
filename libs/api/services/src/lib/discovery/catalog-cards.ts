@@ -82,6 +82,19 @@ export class CatalogCards {
     );
   }
 
+  /** Each release's cover, signed, for those that have one. */
+  public async coverUrls(releaseIds: string[]): Promise<Map<string, string>> {
+    const covers = await this.db.releaseAssets.listCovers(releaseIds);
+    return new Map(
+      await Promise.all(
+        covers.map(
+          async (cover) =>
+            [cover.releaseId, await this.signedUrl(cover.objectKey)] as const,
+        ),
+      ),
+    );
+  }
+
   private signedUrl(objectKey: string): Promise<string> {
     return this.storage.getObjectSignedUrl(objectKey, IMAGE_URL_EXPIRY_SECONDS);
   }

@@ -42,3 +42,6 @@ export * from './cost-shares';
 export * from './monthly-usage';
 export * from './reserve-entries';
 export * from './job-runs';
+export * from './crates';
+export * from './crate-releases';
+export * from './user-followers';

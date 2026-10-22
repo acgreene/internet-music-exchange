@@ -47,6 +47,8 @@ const PHYSICAL_FORMATS: PhysicalFormat[] = ['vinyl', 'cassette', 'cd'];
 export interface ReleaseSearch {
   words: string[];
   genres: string[];
+  /** Releases carrying any of these tags. */
+  tags?: string[];
   format?: 'digital' | PhysicalFormat;
   under?: number;
   /** Released on or after, `YYYY-MM-DD`. */
@@ -399,6 +401,9 @@ export class SearchRepository {
       ...search.words.map((word) => ilike(searchable, contains(word))),
       omit !== 'genres' && search.genres.length
         ? arrayOverlaps(releases.genres, search.genres)
+        : undefined,
+      search.tags?.length
+        ? arrayOverlaps(releases.tags, search.tags)
         : undefined,
       omit !== 'format' && physical
         ? this.offeredAs(physical, omit === 'under' ? undefined : search.under)

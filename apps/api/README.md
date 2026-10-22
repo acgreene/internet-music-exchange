@@ -200,6 +200,19 @@ Managers, designers, and owners are checked by the service, which answers 403.
 | GET | `/api/marketplace/designs` | P | `designMarketplace.browse` |
 | GET | `/api/marketplace/search?q=` | P | `designMarketplace.search` |
 | GET | `/api/marketplace/designs/:designId` | P | `designMarketplace.getDesign` |
+| GET | `/api/crates` | P | `crates.listPublic` |
+| POST | `/api/crates` | U | `crates.create` |
+| GET | `/api/crates/sound?genre=&tag=` | P | `crates.bySound` |
+| POST | `/api/crates/from-records` | P | `crates.fromRecords` |
+| GET | `/api/crates/:crateId` | O | `crates.get` |
+| PATCH, DELETE | `/api/crates/:crateId` | U | `crates.update`, `crates.delete` |
+| POST, PUT | `/api/crates/:crateId/releases` | U | `crates.addRelease`, `crates.reorder` |
+| PATCH, DELETE | `/api/crates/:crateId/releases/:releaseId` | U | `crates.setReleaseNote`, `crates.removeRelease` |
+| GET | `/api/me/crates?releaseId=` | U | `crates.listMine` |
+| GET | `/api/me/crate-of-the-day` | U | `crates.ofTheDay` |
+| GET | `/api/me/followed-crates` | U | `crates.listFromFollowed` |
+| GET | `/api/users/:username/crates` | P | `crates.listByUsername` |
+| PUT, DELETE | `/api/users/:userId/follow` | U | `crates.followMaker`, `crates.unfollowMaker` |
 | GET | `/api/gallery/designs` | P | `gallery.list` |
 | GET | `/api/gallery/designs/:designId` | P | `gallery.get` |
 | POST | `/api/gallery/designs/:designId/commission` | U | `gallery.requestCommission` |

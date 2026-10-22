@@ -1,4 +1,14 @@
-import { and, asc, desc, eq, exists, isNull, ne, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  inArray,
+  isNull,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   artists,
@@ -240,6 +250,19 @@ export class ReleaseRepository {
       .orderBy(desc(releases.publishedAt))
       .limit(limit)
       .offset(offset);
+  }
+
+  /**
+   * The genres and tags of some releases.
+   */
+  public async listSounds(
+    releaseIds: string[],
+  ): Promise<{ id: string; genres: string[]; tags: string[] }[]> {
+    if (releaseIds.length === 0) return [];
+    return this.db
+      .select({ id: releases.id, genres: releases.genres, tags: releases.tags })
+      .from(releases)
+      .where(inArray(releases.id, releaseIds));
   }
 
   /**

@@ -77,6 +77,8 @@ A crate is a list of releases someone put together, like a box of records at a s
 - A listener can follow people whose crates they like and see their new public crates.
 - IME offers **crates by sound**, built from genres and tags, and **crates built from records you love**: a listener picks a few records and IME fills a crate from what their buyers also kept, the crates they appear in, and their artists' tags.
 - A signed-in listener can get a **crate of the day** built from their own library the same way.
+- A crate IME built can be saved as one of the listener's own, and changed from there.
+- A crate holds up to 200 records, and someone can keep up to 100 crates. A crate's words can be reported through its maker, and a suspended person's crates are hidden.
 
 ## Dig mode
 

@@ -69,6 +69,11 @@ Each is a property of `ImeServices`, named in brackets.
   artists are based for reading them out of a search, and suggestions while
   someone types.
   Use it for the search box and the results page.
+- **`CrateService`** (`crates`): crates, lists of releases people put
+  together with a line about each, public or private; following the people
+  who make them; and the crates IME builds by fixed rules: by genre or tag,
+  from a few records someone loves, and a crate of the day from a
+  listener's library. Use it for `/crates` and adding a release to a crate.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release
   pages, browsing, the feed of followed artists, the library, and
   the URLs that stream, download, and open assets. Use it for anything a

@@ -9,6 +9,7 @@ export * from './catalog';
 export * from './merch';
 export * from './orders';
 export * from './community';
+export * from './crates';
 export * from './designs';
 export * from './funding';
 export * from './moderation';

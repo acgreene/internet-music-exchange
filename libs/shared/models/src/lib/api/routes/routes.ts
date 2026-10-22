@@ -241,6 +241,39 @@ export enum ApiRoute {
   /** PUT follows an artist; DELETE unfollows. */
   ArtistFollow = '/api/artists/:artistId/follow',
 
+  /** Public crates, `?limit=&offset=`; making a crate. */
+  Crates = '/api/crates',
+
+  /** A crate IME builds from a genre or a tag, `?genre=` or `?tag=`. */
+  CrateBySound = '/api/crates/sound',
+
+  /** A crate IME builds from a few records someone loves. */
+  CrateFromRecords = '/api/crates/from-records',
+
+  /** A crate's page; changing or deleting it. */
+  Crate = '/api/crates/:crateId',
+
+  /** Adding a release to a crate; putting its releases in a new order. */
+  CrateReleases = '/api/crates/:crateId/releases',
+
+  /** A release in a crate: its line, or taking it out. */
+  CrateRelease = '/api/crates/:crateId/releases/:releaseId',
+
+  /** The signed-in user's crates, `?releaseId=` to say which hold it. */
+  MyCrates = '/api/me/crates',
+
+  /** A crate built from the signed-in listener's library, new each day. */
+  CrateOfTheDay = '/api/me/crate-of-the-day',
+
+  /** New public crates by the people the signed-in user follows. */
+  FollowedCrates = '/api/me/followed-crates',
+
+  /** Someone's public crates, by username. */
+  UserCrates = '/api/users/:username/crates',
+
+  /** Following someone whose crates you like. */
+  UserFollow = '/api/users/:userId/follow',
+
   /** The artists the signed-in user follows. */
   MyFollowing = '/api/me/following',
 
