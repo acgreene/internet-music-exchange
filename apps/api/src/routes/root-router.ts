@@ -11,6 +11,7 @@ import { DesignsRouter } from './designs';
 import { FundingRouter } from './funding';
 import { HealthRouter } from './health';
 import { MerchRouter } from './merch';
+import { ModerationRouter } from './moderation';
 import { OrdersRouter } from './orders';
 import { ReleasesRouter } from './releases';
 import { RouteGuard } from './route-guard';
@@ -61,6 +62,12 @@ export class RootRouter extends AbstractRouter {
         services.costShares,
         services.donations,
         services.publicCosts,
+      ),
+      new ModerationRouter(
+        guard,
+        services.reports,
+        services.moderation,
+        services.monthlyClose,
       ),
       new WebhooksRouter(guard, services.stripeWebhooks),
     ];

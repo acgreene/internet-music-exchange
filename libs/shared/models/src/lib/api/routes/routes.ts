@@ -380,4 +380,47 @@ export enum ApiRoute {
 
   /** Stripe's events about sellers' connected accounts. */
   StripeConnectWebhook = '/api/webhooks/stripe/connect',
+
+  // Moderation
+
+  /** Report something for an admin to review. */
+  Reports = '/api/reports',
+
+  /** Contest a copyright takedown of one of the artist's releases. */
+  ReleaseContest = '/api/releases/:releaseId/contest',
+
+  /** The admin queue of items with open reports. */
+  AdminReports = '/api/admin/reports',
+
+  /** One item's reports, actions, and any open contest. */
+  AdminCase = '/api/admin/cases/:targetType/:targetId',
+
+  /** Close an item's reports without acting on it. */
+  AdminCaseDismiss = '/api/admin/cases/:targetType/:targetId/dismiss',
+
+  /** Take an item down, or suspend an artist or user. */
+  AdminCaseTakeDown = '/api/admin/cases/:targetType/:targetId/take-down',
+
+  /** Undo a takedown or suspension. */
+  AdminCaseRestore = '/api/admin/cases/:targetType/:targetId/restore',
+
+  /** Clear an offensive username and display name. */
+  AdminClearProfile = '/api/admin/users/:userId/clear-profile',
+
+  /** Record a copyright claim a rights holder sent to IME. */
+  AdminCopyrightClaims = '/api/admin/copyright-claims',
+
+  /** Decide an artist's contest of a copyright takedown. */
+  AdminContestDecision = '/api/admin/releases/:releaseId/contest-decision',
+
+  // Monthly close, for admins
+
+  /** Open a month for billing at the provider's rates. */
+  AdminBillingPeriods = '/api/admin/billing-periods',
+
+  /** Record one of the month's bills. */
+  AdminBillingPeriodCosts = '/api/admin/billing-periods/:month/costs',
+
+  /** Close a month: issue and charge every seller's statement. */
+  AdminBillingPeriodClose = '/api/admin/billing-periods/:month/close',
 }

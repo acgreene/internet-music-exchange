@@ -11,3 +11,4 @@ export * from './orders';
 export * from './community';
 export * from './designs';
 export * from './funding';
+export * from './moderation';

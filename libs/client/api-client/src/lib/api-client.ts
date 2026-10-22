@@ -11,6 +11,7 @@ import { CommunityClient } from './community';
 import { DesignsClient } from './designs';
 import { FundingClient } from './funding';
 import { MerchClient } from './merch';
+import { AdminClient, ReportsClient } from './moderation';
 import { OrdersClient } from './orders';
 import { ReleasesClient } from './releases';
 
@@ -62,6 +63,16 @@ export class ApiClient {
    * public costs page.
    */
   public readonly funding = new FundingClient(this.transport);
+
+  /**
+   * Reporting content and contesting copyright takedowns.
+   */
+  public readonly reports = new ReportsClient(this.transport);
+
+  /**
+   * The admin tools: moderation and the monthly billing close.
+   */
+  public readonly admin = new AdminClient(this.transport);
 
   /**
    * Checkout, purchases, and sales.
