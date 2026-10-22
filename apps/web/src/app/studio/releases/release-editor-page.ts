@@ -17,6 +17,7 @@ import { DetailsSection } from './sections/details-section';
 import { ExtrasSection } from './sections/extras-section';
 import { GiftSection } from './sections/gift-section';
 import { PricingSection } from './sections/pricing-section';
+import { SoundSection } from './sections/sound-section';
 import { TakedownNotice } from './sections/takedown-notice';
 import { TracksSection } from './sections/tracks-section';
 import { STATUS_LABELS } from './release-options';
@@ -38,6 +39,7 @@ import { currentValue } from '@ime/client-data';
     ExtrasSection,
     GiftSection,
     PricingSection,
+    SoundSection,
     RouterLink,
     SpinnerComponent,
     TakedownNotice,
@@ -159,6 +161,7 @@ import { currentValue } from '@ime/client-data';
         </header>
 
         <ime-details-section [managed]="managed" (changed)="release.reload()" />
+        <ime-sound-section [managed]="managed" (changed)="release.reload()" />
         <ime-cover-section [managed]="managed" (changed)="release.reload()" />
         <ime-tracks-section [managed]="managed" (changed)="release.reload()" />
         <ime-pricing-section [managed]="managed" (changed)="release.reload()" />

@@ -19,7 +19,13 @@ import {
   SessionService,
   currentValue,
 } from '@ime/client-data';
-import { ApiError, HttpStatus, type TracklistItem } from '@ime/models';
+import {
+  ApiError,
+  genreName,
+  HttpStatus,
+  sideOf,
+  type TracklistItem,
+} from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
@@ -122,6 +128,27 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                 >{{ page.artist.name }}</a
               >
             </p>
+            @if (page.release.genres.length || page.release.tags.length) {
+              <ul
+                class="mt-1 flex flex-wrap gap-1.5"
+                aria-label="Genres and tags"
+              >
+                @for (genre of page.release.genres; track genre) {
+                  <li
+                    class="rounded-full border border-ink px-2.5 py-0.5 text-sm font-medium"
+                  >
+                    {{ genreName(genre) }}
+                  </li>
+                }
+                @for (tag of page.release.tags; track tag) {
+                  <li
+                    class="rounded-full border border-line px-2.5 py-0.5 text-sm text-ink-muted"
+                  >
+                    {{ tag }}
+                  </li>
+                }
+              </ul>
+            }
             @if (playable().length) {
               <div class="mt-2">
                 <button imeButton (click)="play()">
@@ -173,6 +200,14 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
               <h2 id="tracks-heading" class="sr-only">Tracks</h2>
               <ol class="flex flex-col border-t border-line">
                 @for (track of page.tracks; track track.trackId) {
+                  @if (opensSide(track); as side) {
+                    <li
+                      class="border-b border-hairline px-2 pt-4 pb-1.5 font-mono text-xs tracking-wider text-ink-muted uppercase"
+                      aria-hidden="true"
+                    >
+                      Side {{ side }}
+                    </li>
+                  }
                   <li>
                     <button
                       class="grid w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline px-2 py-2.5 text-left text-[15px] disabled:text-ink-subtle"
@@ -195,7 +230,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                             [playing]="playing()"
                           />
                         } @else {
-                          {{ track.position }}.
+                          {{ trackNumber(track) }}
                         }
                       </span>
                       <span class="flex min-w-0 items-center gap-2">
@@ -385,6 +420,16 @@ export class ReleasePage {
   );
 
   protected readonly assetLabel = assetKindLabel;
+  protected readonly genreName = genreName;
+
+  /** Where each side after A begins, among the tracks on the release. */
+  private readonly sideStarts = computed(() => {
+    const page = currentValue(this.page);
+    if (!page) return [];
+    return page.release.sideStarts.filter(
+      (start) => start <= page.tracks.length,
+    );
+  });
 
   constructor() {
     effect(() => {
@@ -397,6 +442,25 @@ export class ReleasePage {
         image: page.coverUrl,
       });
     });
+  }
+
+  /** The side this track opens, when the release has sides. */
+  protected opensSide(track: TracklistItem): string | null {
+    const starts = this.sideStarts();
+    if (track.position !== 1 && !starts.includes(track.position)) return null;
+    return sideOf(track.position, starts);
+  }
+
+  /** "3." on a release without sides, "B1" on one with them, as on a record. */
+  protected trackNumber(track: TracklistItem): string {
+    const starts = this.sideStarts();
+    const side = sideOf(track.position, starts);
+    if (!side) return `${track.position}.`;
+    const sideStart = Math.max(
+      1,
+      ...starts.filter((start) => start <= track.position),
+    );
+    return `${side}${track.position - sideStart + 1}`;
   }
 
   protected canPlay(track: TracklistItem): boolean {

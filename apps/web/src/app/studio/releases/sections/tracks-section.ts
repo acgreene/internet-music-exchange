@@ -10,7 +10,11 @@ import {
 import { form, FormField, required, submit } from '@angular/forms/signals';
 import { ApiClient, type ApiResult } from '@ime/api-client';
 import { readAudioDuration } from '@ime/client-data';
-import type { ManagedReleaseResponse, TracklistItem } from '@ime/models';
+import {
+  type ManagedReleaseResponse,
+  sideOf,
+  type TracklistItem,
+} from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
@@ -23,8 +27,8 @@ import { uploadTrackAudio } from '../upload-asset';
 const MB = 1024 * 1024;
 
 /**
- * The tracklist: titles, running order, audio, and which tracks anyone may
- * hear as a preview.
+ * The tracklist: titles, running order, sides, audio, and which tracks anyone
+ * may hear as a preview.
  */
 @Component({
   selector: 'ime-tracks-section',
@@ -43,7 +47,8 @@ const MB = 1024 * 1024;
         <h2 id="tracks-heading" class="text-lg font-semibold">Tracks</h2>
         <p class="text-sm text-ink-muted">
           Upload WAV, FLAC, or AIFF if you can; MP3 works too. Owners download
-          exactly what you upload. Previews can be heard by anyone.
+          exactly what you upload. Previews can be heard by anyone. Split the
+          tracklist into sides if it has them, as a record would.
         </p>
       </div>
 
@@ -57,6 +62,12 @@ const MB = 1024 * 1024;
           let last = $last
         ) {
           <li class="flex flex-col gap-3 p-4">
+            @if (startsSide(track); as side) {
+              <span
+                class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+                >Side {{ side }}</span
+              >
+            }
             <div class="flex flex-wrap items-center gap-3">
               <span
                 class="w-6 text-right text-sm text-ink-subtle tabular-nums"
@@ -130,6 +141,17 @@ const MB = 1024 * 1024;
                 />
                 Preview
               </label>
+              @if (!first) {
+                <label class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    [checked]="sideStarts().includes(track.position)"
+                    [disabled]="busy()"
+                    (change)="setSideStart(track, $event)"
+                  />
+                  Starts a new side
+                </label>
+              }
               @if (uploading().get(track.trackId); as fraction) {
                 <progress
                   class="w-40"
@@ -191,12 +213,40 @@ export class TracksSection {
     required(path.title, { message: 'Give the track a title.' });
   });
 
+  /** Where each side after A begins, among the tracks still on the release. */
+  protected readonly sideStarts = computed(() =>
+    this.managed().release.sideStarts.filter(
+      (start) => start <= this.managed().tracks.length,
+    ),
+  );
+
   private readonly originals = computed(
     () => new Map(this.managed().originals.map((file) => [file.trackId, file])),
   );
   private readonly streamable = computed(
     () => new Set(this.managed().streamCopies.map((file) => file.trackId)),
   );
+
+  /** The side this track opens, if it opens one. */
+  protected startsSide(track: TracklistItem): string | null {
+    const starts = this.sideStarts();
+    if (track.position !== 1 && !starts.includes(track.position)) return null;
+    return sideOf(track.position, starts);
+  }
+
+  protected async setSideStart(
+    track: TracklistItem,
+    event: Event,
+  ): Promise<void> {
+    const starts = (event.target as HTMLInputElement).checked
+      ? [...this.sideStarts(), track.position].sort((a, b) => a - b)
+      : this.sideStarts().filter((start) => start !== track.position);
+    await this.run(() =>
+      this.api.releases.update(this.managed().release.id, {
+        sideStarts: starts,
+      }),
+    );
+  }
 
   protected hasAudio(track: TracklistItem): boolean {
     return this.originals().has(track.trackId);
