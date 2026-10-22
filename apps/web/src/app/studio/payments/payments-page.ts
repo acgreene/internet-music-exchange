@@ -14,8 +14,9 @@ import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
 import { StudioService } from '../studio.service';
 
 /**
- * Getting paid: connect the artist's Stripe account and see what it is
- * cleared to do. Stripe sends managers back here from onboarding.
+ * Getting paid: connect the artist's Stripe account, or the designer's own,
+ * and see what it is cleared to do. Stripe sends people back here from
+ * onboarding.
  */
 @Component({
   selector: 'ime-payments-page',
@@ -26,8 +27,9 @@ import { StudioService } from '../studio.service';
       <div>
         <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Getting paid</h1>
         <p class="text-sm text-ink-muted">
-          Buyers pay you directly through your own Stripe account. IME takes no
-          cut and never holds your money.
+          {{ scope() === 'designer' ? 'Artists' : 'Buyers' }} pay you directly
+          through your own Stripe account. IME takes no cut and never holds your
+          money.
         </p>
       </div>
 
@@ -41,9 +43,10 @@ import { StudioService } from '../studio.service';
             class="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
           >
             <p>
-              Connect a Stripe account to sell paid releases and merch. Stripe
-              asks for your details and bank account, and pays you out. Free
-              releases need no payment account.
+              Connect a Stripe account to sell {{ selling() }}. Stripe asks for
+              your details and bank account, and pays you out. Free
+              {{ scope() === 'designer' ? 'designs' : 'releases' }} need no
+              payment account.
             </p>
             <div>
               <button imeButton [busy]="starting()" (click)="startOnboarding()">
@@ -149,18 +152,41 @@ export class PaymentsPage {
 
   /** Set by Stripe when an onboarding link expired before it was used. */
   public readonly onboarding = input<string>();
+  /** Whose account: the artist being worked on, or the signed-in designer's. */
+  public readonly scope = input<'artist' | 'designer'>('artist');
+
+  protected readonly selling = computed(() =>
+    this.scope() === 'designer' ? 'paid designs' : 'paid releases and merch',
+  );
+
+  /** The calls for whose account this is, or none until the artist is known. */
+  private readonly calls = computed(() => {
+    const funding = this.api.funding;
+    if (this.scope() === 'designer') {
+      return {
+        get: () => funding.getMyPaymentAccount(),
+        start: () => funding.startMyOnboarding(),
+        refresh: () => funding.refreshMyPaymentAccount(),
+      };
+    }
+    const artistId = this.studio.currentArtistId();
+    if (!artistId) return undefined;
+    return {
+      get: () => funding.getArtistPaymentAccount(artistId),
+      start: () => funding.startArtistOnboarding(artistId),
+      refresh: () => funding.refreshArtistPaymentAccount(artistId),
+    };
+  });
 
   protected readonly account = resource({
-    params: () => this.studio.currentArtistId() ?? undefined,
+    params: () => this.calls(),
     loader: async ({ params }) => {
-      const recorded = unwrap(
-        await this.api.funding.getArtistPaymentAccount(params),
-      );
+      const recorded = unwrap(await params.get());
       // an account mid-setup may have changed on Stripe's side, as when the
-      // manager just came back from onboarding, so ask Stripe
+      // owner just came back from onboarding, so ask Stripe
       return recorded.connected &&
         !(recorded.chargesEnabled && recorded.detailsSubmitted)
-        ? unwrap(await this.api.funding.refreshArtistPaymentAccount(params))
+        ? unwrap(await params.refresh())
         : recorded;
     },
   });
@@ -177,11 +203,11 @@ export class PaymentsPage {
   }
 
   protected async startOnboarding(): Promise<void> {
-    const artistId = this.studio.currentArtistId();
-    if (!artistId) return;
+    const calls = this.calls();
+    if (!calls) return;
     this.starting.set(true);
     this.error.set(null);
-    const result = await this.api.funding.startArtistOnboarding(artistId);
+    const result = await calls.start();
     if (result.ok) {
       window.location.assign(result.data.url);
       return;
@@ -191,11 +217,11 @@ export class PaymentsPage {
   }
 
   protected async refresh(): Promise<void> {
-    const artistId = this.studio.currentArtistId();
-    if (!artistId) return;
+    const calls = this.calls();
+    if (!calls) return;
     this.refreshing.set(true);
     this.error.set(null);
-    const result = await this.api.funding.refreshArtistPaymentAccount(artistId);
+    const result = await calls.refresh();
     this.refreshing.set(false);
     if (result.ok) this.account.set(result.data);
     else this.error.set(result.error.message);

@@ -131,6 +131,8 @@ export class StudioShell {
 
   /** Pages about the signed-in user rather than one artist. */
   protected readonly global = [
+    { label: 'Design marketplace', path: '/studio/marketplace' },
+    { label: 'Your designs', path: '/studio/designs' },
     { label: 'Hosting balance', path: '/studio/billing' },
   ];
 
@@ -139,6 +141,7 @@ export class StudioShell {
     return [
       { label: 'Releases', path: base, exact: true },
       { label: 'Merch', path: `${base}/merch`, exact: false },
+      { label: 'Page designs', path: `${base}/designs`, exact: false },
       { label: 'Sales', path: `${base}/sales`, exact: false },
       { label: 'Getting paid', path: `${base}/payments`, exact: false },
       { label: 'Hosting costs', path: `${base}/costs`, exact: false },

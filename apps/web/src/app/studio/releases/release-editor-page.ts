@@ -12,6 +12,7 @@ import { ApiClient, unwrap } from '@ime/api-client';
 import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
 import { StudioService } from '../studio.service';
 import { CoverSection } from './sections/cover-section';
+import { DesignSection } from './sections/design-section';
 import { DetailsSection } from './sections/details-section';
 import { ExtrasSection } from './sections/extras-section';
 import { GiftSection } from './sections/gift-section';
@@ -31,6 +32,7 @@ import { currentValue } from '@ime/client-data';
     AlertComponent,
     ButtonDirective,
     CoverSection,
+    DesignSection,
     DetailsSection,
     ExtrasSection,
     GiftSection,
@@ -158,6 +160,7 @@ import { currentValue } from '@ime/client-data';
         <ime-tracks-section [managed]="managed" (changed)="release.reload()" />
         <ime-pricing-section [managed]="managed" (changed)="release.reload()" />
         <ime-extras-section [managed]="managed" (changed)="release.reload()" />
+        <ime-design-section [managed]="managed" />
         @if (managed.release.status === 'published') {
           <ime-gift-section [releaseId]="managed.release.id" />
         }

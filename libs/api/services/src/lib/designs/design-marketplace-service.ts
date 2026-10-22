@@ -212,7 +212,7 @@ export class DesignMarketplaceService {
         },
         metadata,
         success_url: `${returnUrl}?acquired=${designId}`,
-        cancel_url: `${this.webAppUrl}/designs/${designId}`,
+        cancel_url: `${this.webAppUrl}/studio/marketplace/${designId}`,
       },
       { stripeAccount: payout.stripeAccountId },
     );

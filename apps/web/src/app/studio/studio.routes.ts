@@ -77,6 +77,14 @@ export const studioRoutes: Route[] = [
               import('./billing/cost-split-page').then((m) => m.CostSplitPage),
           },
           {
+            path: 'designs',
+            title: 'Page designs · Studio · IME',
+            loadComponent: () =>
+              import('./designs/artist-designs-page').then(
+                (m) => m.ArtistDesignsPage,
+              ),
+          },
+          {
             path: 'followers',
             title: 'Followers · Studio · IME',
             loadComponent: () =>
@@ -90,6 +98,41 @@ export const studioRoutes: Route[] = [
         loadComponent: () =>
           import('./merch/product-editor-page').then(
             (m) => m.ProductEditorPage,
+          ),
+      },
+      {
+        path: 'marketplace',
+        title: 'Design marketplace · Studio · IME',
+        loadComponent: () =>
+          import('./designs/marketplace-page').then((m) => m.MarketplacePage),
+      },
+      {
+        path: 'marketplace/:designId',
+        title: 'Design · Studio · IME',
+        loadComponent: () =>
+          import('./designs/marketplace-design-page').then(
+            (m) => m.MarketplaceDesignPage,
+          ),
+      },
+      {
+        path: 'designs',
+        title: 'Your designs · Studio · IME',
+        loadComponent: () =>
+          import('./designs/my-designs-page').then((m) => m.MyDesignsPage),
+      },
+      {
+        path: 'designs/payments',
+        title: 'Getting paid for designs · Studio · IME',
+        data: { scope: 'designer' },
+        loadComponent: () =>
+          import('./payments/payments-page').then((m) => m.PaymentsPage),
+      },
+      {
+        path: 'designs/:designId',
+        title: 'Design · Studio · IME',
+        loadComponent: () =>
+          import('./designs/design-editor-page').then(
+            (m) => m.DesignEditorPage,
           ),
       },
       {
