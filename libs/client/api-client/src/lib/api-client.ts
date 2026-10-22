@@ -6,6 +6,7 @@ import { UsersClient } from './user';
 import { SupabaseSingleton } from './auth';
 import { ArtistPagesClient } from './artist-pages';
 import { ArtistsClient } from './artists';
+import { CatalogClient } from './catalog';
 import { ReleasesClient } from './releases';
 
 /**
@@ -29,6 +30,11 @@ export class ApiClient {
    * Artists' profiles, and what their managers edit.
    */
   public readonly artists = new ArtistsClient(this.transport);
+
+  /**
+   * What listeners browse, read, and play.
+   */
+  public readonly catalog = new CatalogClient(this.transport);
 
   /**
    * Releases, for their artist's managers.

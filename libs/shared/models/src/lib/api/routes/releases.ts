@@ -54,8 +54,8 @@ export const releaseAssetKindSchema = z.enum([
 export type ReleaseAssetKind = z.infer<typeof releaseAssetKindSchema>;
 
 export const releaseSchema = z.object({
-  id: z.uuid(),
-  artistId: z.uuid(),
+  id: z.guid(),
+  artistId: z.guid(),
   title: z.string(),
   slug: z.string(),
   kind: releaseKindSchema,
@@ -74,7 +74,7 @@ export type ReleaseResponse = z.infer<typeof releaseSchema>;
  * A track as a release lists it.
  */
 export const tracklistItemSchema = z.object({
-  trackId: z.uuid(),
+  trackId: z.guid(),
   position: z.number().int(),
   title: z.string(),
   durationMs: z.number().int().nullable(),
@@ -85,8 +85,8 @@ export const tracklistItemSchema = z.object({
 export type TracklistItem = z.infer<typeof tracklistItemSchema>;
 
 export const trackSchema = z.object({
-  id: z.uuid(),
-  artistId: z.uuid(),
+  id: z.guid(),
+  artistId: z.guid(),
   title: z.string(),
   durationMs: z.number().int().nullable(),
   createdAt: timestampSchema,
@@ -98,8 +98,8 @@ export type TrackResponse = z.infer<typeof trackSchema>;
  * A track's uploaded audio, as its managers see it.
  */
 export const audioFileSchema = z.object({
-  audioFileId: z.uuid(),
-  trackId: z.uuid(),
+  audioFileId: z.guid(),
+  trackId: z.guid(),
   trackTitle: z.string(),
   position: z.number().int(),
   variant: z.enum(['original', 'stream']),
@@ -123,8 +123,8 @@ export type PricingResponse = z.infer<typeof pricingSchema>;
  * A release asset, as its managers see it.
  */
 export const releaseAssetSchema = z.object({
-  id: z.uuid(),
-  releaseId: z.uuid(),
+  id: z.guid(),
+  releaseId: z.guid(),
   kind: releaseAssetKindSchema,
   title: z.string().nullable(),
   description: z.string().nullable(),
@@ -189,7 +189,7 @@ export const trackChangesRequestSchema = trackRequestSchema.partial();
 export type TrackChangesRequest = z.infer<typeof trackChangesRequestSchema>;
 
 export const reorderTracksRequestSchema = z.object({
-  trackIds: z.array(z.uuid()),
+  trackIds: z.array(z.guid()),
 });
 
 export const trackPreviewRequestSchema = z.object({ isPreview: z.boolean() });

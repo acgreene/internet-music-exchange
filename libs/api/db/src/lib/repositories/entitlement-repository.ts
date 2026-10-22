@@ -17,9 +17,11 @@ import {
 export interface LibraryItem {
   releaseId: string;
   title: string;
+  slug: string;
   kind: ReleaseKind;
   artistId: string;
   artistName: string;
+  artistHandle: string;
   source: EntitlementSource;
   acquiredAt: Date;
 }
@@ -138,9 +140,11 @@ export class EntitlementRepository {
       .select({
         releaseId: releases.id,
         title: releases.title,
+        slug: releases.slug,
         kind: releases.kind,
         artistId: artists.id,
         artistName: artists.name,
+        artistHandle: artists.handle,
         source: entitlements.source,
         acquiredAt: entitlements.createdAt,
       })

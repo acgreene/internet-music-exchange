@@ -122,4 +122,33 @@ export enum ApiRoute {
 
   /** Give a listener a release, by username. */
   ReleaseGifts = '/api/releases/:releaseId/gifts',
+
+  // Catalog and library, for listeners
+
+  /** The newest releases. */
+  CatalogReleases = '/api/catalog/releases',
+
+  /** Search artists and releases, `?q=`. */
+  CatalogSearch = '/api/catalog/search',
+
+  /** An artist's published releases. */
+  CatalogDiscography = '/api/catalog/artists/:handle/releases',
+
+  /** A release page. */
+  CatalogReleasePage = '/api/catalog/artists/:handle/releases/:slug',
+
+  /** A link that streams one track. */
+  CatalogTrackStream = '/api/catalog/releases/:releaseId/tracks/:trackId/stream',
+
+  /** A link that downloads one track's original, for owners. */
+  CatalogTrackDownload = '/api/catalog/releases/:releaseId/tracks/:trackId/download',
+
+  /** A link that opens a release asset. */
+  CatalogAsset = '/api/catalog/assets/:assetId',
+
+  /** The releases the signed-in user owns. */
+  MyLibrary = '/api/me/library',
+
+  /** New releases from the artists the signed-in user follows. */
+  MyFeed = '/api/me/feed',
 }

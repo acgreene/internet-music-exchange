@@ -18,7 +18,8 @@ import type { Access, RouteGuard } from './route-guard';
 import { RouteUtils } from './utils';
 
 const log = new Logger('api').child('routes');
-const uuidSchema = z.uuid();
+/** Any id Postgres accepts, not only RFC 4122 versions, which seed data skips. */
+const idSchema = z.guid();
 
 /**
  * Everything a handler gets: input already checked against the route's
@@ -116,7 +117,7 @@ export abstract class AbstractRouter {
       const params = c.req.param() as Record<string, string>;
       for (const [name, value] of Object.entries(params)) {
         // a malformed id names nothing, and would only fail in the database
-        if (name.endsWith('Id') && !uuidSchema.safeParse(value).success) {
+        if (name.endsWith('Id') && !idSchema.safeParse(value).success) {
           throw new ApiError(
             ApiErrorKind.Http,
             HttpStatus.NotFound,

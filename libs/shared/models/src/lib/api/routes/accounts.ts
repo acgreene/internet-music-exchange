@@ -8,7 +8,7 @@ import { ApiRoute } from './routes';
  * Anyone's public profile, `/users/<username>`.
  */
 export const publicUserSchema = z.object({
-  id: z.uuid(),
+  id: z.guid(),
   username: z.string().nullable(),
   name: z.string().nullable(),
   createdAt: timestampSchema,
@@ -39,7 +39,7 @@ export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;
  * handle counts as free.
  */
 export const handleAvailabilityQuerySchema = z.object({
-  artistId: z.uuid().optional(),
+  artistId: z.guid().optional(),
 });
 
 export const accountContracts = {

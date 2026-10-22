@@ -19,7 +19,7 @@ export const artistImageKindSchema = z.enum(['avatar', 'header']);
 export type ArtistImageKind = z.infer<typeof artistImageKindSchema>;
 
 export const artistSchema = z.object({
-  id: z.uuid(),
+  id: z.guid(),
   name: z.string(),
   handle: z.string(),
   bio: z.string().nullable(),
@@ -33,7 +33,7 @@ export const artistSchema = z.object({
 export type ArtistResponse = z.infer<typeof artistSchema>;
 
 export const artistLinkSchema = z.object({
-  id: z.uuid(),
+  id: z.guid(),
   label: z.string(),
   url: z.string(),
   position: z.number().int(),
@@ -55,7 +55,7 @@ export const artistProfileSchema = z.object({
 export type ArtistProfileResponse = z.infer<typeof artistProfileSchema>;
 
 export const artistManagerSchema = z.object({
-  userId: z.uuid(),
+  userId: z.guid(),
   username: z.string().nullable(),
   name: z.string().nullable(),
   createdAt: timestampSchema,

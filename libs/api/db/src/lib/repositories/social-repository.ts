@@ -16,6 +16,7 @@ import {
 export interface FollowedArtist {
   artistId: string;
   name: string;
+  handle: string;
   followedAt: Date;
 }
 
@@ -36,9 +37,11 @@ export interface FollowerProfile {
 export interface FeedRelease {
   releaseId: string;
   title: string;
+  slug: string;
   kind: ReleaseKind;
   artistId: string;
   artistName: string;
+  artistHandle: string;
   publishedAt: Date | null;
 }
 
@@ -183,6 +186,7 @@ export class SocialRepository {
       .select({
         artistId: artists.id,
         name: artists.name,
+        handle: artists.handle,
         followedAt: artistFollowers.createdAt,
       })
       .from(artistFollowers)
@@ -239,9 +243,11 @@ export class SocialRepository {
       .select({
         releaseId: releases.id,
         title: releases.title,
+        slug: releases.slug,
         kind: releases.kind,
         artistId: artists.id,
         artistName: artists.name,
+        artistHandle: artists.handle,
         publishedAt: releases.publishedAt,
       })
       .from(artistFollowers)
