@@ -119,7 +119,9 @@ How people can give:
 
 ## How we talk about it
 
-Public copy describes IME as **built for, funded by, and hosted by the community**, at cost. It explains that sellers chip in for what they use, that no one profits from those contributions, and that the creators cannot cover the bills alone. Keep the framing practical and plain: no political labels, no guilt, no fundraising tone.
+Public copy describes IME as **built for, funded by, and hosted by the community**, at cost. It explains that sellers chip in for what they use, that no one profits from those contributions, and that the creators cannot cover the bills alone.
+
+IME's voice can be bold about what it stands against: a platform cut, shareholders, AI-generated music, and treating music as a growth market ("Music is not a growth market."). It makes that case with plain facts, such as a receipt showing where a sale's money goes, rather than slogans or party-political labels, and without guilt or a fundraising tone. Comparisons with other platforms name them and use their own published figures (for example, Bandcamp's published average share for artists).
 
 Supporting the developers is mentioned subtly, in a few quiet places such as the donation page and the top-up form, and always as completely optional. It is never pushed in a seller's or listener's way.
 

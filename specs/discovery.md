@@ -2,47 +2,114 @@
 
 ## Purpose
 
-Discovery is how a listener finds something to listen to or buy. It is the listener's primary entry point, especially on mobile, where it is effectively the home of the app. This domain covers search, browsing the catalog, and the surfaces that put music in front of a listener. It spans artists, releases, and merch rather than belonging to any one of them.
+Discovery is how a listener finds something to listen to or buy. Most people arrive not knowing what they want, so IME has to do what a good record store does: put interesting records in front of them, explain why, and let them dig. This domain covers the home page, browsing by format, search, charts, crates, and dig mode.
+
+Discovery on IME is built around whole records rather than seconds of attention. It helps people find music and then gets out of the way so they can listen to it properly. It never uses AI to recommend, describe, or generate anything; recommendations come from what real people bought, kept, and shared, and from what artists say about their own work.
 
 ## Roles
 
-- **Any visitor** can browse and search public content.
-- **Signed-in listeners** additionally get a personalized entry point through the artists they follow.
+- **Any visitor** can use the home page, browse, search, read charts, open crates, and dig.
+- **Signed-in listeners** also get shelves and crates drawn from their own library, can keep records while digging, and can make crates.
+- **Artists** describe their releases with genres and tags, and choose which tracks anyone may hear (see [Releases & Music](./releases.md)).
 
-## What a listener can do
+## The home page
 
-### Search
+The home page is a short pitch for why IME exists, then straight to music.
 
-- A listener can search for artists by name and releases by title.
-- Search returns published, publicly available results, with enough context to recognize each one (artist name, release title, cover art).
-- Finding an artist by their exact handle is also supported (see
-  [Artists & Management](./artists.md)).
+### The gatefold
 
-### Browse
+The top of the home page is a gatefold sleeve, opened: a front cover between an inside left and an inside right panel.
 
-- A listener can browse the catalog of published releases, newest first.
-- A listener can open an artist to see their discography and their store.
-- A listener can browse an artist's merch and open a product to see its variants and photos (see [Merchandise](./merchandise.md)).
+- **Front**: the platform's statement, "Music is not a growth market.", a sentence on what IME is (run by its community, for the people who make music, with no cut, no shareholders, no AI, and no algorithm deciding who gets heard), and two ways in: **Start listening** for listeners and **Sell your music** for artists.
+- **Inside left, the money**: a receipt for a $10.00 album. It shows what the buyer pays, crosses out what IME never takes (shareholders, executive bonuses, ad networks, AI training data, a platform cut), and shows the card processor's fee and what the artist keeps. It compares the artist's share with Bandcamp's published average, and says that IME isn't built to profit: sellers split IME's monthly hosting bill, linked to the public costs page.
+- **Inside right, liner notes**: the platform's commitments as a numbered list: human-made (pledged), no platform cut, music as art (designer-built release pages), own what you buy, open source and open books. It ends with a credits line naming who builds IME.
 
-### Personalized entry points
+The receipt's figures are computed from the card processor's actual rates, never rounded in IME's favor. On a phone, the gatefold opens as three panels you swipe through, front first.
 
-- A signed-in listener has a feed of new releases from the artists they follow (see [Community](./community.md)). This is the primary "what's new for you"
-  surface.
+### Below the gatefold
+
+- **Shop by format**: a row of the formats IME sells, each with how much is on offer, leading to browsing by format.
+- **Shelves**: rows of records chosen by a recipe (see Shelves).
+- **Charts**: a preview of this week's charts (see Charts).
+- **Designed releases**: what designer-built release pages are, with a way into the public design gallery (see [Creative Pages](./creative-pages.md)).
+- **Dig mode**: a way into dig mode (see Dig mode).
+
+## Shelves
+
+A shelf is a row of records with a title and a reason it exists ("because you own Tiny Harbor", "out since Friday", "a crate by Mara Okafor"). Shelves are made by **recipes**, not by hand, so they stay fresh without upkeep.
+
+- **Catalog recipes** draw on facts about the catalog: just landed, tapes under $10, free downloads, first releases from artists new to IME, designed releases, merch that ships to the listener's country.
+- **Personal recipes** draw on the listener's library: records owned by people who own what the listener owns, new releases from artists they follow.
+- **People recipes** feature a crate someone made (see Crates).
+
+The home page shows a handful of shelves at a time, chosen from all recipes and changing daily. A shelf that would come up nearly empty is skipped. Visitors who aren't signed in see only catalog and people recipes. New recipes can be added over time without changing how shelves work.
+
+## Browsing by format
+
+- A listener can browse everything IME sells by format: digital releases, vinyl, cassettes, CDs, apparel, and everything else.
+- Each format can be narrowed by genre, price, release date, and where the artist is based, and sorted by newest or most kept.
+- Switching format keeps the listener's other choices, so a listener can look at shoegaze on vinyl, then shoegaze on cassette, without starting over.
+- Format pages show what matters for that format: for physical goods, what is in stock, what ships to the listener and for how much, and whether a download comes with it.
+
+## Search
+
+- Search covers artists, releases, merch, and crates, and is reachable from every page. Pressing `/` focuses it.
+- As a listener types, suggestions appear grouped by kind, and a search can be refined into filters before it is run ("lo-fi on tapes").
+- The results page shows a rail of filters with live counts (format, genre, price, release date, where the artist is based, and extras such as designed pages or included downloads), and a sort.
+- When a search contains words IME recognizes as filters, such as a format, a genre, a price, a year, or a place, it is shown as those filters ("We read that as: genre shoegaze, format vinyl, based in Glasgow"), each removable, with one click to search the plain words instead. Recognizing filters uses fixed rules and the catalog's own genres and places, never AI.
+- Results show every format a release is offered in and its price, so a listener can pick one from the results.
+
+## Charts
+
+Charts help people find what others are taking home, without treating music as a race for money.
+
+- Charts rank releases by **people**, never by money: how many listeners bought or claimed a release in the period. A free download counts the same as a purchase. Dollar amounts are never shown.
+- A second chart ranks releases by how many listeners **heard them front to back** in the period.
+- Charts exist for all of IME and for each genre, for this week, this month, this year, and all time, and can be narrowed by format.
+- Charts show each release's position, its movement since the last period, its peak, and its weeks on the chart, and refresh weekly.
+
+## Crates
+
+A crate is a list of releases someone put together, like a box of records at a store.
+
+- Any signed-in listener, artist, or designer can make a crate, give it a name and a short note, and add releases to it, each with an optional line about why.
+- A crate is private or public. Public crates show who made it (and whether they are a listener, an artist, or a designer) and can be dug, followed, and featured.
+- A listener can follow people whose crates they like and see their new public crates.
+- IME offers **crates by sound**, built from genres and tags, and **crates built from records you love**: a listener picks a few records and IME fills a crate from what their buyers also kept, the crates they appear in, and their artists' tags.
+- A signed-in listener can get a **crate of the day** built from their own library the same way.
+
+## Dig mode
+
+Dig mode is a separate, focused space for flipping through a crate one record at a time, the way people dig in a record store.
+
+- A listener chooses a crate and how deep to go: 10, 20, or 30 records. A dig always ends; there is no endless feed.
+- Each record shows its cover, artist, why it is in the crate, and its full tracklist.
+- A listener hears the tracks the artist chose to share, in full, and can move anywhere within them. IME never picks a highlight or plays an excerpt on the artist's behalf.
+- On a phone, swiping up and down moves between records and swiping left and right moves between the shared tracks. On the web, the crate is listed alongside the record, with keyboard controls.
+- When the shared tracks run out, the listener is told how many more are on the record, with a way to buy it or keep it for later.
+- A release with a designed page is shown through its design while digging, with the dig controls docked over it.
+- A listener can **keep** records as they dig. Kept records go into a bag.
+- At the bottom of the crate the listener sees how many records they dug and kept and how long they listened, and can buy the bag (choosing a format for each record), save it as a crate, or leave it.
+- Nothing plays automatically when a listener first opens dig mode; listening starts when they press play.
 
 ## Web & mobile
 
-- Discovery is available on **both web and mobile**. On mobile it is the central experience; browsing, search, and the feed are the app's home.
+- Everything in this domain is available on **both web and mobile**. On mobile, discovery is the home of the app, and dig mode is designed first for a phone.
+- Buying from a dig bag opens checkout on the web, like any purchase from the app (see [Buying & Checkout](./buying.md)).
 
 ## Rules & constraints
 
-- Discovery only ever surfaces public content: published releases and products, and public artist profiles. Drafts, archived items, items off sale because their hosting contributions lapsed, taken-down content, and suspended artists never appear.
-- Cover art and the artist name are always available for a public release, so discovery surfaces can always render a recognizable result.
-- Preview tracks let a listener sample a release from a discovery surface without owning it (see [Releases & Music](./releases.md)).
+- Discovery only ever surfaces public content: published releases and products, public crates, and public artist profiles. Drafts, archived items, items off sale because their hosting contributions lapsed, taken-down content, and suspended artists never appear.
+- Cover art and the artist name are always available for a public release, so every discovery surface can render a recognizable result.
+- A listener can always see why something was put in front of them.
+- No discovery surface ranks or describes music using AI, and none sells placement: what appears comes from recipes, charts, and people.
+- Charts and shelves never show sales revenue.
+- Listening counted for the front-to-back chart is the listener's own and is never shown as their personal history to anyone else (see [Library & Ownership](./library.md)).
 
 ## Out of scope / future
 
-- Algorithmic recommendations ("you might like").
-- Genre, tag, mood, and faceted browsing.
-- Charts, trending, editorial, and featured placement.
-- Unified search across merch and page designs.
-- Search of the [Creative Pages](./creative-pages.md) marketplace is specified with that domain, since its audience is artists rather than listeners.
+- Moods and vibe-based browsing beyond artists' tags.
+- A genre map or other spatial browsing.
+- Editorial writing beyond crates' notes.
+- Ranking or upvoting crates.
+- Sharing a dig session as a trail.

@@ -32,6 +32,16 @@ All three produce the same thing: permanent ownership.
 - **Downloading**: an owner can download the original audio files of a release, exactly as the artist uploaded them (see [Releases & Music](./releases.md)).
 - **Gated assets**: an owner can access assets attached to the release that are reserved for buyers (e.g. hi-res liner notes, bonus material).
 
+### Record mode
+
+- An owner can play a release in **record mode**: front to back in its running order, with no shuffle, its sides shown, and its liner notes and credits alongside.
+- Record mode can stop at the end of each side until the listener plays the next one, the way a record is turned over. A listener can turn this off.
+
+### Listening history
+
+- IME keeps each owner's history of listening to their releases, including which they heard front to back, so it can show them their own history with a record ("played front to back 3 times") and count the front-to-back chart (see [Discovery](./discovery.md)).
+- A listener's listening history is private to them. It is never shown on their profile or to artists.
+
 ### Gifting
 
 - A manager can grant a listener ownership of one of their artist's releases directly, without a sale.
@@ -56,5 +66,5 @@ All three produce the same thing: permanent ownership.
 ## Out of scope / future
 
 - Lending, gifting between listeners, or transferring owned releases.
-- A per-owner download / play history log (deferred).
+- A per-owner download log (deferred).
 - Ownership of individual tracks rather than whole releases.

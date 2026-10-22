@@ -9,6 +9,7 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 - **Designers (web developers)** build designs and publish them, publicly on the marketplace or privately for a specific artist. Any signed-in user can be a designer.
 - **Managers** browse the marketplace, get designs for their artist, apply them to releases, and fill in their content.
 - **Listeners** view releases rendered through whichever design the artist chose.
+- **Any visitor** can browse public designs and try them out (see Design gallery).
 - **Platform admins** can take down designs that break the rules (see [Moderation](./moderation.md)).
 
 ## Concepts
@@ -43,6 +44,13 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 - When a newer version of an applied design exists, managers are shown it and can switch to it. Nothing changes until they do.
 - A manager can remove a design from a release, returning it to the default layout.
 
+## Design gallery
+
+- Public designs are on show to everyone, signed in or not, in a gallery that explains what designed releases are.
+- Each design can be tried with placeholder content: a stand-in cover, title, tracklist, and music, on a desktop or phone frame and for an album, EP, or single, so anyone can see what a release would look like in it. A visitor can try their own cover image in the preview; it stays on their device.
+- From a design, a visitor can hear it on real releases that use it, start selling on IME to use it, or ask its designer for a custom design.
+- Designers can say whether they are open to commissions. Asking for a custom design sends the designer the request; the commission itself is arranged between them and delivered as a private design.
+
 ## Mobile app
 
 - A listener viewing a release sees it rendered through the design and version the artist applied, with the artist's content, or the default layout when none is applied.
@@ -62,7 +70,7 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 ## Out of scope / future
 
 - Designs for artist home pages, music pages, and merch pages.
-- Marketplace categories, previews, ranking, and featured designs.
-- Commissions arranged and paid through IME.
+- Marketplace categories, ranking, and featured designs.
+- Commissions paid through IME.
 - Designs that span multiple releases or a full artist storefront.
 - A live design preview or editor inside IME.

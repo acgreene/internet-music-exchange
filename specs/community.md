@@ -23,6 +23,15 @@ Social features connect listeners to the artists and releases they care about. T
 - Following an artist produces a feed: the newest published releases from the artists a listener follows, most recently published first.
 - The feed is the payoff of following, it is how a listener keeps up with the artists they care about.
 
+### Crates and the people who make them
+
+- A listener can follow the people whose public crates they like, and see their new public crates (see [Discovery](./discovery.md)).
+
+### Supporter profiles
+
+- A listener's profile can show facts about their support that IME can verify: how many releases they own, how many artists they have supported, how many records they have gifted, and the releases they were among the first buyers of.
+- Listeners choose whether these appear on their profile. There are no leaderboards, and nothing about listening time or listening habits is ever shown.
+
 ### Comments
 
 - A listener can comment on a release.
@@ -46,7 +55,7 @@ Social features connect listeners to the artists and releases they care about. T
 
 ## Out of scope / future
 
-- Following other listeners, or any listener-to-listener social graph.
+- Following other listeners beyond following the crates they make, or any wider listener-to-listener social graph.
 - Replies / threaded comments, likes, or reactions.
 - Notifications and activity feeds beyond new-release following. (Transactional emails, such as receipts and shipping notices, are covered in the domains that send them.)
 - Sharing and reposting.

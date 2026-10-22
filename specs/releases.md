@@ -16,6 +16,8 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 - A manager can create a release with a title and a kind (single, EP, LP, album, compilation, remaster, soundtrack, score, demo, other), and an optional original release date.
 - A new release starts as a **draft**, visible only to the artist's managers.
 - A manager can edit a release's title, kind, and release date.
+- A manager describes a release with up to three **genres**, chosen from IME's list, and a few free-form **tags** for its sound and mood. These drive browsing, charts, and crates by sound (see [Discovery](./discovery.md)).
+- A manager can divide a release's tracklist into **sides** (side A, side B, and so on), as on a record. Sides are optional.
 - A release is reachable at a readable address under its artist, `/artists/<handle>/<release>`, where the last part is made from the title and is unique within the artist.
 - A manager can delete a draft release. A release that has already sold cannot be deleted (its sales records reference it); it is archived instead.
 
@@ -23,7 +25,7 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 
 - A manager can add tracks to a release and arrange them into a running order.
 - A manager can reorder the tracklist, rename tracks, and remove a track from a release without deleting the track itself.
-- Each track can be marked as a **preview**, letting anyone stream it without owning the release: a way to put a few songs forward as a taste of the whole.
+- Each track can be marked as a **preview**, letting anyone stream it without owning the release: a way to put a few songs forward as a taste of the whole. Previews are always the whole track; IME never cuts a release down to an excerpt.
 - A track's duration is shown on the tracklist once known.
 
 ### Audio

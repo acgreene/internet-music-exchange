@@ -43,7 +43,7 @@ Everything in these specs is in scope for the MVP unless it is listed under a do
 | Domain                                | Covers                                                                        |
 | ------------------------------------- | ----------------------------------------------------------------------------- |
 | [Accounts & Profiles](./accounts.md)  | Sign-up, verification, sign-in, profiles, usernames.                          |
-| [Discovery](./discovery.md)           | Search, browsing the catalog, the listener's entry points.                    |
+| [Discovery](./discovery.md)           | The home page, shelves, search, charts, crates, and dig mode.                 |
 | [Artists & Management](./artists.md)  | Artist profiles and handles, managers, follower moderation.                   |
 | [Releases & Music](./releases.md)     | Releases, tracks, audio, pricing, previews, publishing.                       |
 | [Merchandise](./merchandise.md)       | Physical products, variants, stock, shipping rates.                           |
