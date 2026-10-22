@@ -45,3 +45,4 @@ export * from './job-runs';
 export * from './crates';
 export * from './crate-releases';
 export * from './user-followers';
+export * from './chart-entries';

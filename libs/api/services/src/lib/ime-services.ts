@@ -24,6 +24,7 @@ import {
 } from './funding';
 import { HealthService } from './health';
 import {
+  ChartService,
   CrateService,
   DigService,
   SearchService,
@@ -74,6 +75,7 @@ export class ImeServices {
   public readonly search: SearchService;
   public readonly crates: CrateService;
   public readonly dig: DigService;
+  public readonly charts: ChartService;
   public readonly artistPages: ArtistPageService;
   public readonly products: ProductService;
   public readonly store: StoreService;
@@ -121,6 +123,7 @@ export class ImeServices {
     this.search = new SearchService(db, storage);
     this.crates = new CrateService(db, storage, access);
     this.dig = new DigService(db, this.crates);
+    this.charts = new ChartService(db, storage);
     this.artistPages = new ArtistPageService(db, storage);
     this.products = new ProductService(db, storage, access, gate, uploads);
     this.store = new StoreService(db, storage);

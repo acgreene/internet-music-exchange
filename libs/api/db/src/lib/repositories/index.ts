@@ -1,4 +1,5 @@
 export * from './artist-repository';
+export * from './chart-repository';
 export * from './crate-repository';
 export * from './design-repository';
 export * from './entitlement-repository';

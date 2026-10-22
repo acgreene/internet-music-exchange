@@ -1,6 +1,7 @@
 import { ApiRoute, HttpMethod } from '@ime/models';
 import type {
   CatalogService,
+  ChartService,
   SearchService,
   ShelfService,
 } from '@ime/services';
@@ -17,6 +18,7 @@ export class CatalogRouter extends AbstractRouter {
     private readonly catalog: CatalogService,
     private readonly shelves: ShelfService,
     private readonly search: SearchService,
+    private readonly charts: ChartService,
   ) {
     super(guard);
     this.register();
@@ -35,6 +37,10 @@ export class CatalogRouter extends AbstractRouter {
       ApiRoute.CatalogHome,
       'optional',
       ({ userId }) => this.shelves.getHome(userId),
+    );
+
+    this.handle(HttpMethod.Get, ApiRoute.Charts, 'public', ({ query }) =>
+      this.charts.get(query),
     );
 
     this.handle(HttpMethod.Get, ApiRoute.CatalogSearch, 'public', ({ query }) =>

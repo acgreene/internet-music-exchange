@@ -66,7 +66,8 @@ Charts help people find what others are taking home, without treating music as a
 - Charts rank releases by **people**, never by money: how many listeners bought or claimed a release in the period. A free download counts the same as a purchase. Dollar amounts are never shown.
 - A second chart ranks releases by how many listeners **heard them front to back** in the period.
 - Charts exist for all of IME and for each genre, for this week, this month, this year, and all time, and can be narrowed by format.
-- Charts show each release's position, its movement since the last period, its peak, and its weeks on the chart, and refresh weekly.
+- Charts show each release's position, its movement since the last period, its peak, and its weeks on the chart, and refresh weekly. Every chart ends where the current week began; this month is the last four weeks and this year the last 52.
+- A gift does not count toward a chart; a free download counts the same as a purchase, and buying a record, tape, or CD counts for that format.
 
 ## Crates
 

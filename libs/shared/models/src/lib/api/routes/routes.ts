@@ -271,6 +271,9 @@ export enum ApiRoute {
   /** Someone's public crates, by username. */
   UserCrates = '/api/users/:username/crates',
 
+  /** A chart, `?period=week|month|year|all&genre=&format=`. */
+  Charts = '/api/charts',
+
   /** Digging a crate someone made, `?depth=`. */
   DigCrate = '/api/dig/crates/:crateId',
 

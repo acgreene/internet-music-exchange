@@ -6,6 +6,7 @@ export * from './accounts';
 export * from './artists';
 export * from './releases';
 export * from './catalog';
+export * from './charts';
 export * from './merch';
 export * from './orders';
 export * from './community';

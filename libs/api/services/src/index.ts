@@ -35,6 +35,7 @@ export type {
   ReleasePageAsset,
 } from './lib/releases/catalog-service';
 export type { ArtistPageService } from './lib/artist-pages/artist-page-service';
+export type { ChartService } from './lib/discovery/chart-service';
 export type { CrateService } from './lib/discovery/crate-service';
 export type { DigService } from './lib/discovery/dig-service';
 export type { SearchService } from './lib/discovery/search-service';

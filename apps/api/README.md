@@ -114,6 +114,7 @@ Managers, designers, and owners are checked by the service, which answers 403.
 | GET | `/api/catalog/home` | O | `shelves.getHome` |
 | GET | `/api/catalog/search?q=&genres=&format=&under=&year=&kind=&designed=&country=&city=&sort=` | P | `search.search` |
 | GET | `/api/catalog/suggest?q=` | P | `search.suggest` |
+| GET | `/api/charts?period=&genre=&format=` | P | `charts.get` |
 | GET | `/api/catalog/places` | P | `search.listPlaces` |
 | GET | `/api/catalog/artists/:handle` | P | `artists.getProfile` |
 | GET | `/api/catalog/artists/:handle/releases` | P | `catalog.listDiscography` |
