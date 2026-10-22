@@ -91,6 +91,8 @@ async function clean(
     sql`delete from artist_managers where artist_id::text like ${like} or user_id::text like ${like}`,
     sql`delete from artists where id::text like ${like}`,
     sql`delete from platform_admins where user_id::text like ${like}`,
+    sql`delete from user_followers where follower_user_id::text like ${like} or followed_user_id::text like ${like}`,
+    sql`delete from crates where id::text like ${like}`,
     sql`delete from auth.users where id::text like ${like}`,
   ];
   await db.transaction(async (tx) => {
@@ -200,6 +202,9 @@ async function insertWorld(
       [schema.reports, rows.reports],
       [schema.moderationActions, rows.moderationActions],
       [schema.copyrightContests, rows.copyrightContests],
+      [schema.crates, rows.crates],
+      [schema.crateReleases, rows.crateReleases],
+      [schema.userFollowers, rows.userFollowers],
     ];
     for (const [table, tableRows] of order)
       await insertAll(tx, table, tableRows);

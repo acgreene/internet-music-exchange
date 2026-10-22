@@ -138,6 +138,9 @@ export function buildWorld(options: WorldOptions) {
     contributions: [] as Row<typeof schema.contributions>[],
     reserveEntries: [] as Row<typeof schema.reserveEntries>[],
     reports: [] as Row<typeof schema.reports>[],
+    crates: [] as Row<typeof schema.crates>[],
+    crateReleases: [] as Row<typeof schema.crateReleases>[],
+    userFollowers: [] as Row<typeof schema.userFollowers>[],
     moderationActions: [] as Row<typeof schema.moderationActions>[],
     copyrightContests: [] as Row<typeof schema.copyrightContests>[],
   };
@@ -1189,6 +1192,77 @@ export function buildWorld(options: WorldOptions) {
     }
   }
 
+  // ----------------------------------------------------------------- crates
+  // their own source, so adding crates leaves the rest of the world as it was
+  const crating = new Random(9001);
+  const onShelves = releases.filter(
+    (release) =>
+      release.status === 'published' && release.artist !== suspendedArtist,
+  );
+  const crateMakers = [
+    ...crating.sample(listeners, 60),
+    ...crating.sample(sellers, 10),
+  ];
+  const makeCrate = (
+    ownerUserId: string,
+    since: Date,
+    picks: DemoRelease[],
+    name: string,
+    visibility: 'public' | 'private',
+  ) => {
+    const id = next('crate');
+    const createdAt = later(since, 300, crating, now);
+    rows.crates.push({
+      id,
+      ownerUserId,
+      name,
+      note: crating.chance(0.5) ? words.crateNote(crating) : null,
+      visibility,
+      createdAt,
+      updatedAt: createdAt,
+    });
+    picks.forEach((release, i) =>
+      rows.crateReleases.push({
+        crateId: id,
+        releaseId: release.id,
+        position: i + 1,
+        note: crating.chance(0.3) ? words.crateLine(crating) : null,
+        addedAt: createdAt,
+      }),
+    );
+  };
+  for (const maker of crateMakers) {
+    // a crate leans toward one sound, with a few strays
+    const scene = crating.pick(SCENES);
+    const inScene = onShelves.filter(
+      (release) => release.artist.scene === scene,
+    );
+    const picks = [
+      ...new Set([
+        ...crating.sample(inScene, crating.int(4, 10)),
+        ...crating.sample(onShelves, crating.int(1, 4)),
+      ]),
+    ];
+    makeCrate(
+      maker.id,
+      maker.createdAt,
+      picks,
+      words.crateName(crating, scene),
+      crating.chance(0.85) ? 'public' : 'private',
+    );
+  }
+  // some listeners follow the people whose crates they like
+  for (const follower of crating.sample(listeners, 150)) {
+    for (const maker of crating.sample(crateMakers, crating.int(1, 4))) {
+      if (maker.id === follower.id) continue;
+      rows.userFollowers.push({
+        followerUserId: follower.id,
+        followedUserId: maker.id,
+        createdAt: later(follower.createdAt, 200, crating, now),
+      });
+    }
+  }
+
   // ------------------------------------------------- the owner's own world
   let ownerArtist: DemoArtist | null = null;
   if (owner) {
@@ -1690,6 +1764,32 @@ export function buildWorld(options: WorldOptions) {
   rows.entitlements = rows.entitlements.filter(
     (row) => row.releaseId !== removed.id,
   );
+
+  if (owner) {
+    const owned = new Set(ownedBy(owner.id));
+    const shelf = onShelves.filter((release) => owned.has(release.id));
+    makeCrate(
+      owner.id,
+      new Date(now.getTime() - 120 * DAY),
+      crating.sample(shelf, 8),
+      'Records for the drive home',
+      'public',
+    );
+    makeCrate(
+      owner.id,
+      new Date(now.getTime() - 30 * DAY),
+      crating.sample(onShelves, 5),
+      'To listen to',
+      'private',
+    );
+    for (const maker of crating.sample(crateMakers, 5)) {
+      rows.userFollowers.push({
+        followerUserId: owner.id,
+        followedUserId: maker.id,
+        createdAt: new Date(now.getTime() - 20 * DAY),
+      });
+    }
+  }
 
   const suspendedUserIds = [suspendedUser.id];
   // every other designer takes requests for custom designs

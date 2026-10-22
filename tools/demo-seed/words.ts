@@ -507,6 +507,49 @@ const BIO_CLOSERS = [
   '',
 ];
 
+const CRATE_NAMES = [
+  'Late night drives',
+  'Records that got me through winter',
+  'Sunday morning',
+  'Headphones only',
+  'For the kitchen',
+  'Rainy day records',
+  'Tapes I keep coming back to',
+  'Songs for a long walk',
+  'The quiet ones',
+  'First listens I loved',
+  'Play these loud',
+  'Summer, mostly',
+];
+
+const CRATE_TIMES = [
+  'the train',
+  'late nights',
+  'rainy days',
+  'a long drive',
+  'cooking',
+  'mornings',
+];
+
+const CRATE_NOTES = [
+  'Everything here sounds better after midnight.',
+  'Records I found on IME and could not stop playing.',
+  'A box I keep adding to. Start at the top.',
+  'For anyone who asks me what to listen to.',
+  'Small labels, big records.',
+];
+
+const CRATE_LINES = [
+  'The second side is perfect.',
+  'Found this on a rainy Tuesday.',
+  'Play it loud.',
+  'The closing track still gets me.',
+  'Best bassline on IME.',
+  'Start with track three.',
+  'Sounds like the drive home.',
+  'Bought it twice, gave one away.',
+];
+
 const COMMENTS = [
   'This one has been on repeat all week.',
   'The second track is unreal.',
@@ -590,6 +633,19 @@ export const words = {
     const [city, , country] = random.pick(CITIES);
     return { city: random.chance(0.85) ? city : null, country };
   },
+
+  crateName(random: Random, scene: Scene): string {
+    const label = scene.label.charAt(0).toUpperCase() + scene.label.slice(1);
+    return random.weighted<() => string>([
+      [() => random.pick(CRATE_NAMES), 4],
+      [() => `${label} for ${random.pick(CRATE_TIMES)}`, 3],
+      [() => `${random.pick(CITIES)[0]} ${scene.label}`, 1],
+      [() => `Best ${scene.label} on IME`, 1],
+    ])();
+  },
+
+  crateNote: (random: Random) => random.pick(CRATE_NOTES),
+  crateLine: (random: Random) => random.pick(CRATE_LINES),
 
   comment: (random: Random) => random.pick(COMMENTS),
   reportNote: (random: Random) => random.pick(REPORT_NOTES),

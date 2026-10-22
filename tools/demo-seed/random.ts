@@ -107,6 +107,7 @@ const KINDS = [
   'usage',
   'cost',
   'reserve',
+  'crate',
 ] as const;
 
 export type IdKind = (typeof KINDS)[number];
