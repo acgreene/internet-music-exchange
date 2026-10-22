@@ -23,9 +23,18 @@ import {
 } from './funding';
 import { HealthService } from './health';
 import { ProductService, StoreService } from './merch';
+import {
+  ModerationJobsService,
+  ModerationService,
+  ReportService,
+} from './moderation';
 import { CheckoutService, PurchaseService, SalesService } from './orders';
 import { PaymentAccountService } from './payments';
-import { CatalogService, ReleaseService } from './releases';
+import {
+  CatalogService,
+  ReleaseFilesService,
+  ReleaseService,
+} from './releases';
 import { SellingGateService } from './selling';
 import { CloudStorageService, UploadService } from './storage';
 import { TranscodeService } from './transcoding';
@@ -65,6 +74,8 @@ export class ImeServices {
   public readonly designs: DesignService;
   public readonly designMarketplace: DesignMarketplaceService;
   public readonly releaseDesigns: ReleaseDesignService;
+  public readonly reports: ReportService;
+  public readonly moderation: ModerationService;
   public readonly paymentAccounts: PaymentAccountService;
   public readonly billing: BillingService;
   public readonly costShares: CostShareService;
@@ -73,6 +84,7 @@ export class ImeServices {
   public readonly monthlyClose: MonthlyCloseService;
   public readonly stripeWebhooks: StripeWebhookService;
   public readonly fundingJobs: FundingJobsService;
+  public readonly moderationJobs: ModerationJobsService;
   public readonly transcode: TranscodeService;
   public readonly health: HealthService;
 
@@ -86,6 +98,7 @@ export class ImeServices {
     const funding = new FundingService(db);
     const uploads = new UploadService(storage);
     const gate = new SellingGateService(db, funding);
+    const releaseFiles = new ReleaseFilesService(db, storage);
     const webAppUrl = env.WEB_APP_URL;
 
     this.auth = new AuthService(db);
@@ -145,7 +158,23 @@ export class ImeServices {
       this.designMarketplace,
     );
 
-    this.fundingJobs = new FundingJobsService(db, storage, email, webAppUrl);
+    this.reports = new ReportService(db, access);
+    this.moderation = new ModerationService(
+      db,
+      stripe,
+      access,
+      this.designMarketplace,
+      releaseFiles,
+      email,
+      webAppUrl,
+    );
+    this.moderationJobs = new ModerationJobsService(db, this.moderation);
+    this.fundingJobs = new FundingJobsService(
+      db,
+      releaseFiles,
+      email,
+      webAppUrl,
+    );
     this.transcode = new TranscodeService(db, storage);
     this.health = new HealthService();
   }

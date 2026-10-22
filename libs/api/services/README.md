@@ -111,6 +111,16 @@ Each is a property of `ImeServices`, named in brackets.
   moving to a newer version, and going back to the default layout. Use it for
   a release's design editor.
 
+### Moderation
+
+- **`ReportService`** (`reports`): reporting a release, product, comment,
+  design, artist, or user, and a manager contesting a copyright takedown. Use
+  it for report buttons and the contest form.
+- **`ModerationService`** (`moderation`): an admin's queue of open reports,
+  dismissing, taking content down and restoring it, suspensions, clearing
+  profiles, recording copyright claims, and deciding contests. Takedowns
+  refund only what was taken down. Use it for the admin tools.
+
 ### Getting paid and funding
 
 - **`PaymentAccountService`** (`paymentAccounts`): sellers' Stripe Connect
@@ -141,6 +151,9 @@ Each is a property of `ImeServices`, named in brackets.
 - **`FundingJobsService`** (`fundingJobs`): funding's daily work: counting storage, warning
   lapsed sellers, taking their things off sale, and deleting files nobody owns
   after 90 days off sale. The worker runs it; nothing else should.
+- **`ModerationJobsService`** (`moderationJobs`): makes copyright takedowns
+  final once the window to contest them passes with no contest. The worker
+  runs it; nothing else should.
 - **`TranscodeService`** (`transcode`): makes the AAC streaming copy of each lossless upload.
   The worker runs it; nothing else should.
 
@@ -166,6 +179,8 @@ are internal.
 - **`UploadService`**: direct uploads. Hands out a key under a prefix the
   caller owns and confirms what was uploaded against that kind of file's
   rules in `storage/media-types.ts`.
+- **`ReleaseFilesService`**: deletes everything a release stores, rows
+  first and files after, for funding's cleanup and final takedowns.
 - **`SellingGateService`**: what an artist needs before something goes on
   sale: funded hosting, and for anything paid, a payment account that can take
   charges in its currency. Checked when publishing and at checkout.

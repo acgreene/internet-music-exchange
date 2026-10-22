@@ -20,7 +20,10 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
 
 Promise.all([
   runTranscoding(services.transcode, stop.signal),
-  runDailyJobs(services.fundingJobs, stop.signal),
+  runDailyJobs(
+    { funding: services.fundingJobs, moderation: services.moderationJobs },
+    stop.signal,
+  ),
 ]).then(
   () => process.exit(0),
   (error) => {

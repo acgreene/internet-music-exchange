@@ -2,11 +2,16 @@ import {
   and,
   asc,
   count,
+  countDistinct,
   desc,
   eq,
+  gte,
   inArray,
+  isNotNull,
   isNull,
+  lt,
   min,
+  notExists,
   sql,
 } from 'drizzle-orm';
 import type { Db } from '../database-service';
@@ -56,7 +61,8 @@ export interface RecordCopyrightClaimParams {
 }
 
 export interface LogActionParams {
-  adminUserId: string;
+  /** Null for what IME does on its own, such as finalizing a takedown. */
+  adminUserId: string | null;
   action: ModerationActionKind;
   targetType: ModerationTarget;
   targetId: string;
@@ -284,15 +290,16 @@ export class ModerationRepository {
   }
 
   /**
-   * Count how many of an artist's releases have been taken down for copyright,
-   * to spot repeat infringers.
+   * Count how many of an artist's releases are finally taken down for
+   * copyright, to spot repeat infringers. A takedown the artist won a contest
+   * against, or one still open to contest, does not count.
    *
    * @param artistId - The id of the artist.
-   * @returns The number of copyright takedowns.
+   * @returns The number of releases.
    */
   public async countCopyrightTakedowns(artistId: string): Promise<number> {
     const [takedowns] = await this.db
-      .select({ value: count() })
+      .select({ value: countDistinct(moderationActions.targetId) })
       .from(moderationActions)
       .where(
         and(
@@ -304,12 +311,75 @@ export class ModerationRepository {
             this.db
               .select({ id: releases.id })
               .from(releases)
-              .where(eq(releases.artistId, artistId)),
+              .where(
+                and(
+                  eq(releases.artistId, artistId),
+                  eq(releases.status, 'taken_down'),
+                  isNotNull(releases.takedownFinalAt),
+                ),
+              ),
           ),
         ),
       );
 
     return takedowns?.value ?? 0;
+  }
+
+  /**
+   * List copyright takedowns whose window to contest has passed with no
+   * contest open, so they can be made final.
+   *
+   * @param takenDownBefore - Takedowns from before this moment are overdue.
+   * @returns The ids of the releases.
+   */
+  public async listOverdueCopyrightTakedowns(
+    takenDownBefore: Date,
+  ): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ releaseId: releases.id })
+      .from(releases)
+      .innerJoin(
+        moderationActions,
+        and(
+          eq(moderationActions.targetId, releases.id),
+          eq(moderationActions.targetType, 'release'),
+          eq(moderationActions.action, 'take_down'),
+          eq(moderationActions.reason, 'copyright'),
+          lt(moderationActions.createdAt, takenDownBefore),
+        ),
+      )
+      .where(
+        and(
+          eq(releases.status, 'taken_down'),
+          isNull(releases.takedownFinalAt),
+          // the window runs from the latest takedown
+          notExists(
+            this.db
+              .select({ id: moderationActions.id })
+              .from(moderationActions)
+              .where(
+                and(
+                  eq(moderationActions.targetId, releases.id),
+                  eq(moderationActions.action, 'take_down'),
+                  gte(moderationActions.createdAt, takenDownBefore),
+                ),
+              ),
+          ),
+          notExists(
+            this.db
+              .select({ id: copyrightContests.id })
+              .from(copyrightContests)
+              .where(
+                and(
+                  eq(copyrightContests.releaseId, releases.id),
+                  isNull(copyrightContests.resolvedAt),
+                ),
+              ),
+          ),
+        ),
+      );
+
+    return rows.map((row) => row.releaseId);
   }
 
   /**

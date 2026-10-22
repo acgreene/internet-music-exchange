@@ -1,7 +1,7 @@
 import { DatabaseRepository } from '@ime/db';
 import { env } from '@ime/env';
 import { EmailService, fundingEmails } from '../email';
-import { CloudStorageService } from '../storage';
+import { ReleaseFilesService } from '../releases/release-files-service';
 import { GRACE_DAYS } from './monthly-close-service';
 
 /** Warnings go out when this many days of the grace period are left. */
@@ -24,7 +24,9 @@ const DAY_MS = 86_400_000;
 export class FundingJobsService {
   constructor(
     private readonly db: DatabaseRepository = new DatabaseRepository(),
-    private readonly storage: CloudStorageService = new CloudStorageService(),
+    private readonly releaseFiles: ReleaseFilesService = new ReleaseFilesService(
+      db,
+    ),
     private readonly email: EmailService = new EmailService(),
     private readonly webAppUrl: string = env.WEB_APP_URL,
   ) {}
@@ -121,7 +123,7 @@ export class FundingJobsService {
 
       for (const release of await this.db.releases.listAllByArtist(artistId)) {
         if ((await this.db.entitlements.countOwners(release.id)) > 0) continue;
-        await this.deleteReleaseFiles(release.id);
+        await this.releaseFiles.deleteAll(release.id);
       }
     }
   }
@@ -157,30 +159,6 @@ export class FundingJobsService {
       await this.email.send(
         fundingEmails.offSale(address, 'Your designs', billingUrl),
       );
-    }
-  }
-
-  private async deleteReleaseFiles(releaseId: string): Promise<void> {
-    const [assets, originals, streamCopies] = await Promise.all([
-      this.db.releaseAssets.listAllAssets(releaseId),
-      this.db.releaseAssets.listAudioFilesForRelease(releaseId, 'original'),
-      this.db.releaseAssets.listAudioFilesForRelease(releaseId, 'stream'),
-    ]);
-
-    const files = [...originals, ...streamCopies];
-
-    await this.db.transaction(async (repos) => {
-      for (const asset of assets) {
-        await repos.releaseAssets.deleteAssetById(asset.id);
-      }
-      for (const file of files) {
-        await repos.releaseAssets.deleteAudioFile(file.trackId, file.variant);
-      }
-    });
-
-    // files go only once nothing points at them
-    for (const { objectKey } of [...assets, ...files]) {
-      await this.storage.deleteObject(objectKey);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, inArray, sql, sum } from 'drizzle-orm';
+import { and, count, desc, eq, gt, gte, inArray, sql, sum } from 'drizzle-orm';
 import type { Db, DbTransaction } from '../database-service';
 import {
   type ArtistOrder,
@@ -131,6 +131,20 @@ export interface SalesTotals {
   grossAmount: number;
   shippingAmount: number;
   taxAmount: number;
+}
+
+/**
+ * What one settled artist order paid for something an admin took down, so
+ * that part alone can be refunded.
+ */
+export interface TakenDownLine {
+  artistOrderId: string;
+  artistId: string;
+  stripePaymentIntentId: string;
+  currency: Currency;
+  /** What the lines cost, in minor units, before shipping and tax. */
+  amount: number;
+  buyerUserId: string | null;
 }
 
 export interface MarkShippedParams {
@@ -723,5 +737,75 @@ export class OrderRepository {
     }
 
     return shortVariantIds;
+  }
+
+  /**
+   * List the settled purchases of a release, as when refunding buyers after
+   * it is taken down for good.
+   *
+   * @param releaseId - The id of the release.
+   * @returns One entry per artist order that paid for it.
+   */
+  public async listPaidReleaseLines(
+    releaseId: string,
+  ): Promise<TakenDownLine[]> {
+    return this.db
+      .select({
+        artistOrderId: artistOrders.id,
+        artistId: artistOrders.artistId,
+        stripePaymentIntentId: artistOrders.stripePaymentIntentId,
+        currency: artistOrders.currency,
+        amount: orderItems.unitPrice,
+        buyerUserId: orders.userId,
+      })
+      .from(orderItems)
+      .innerJoin(artistOrders, eq(artistOrders.id, orderItems.artistOrderId))
+      .innerJoin(orders, eq(orders.id, artistOrders.orderId))
+      .where(
+        and(
+          eq(orderItems.releaseId, releaseId),
+          eq(artistOrders.status, 'completed'),
+          gt(orderItems.unitPrice, 0),
+        ),
+      );
+  }
+
+  /**
+   * List the settled orders of a product that have not shipped yet, as when
+   * refunding them after it is taken down.
+   *
+   * @param productId - The id of the product.
+   * @returns One entry per artist order, totalling its lines for the product.
+   */
+  public async listUnshippedProductLines(
+    productId: string,
+  ): Promise<TakenDownLine[]> {
+    const rows = await this.db
+      .select({
+        artistOrderId: artistOrders.id,
+        artistId: artistOrders.artistId,
+        stripePaymentIntentId: artistOrders.stripePaymentIntentId,
+        currency: artistOrders.currency,
+        amount: sum(sql`${orderItems.unitPrice} * ${orderItems.quantity}`),
+        buyerUserId: orders.userId,
+      })
+      .from(orderItems)
+      .innerJoin(
+        productVariants,
+        eq(productVariants.id, orderItems.productVariantId),
+      )
+      .innerJoin(artistOrders, eq(artistOrders.id, orderItems.artistOrderId))
+      .innerJoin(orders, eq(orders.id, artistOrders.orderId))
+      .innerJoin(fulfillments, eq(fulfillments.artistOrderId, artistOrders.id))
+      .where(
+        and(
+          eq(productVariants.productId, productId),
+          eq(artistOrders.status, 'completed'),
+          eq(fulfillments.status, 'unfulfilled'),
+        ),
+      )
+      .groupBy(artistOrders.id, orders.userId);
+
+    return rows.map((row) => ({ ...row, amount: Number(row.amount ?? 0) }));
   }
 }

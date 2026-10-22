@@ -99,6 +99,23 @@ export type {
   SlotImage,
 } from './lib/designs/release-design-service';
 
+// Moderation
+export type {
+  ModerationTargetRef,
+  ReportService,
+} from './lib/moderation/report-service';
+export {
+  CONTEST_DAYS,
+  REPEAT_INFRINGER_TAKEDOWNS,
+} from './lib/moderation/moderation-service';
+export type {
+  CopyrightClaimInput,
+  ModerationCase,
+  ModerationDecision,
+  ModerationOutcome,
+  ModerationService,
+} from './lib/moderation/moderation-service';
+
 // Getting paid and funding
 export { STRIPE_DASHBOARD_URL } from './lib/payments/payment-account-service';
 export type {
@@ -140,6 +157,7 @@ export type { StripeWebhookService } from './lib/webhooks/stripe-webhook-service
 
 // Background work
 export type { FundingJobsService } from './lib/funding/funding-jobs-service';
+export type { ModerationJobsService } from './lib/moderation/moderation-jobs-service';
 export type { TranscodeService } from './lib/transcoding/transcode-service';
 
 // Operations
