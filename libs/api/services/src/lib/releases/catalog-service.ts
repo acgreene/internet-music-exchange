@@ -132,20 +132,6 @@ export class CatalogService {
   }
 
   /**
-   * Search artists by name and releases by title.
-   */
-  public async search(query: string) {
-    const [artists, releases] = await Promise.all([
-      this.db.artists.searchByName(query),
-      this.db.releases.searchByTitle(query),
-    ]);
-    return {
-      artists,
-      releases: await this.withCovers(releases, (release) => release.id),
-    };
-  }
-
-  /**
    * An artist's published releases, for their profile page.
    *
    * @throws ApiError 404 when no visible artist has that handle.

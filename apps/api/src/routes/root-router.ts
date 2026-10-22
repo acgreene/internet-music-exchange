@@ -39,7 +39,12 @@ export class RootRouter extends AbstractRouter {
       new UsersRouter(guard, services.auth, services.users, services.artists),
       new ArtistsRouter(guard, services.artists),
       new ReleasesRouter(guard, services.releases),
-      new CatalogRouter(guard, services.catalog, services.shelves),
+      new CatalogRouter(
+        guard,
+        services.catalog,
+        services.shelves,
+        services.search,
+      ),
       new MerchRouter(guard, services.products, services.store),
       new CommunityRouter(guard, services.follows, services.comments),
       new DesignsRouter(

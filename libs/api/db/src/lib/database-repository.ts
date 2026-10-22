@@ -10,6 +10,7 @@ import {
   ProductRepository,
   ReleaseAssetRepository,
   ReleaseRepository,
+  SearchRepository,
   ShelfRepository,
   SocialRepository,
   UserRepository,
@@ -28,6 +29,7 @@ export class DatabaseRepository {
   public readonly products: ProductRepository;
   public readonly releaseAssets: ReleaseAssetRepository;
   public readonly releases: ReleaseRepository;
+  public readonly search: SearchRepository;
   public readonly shelves: ShelfRepository;
   public readonly social: SocialRepository;
   public readonly users: UserRepository;
@@ -44,6 +46,7 @@ export class DatabaseRepository {
     this.products = new ProductRepository(db);
     this.releaseAssets = new ReleaseAssetRepository(db);
     this.releases = new ReleaseRepository(db);
+    this.search = new SearchRepository(db);
     this.shelves = new ShelfRepository(db);
     this.social = new SocialRepository(db);
     this.users = new UserRepository(db);

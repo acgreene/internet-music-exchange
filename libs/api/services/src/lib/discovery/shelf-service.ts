@@ -1,13 +1,12 @@
 import {
   DatabaseRepository,
-  type ProductType,
   type ShelfProduct,
   type ShelfRelease,
 } from '@ime/db';
 import type { CatalogHome, Shelf, ShelfItem } from '@ime/models';
 import { CloudStorageService } from '../storage';
+import { CatalogCards } from './catalog-cards';
 
-const IMAGE_URL_EXPIRY_SECONDS = 3600;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** How many records a shelf holds. */
@@ -39,8 +38,12 @@ type Recipe = {
 export class ShelfService {
   constructor(
     private readonly db: DatabaseRepository = new DatabaseRepository(),
-    private readonly storage: CloudStorageService = new CloudStorageService(),
-  ) {}
+    storage: CloudStorageService = new CloudStorageService(),
+  ) {
+    this.cards = new CatalogCards(db, storage);
+  }
+
+  private readonly cards: CatalogCards;
 
   private readonly recipes: Recipe[] = [
     {
@@ -163,84 +166,20 @@ export class ShelfService {
     ]);
     return {
       shelves,
-      designed: await this.releaseItems(designed),
+      designed: await this.cards.releases(designed),
       formats,
     };
   }
 
   private async cook(recipe: Recipe, userId?: string): Promise<ShelfItem[]> {
     if ('releases' in recipe) {
-      return this.releaseItems(await recipe.releases(userId));
+      return this.cards.releases(await recipe.releases(userId));
     }
-    return this.productItems(await recipe.products());
-  }
-
-  private async releaseItems(rows: ShelfRelease[]): Promise<ShelfItem[]> {
-    const covers = new Map(
-      (await this.db.releaseAssets.listCovers(rows.map((r) => r.id))).map(
-        (cover) => [cover.releaseId, cover.objectKey],
-      ),
-    );
-    return Promise.all(
-      rows.map(async (row) => {
-        const key = covers.get(row.id);
-        return {
-          kind: 'release' as const,
-          release: {
-            id: row.id,
-            artistId: row.artistId,
-            title: row.title,
-            slug: row.slug,
-            kind: row.kind,
-            releasedAt: row.releasedAt,
-            publishedAt: row.publishedAt,
-            artistName: row.artistName,
-            artistHandle: row.artistHandle,
-            coverUrl: key ? await this.signedUrl(key) : null,
-          },
-          pricing: row.pricingMode
-            ? {
-                mode: row.pricingMode,
-                currency: row.currency,
-                minimumPrice: row.minimumPrice ?? 0,
-                suggestedPrice: row.suggestedPrice,
-              }
-            : null,
-        };
-      }),
-    );
-  }
-
-  private async productItems(rows: ShelfProduct[]): Promise<ShelfItem[]> {
-    const images = new Map(
-      (await this.db.products.listPrimaryImages(rows.map((r) => r.id))).map(
-        (image) => [image.productId, image.objectKey],
-      ),
-    );
-    return Promise.all(
-      rows.map(async (row) => {
-        const key = images.get(row.id);
-        return {
-          kind: 'product' as const,
-          id: row.id,
-          name: row.name,
-          productType: row.type as ProductType,
-          artistName: row.artistName,
-          artistHandle: row.artistHandle,
-          imageUrl: key ? await this.signedUrl(key) : null,
-          currency: row.currency,
-          price: row.price,
-        };
-      }),
-    );
+    return this.cards.products(await recipe.products());
   }
 
   private daysAgo(days: number): Date {
     return new Date(Date.now() - days * DAY_MS);
-  }
-
-  private signedUrl(objectKey: string): Promise<string> {
-    return this.storage.getObjectSignedUrl(objectKey, IMAGE_URL_EXPIRY_SECONDS);
   }
 }
 

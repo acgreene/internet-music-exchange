@@ -4,7 +4,6 @@ import {
   desc,
   eq,
   exists,
-  ilike,
   isNull,
   ne,
   sql,
@@ -82,7 +81,6 @@ export interface UpsertPricingParams {
 }
 
 const DEFAULT_LIST_LIMIT = 24;
-const DEFAULT_SEARCH_LIMIT = 20;
 
 const releaseWithArtistColumns = {
   id: releases.id,
@@ -251,33 +249,6 @@ export class ReleaseRepository {
       .orderBy(desc(releases.publishedAt))
       .limit(limit)
       .offset(offset);
-  }
-
-  /**
-   * Find published releases whose title contains the given text.
-   *
-   * @param query - The text to match against release titles, case insensitive.
-   * @param limit - The maximum number of releases to return.
-   * @returns Matching published releases with their artist names, newest first.
-   */
-  public async searchByTitle(
-    query: string,
-    limit: number = DEFAULT_SEARCH_LIMIT,
-  ): Promise<ReleaseWithArtist[]> {
-    return this.db
-      .select(releaseWithArtistColumns)
-      .from(releases)
-      .innerJoin(artists, eq(artists.id, releases.artistId))
-      .where(
-        and(
-          eq(releases.status, 'published'),
-          isNull(artists.suspendedAt),
-          isNull(artists.offSaleAt),
-          ilike(releases.title, `%${query}%`),
-        ),
-      )
-      .orderBy(desc(releases.publishedAt))
-      .limit(limit);
   }
 
   /**

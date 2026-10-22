@@ -35,6 +35,7 @@ export type {
   ReleasePageAsset,
 } from './lib/releases/catalog-service';
 export type { ArtistPageService } from './lib/artist-pages/artist-page-service';
+export type { SearchService } from './lib/discovery/search-service';
 export type { ShelfService } from './lib/discovery/shelf-service';
 
 // Merch

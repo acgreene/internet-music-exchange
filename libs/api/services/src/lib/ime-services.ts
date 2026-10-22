@@ -22,7 +22,7 @@ import {
   PublicCostsService,
 } from './funding';
 import { HealthService } from './health';
-import { ShelfService } from './discovery';
+import { SearchService, ShelfService } from './discovery';
 import { ProductService, StoreService } from './merch';
 import {
   ModerationJobsService,
@@ -65,6 +65,7 @@ export class ImeServices {
   public readonly releases: ReleaseService;
   public readonly catalog: CatalogService;
   public readonly shelves: ShelfService;
+  public readonly search: SearchService;
   public readonly artistPages: ArtistPageService;
   public readonly products: ProductService;
   public readonly store: StoreService;
@@ -108,6 +109,7 @@ export class ImeServices {
     this.releases = new ReleaseService(db, storage, access, gate, uploads);
     this.catalog = new CatalogService(db, storage);
     this.shelves = new ShelfService(db, storage);
+    this.search = new SearchService(db, storage);
     this.artistPages = new ArtistPageService(db, storage);
     this.products = new ProductService(db, storage, access, gate, uploads);
     this.store = new StoreService(db, storage);

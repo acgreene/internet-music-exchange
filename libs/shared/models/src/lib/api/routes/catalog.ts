@@ -12,6 +12,13 @@ import {
   releaseSchema,
   tracklistItemSchema,
 } from './releases';
+import {
+  FORMAT_IDS,
+  SEARCH_KINDS,
+  SEARCH_SORTS,
+  type SearchKindId,
+  type SearchSort,
+} from '../../music';
 import { ApiRoute } from './routes';
 
 /**
@@ -39,16 +46,6 @@ export const releaseCardWithArtistSchema = releaseCardSchema.extend({
 });
 
 export type ReleaseCardWithArtist = z.infer<typeof releaseCardWithArtistSchema>;
-
-/**
- * What a search finds.
- */
-export const searchResultsSchema = z.object({
-  artists: z.array(artistSchema),
-  releases: z.array(releaseCardWithArtistSchema),
-});
-
-export type SearchResults = z.infer<typeof searchResultsSchema>;
 
 export const searchQuerySchema = z.object({ q: z.string().min(1) });
 
@@ -175,6 +172,91 @@ export const catalogHomeSchema = z.object({
 
 export type CatalogHome = z.infer<typeof catalogHomeSchema>;
 
+/**
+ * A search of the catalog. `genres` is a comma-separated list; `under` is a
+ * price ceiling in cents, exclusive; `year` is a year or a decade like
+ * "1990s".
+ */
+export const catalogSearchQuerySchema = pageQuerySchema.extend({
+  q: z.string().optional(),
+  genres: z.string().optional(),
+  format: z.enum(FORMAT_IDS).optional(),
+  under: z.coerce.number().int().min(1).optional(),
+  year: z
+    .string()
+    .regex(/^(19|20)\d(\d|0s)$/)
+    .optional(),
+  kind: z
+    .enum(SEARCH_KINDS.map((kind) => kind.id) as [SearchKindId])
+    .optional(),
+  designed: z.literal('1').optional(),
+  sort: z.enum(SEARCH_SORTS.map((sort) => sort.id) as [SearchSort]).optional(),
+});
+
+export type CatalogSearchQuery = z.infer<typeof catalogSearchQuerySchema>;
+
+const facetCountSchema = <T extends z.ZodType>(value: T) =>
+  z.object({ value, count: z.number().int() });
+
+/**
+ * A release a search found, with every format it can be bought in.
+ */
+export const searchReleaseSchema = z.object({
+  release: releaseCardWithArtistSchema,
+  pricing: pricingSchema.nullable(),
+  editions: z.array(
+    z.object({
+      productId: z.guid(),
+      format: z.enum(['vinyl', 'cassette', 'cd']),
+      currency: currencySchema,
+      price: z.number().int(),
+    }),
+  ),
+});
+
+export type SearchRelease = z.infer<typeof searchReleaseSchema>;
+
+/**
+ * What a search finds, and how many releases each filter value would leave.
+ */
+export const searchResultsSchema = z.object({
+  releases: z.array(searchReleaseSchema),
+  /** How many releases match in all. */
+  total: z.number().int(),
+  artists: z.array(artistSchema),
+  /** Merch that is not a record. */
+  merch: z.array(shelfItemSchema),
+  facets: z.object({
+    genres: z.array(facetCountSchema(z.string())),
+    formats: z.array(facetCountSchema(z.enum(FORMAT_IDS))),
+    prices: z.array(facetCountSchema(z.number().int())),
+    years: z.array(facetCountSchema(z.number().int())),
+    kinds: z.array(facetCountSchema(releaseKindSchema)),
+    designed: z.number().int(),
+  }),
+});
+
+export type SearchResults = z.infer<typeof searchResultsSchema>;
+
+/**
+ * Quick suggestions while someone types in the search box.
+ */
+export const searchSuggestionsSchema = z.object({
+  artists: z.array(z.object({ name: z.string(), handle: z.string() })),
+  releases: z.array(
+    z.object({
+      title: z.string(),
+      slug: z.string(),
+      artistName: z.string(),
+      artistHandle: z.string(),
+      coverUrl: z.string().nullable(),
+    }),
+  ),
+  tags: z.array(facetCountSchema(z.string())),
+});
+
+export type SearchSuggestions = z.infer<typeof searchSuggestionsSchema>;
+
 export const catalogContracts = {
   [ApiRoute.CatalogHome]: {
     [HttpMethod.Get]: { response: catalogHomeSchema },
@@ -187,8 +269,14 @@ export const catalogContracts = {
   },
   [ApiRoute.CatalogSearch]: {
     [HttpMethod.Get]: {
-      query: searchQuerySchema,
+      query: catalogSearchQuerySchema,
       response: searchResultsSchema,
+    },
+  },
+  [ApiRoute.CatalogSuggest]: {
+    [HttpMethod.Get]: {
+      query: searchQuerySchema,
+      response: searchSuggestionsSchema,
     },
   },
   [ApiRoute.CatalogDiscography]: {

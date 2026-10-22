@@ -55,13 +55,19 @@ Each is a property of `ImeServices`, named in brackets.
 
 - **`ReleaseService`** (`releases`): a manager's side of releases: drafts,
   tracks and sides, genres and tags, audio and artwork uploads, pricing,
-  publishing, archiving, and gifting. Use it for every screen where an artist builds or edits a release.
+  publishing, archiving, and gifting. Use it for every screen where an
+  artist builds or edits a release.
 - **`ShelfService`** (`shelves`): the home page's shelves, rows picked by
   recipes over the catalog and the listener's library, rotated daily, plus a
   few designed releases and how much of each format is on offer. Use it for
   the home page.
+- **`SearchService`** (`search`): searching the catalog: releases by words
+  and filters (genre, format, price, year, kind, designed pages) with how
+  many releases each filter value would leave, every format a release is
+  sold in, matching artists and merch, and suggestions while someone types.
+  Use it for the search box and the results page.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release
-  pages, browsing and search, the feed of followed artists, the library, and
+  pages, browsing, the feed of followed artists, the library, and
   the URLs that stream, download, and open assets. Use it for anything a
   listener sees or plays.
 - **`ArtistPageService`** (`artistPages`): what a client needs to render a
