@@ -24,7 +24,7 @@ import { releasePriceLabel } from '../releases/release-labels';
         } @else {
           {{ shelf().title }}
         }
-        <span class="text-base font-medium tracking-normal text-ink-muted">{{
+        <span class="ml-1 text-base font-medium tracking-normal text-ink-muted">{{
           shelf().reason
         }}</span>
       </h2>
