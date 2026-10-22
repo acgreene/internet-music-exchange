@@ -40,28 +40,29 @@ Each is a property of `ImeServices`, named in brackets.
 
 ### Accounts and artists
 
-- **`AuthService`** (`auth`): sign-up, sign-in, sign-out, token checks, and account
-  deletion through Supabase auth. Reach for it in auth routes and the auth
-  middleware, and when a user deletes their account (it refuses while they are
-  an artist's only manager).
-- **`UserService`** (`users`): a user's own and public profile, username availability,
-  and editing username and display name. Use it for `/users/<username>` and the
-  profile settings screens.
-- **`ArtistService`** (`artists`): creating artists, their public profile, handle, bio,
-  images, links, and managers. Use it for `/artists/<handle>` and the artist
-  settings screens, and whenever managers are added or removed.
+- **`AuthService`** (`auth`): sign-up, sign-in, sign-out, token checks, and
+  account deletion through Supabase auth. Reach for it in auth routes and the
+  auth middleware, and when a user deletes their account (it refuses while
+  they are an artist's only manager).
+- **`UserService`** (`users`): a user's own and public profile, username
+  availability, and editing username and display name. Use it for
+  `/users/<username>` and the profile settings screens.
+- **`ArtistService`** (`artists`): creating artists, their public profile,
+  handle, bio, images, links, and managers. Use it for `/artists/<handle>` and
+  the artist settings screens, and whenever managers are added or removed.
 
 ### Releases and listening
 
-- **`ReleaseService`** (`releases`): a manager's side of releases: drafts, tracks, audio
-  and artwork uploads, pricing, publishing, archiving, and gifting. Use it for
-  every screen where an artist builds or edits a release.
-- **`CatalogService`** (`catalog`): a listener's side of releases: release pages, browsing
-  and search, the feed of followed artists, the library, and the URLs that stream, download, and open
-  assets. Use it for anything a listener sees or plays.
+- **`ReleaseService`** (`releases`): a manager's side of releases: drafts,
+  tracks, audio and artwork uploads, pricing, publishing, archiving, and
+  gifting. Use it for every screen where an artist builds or edits a release.
+- **`CatalogService`** (`catalog`): a listener's side of releases: release
+  pages, browsing and search, the feed of followed artists, the library, and
+  the URLs that stream, download, and open assets. Use it for anything a
+  listener sees or plays.
 - **`ArtistPageService`** (`artistPages`): what a client needs to render a
   release page: the release data with its cover, and when the artist applied
-  a design, a signed link to its bundle and their slot values with images as
+  a design, a signed link to its bundle and their slot values, with images as
   signed links. Without a design, the client shows the default layout.
 
 ### Merch
@@ -76,9 +77,9 @@ Each is a property of `ImeServices`, named in brackets.
 
 ### Buying and selling
 
-- **`CheckoutService`** (`checkout`): turns a cart into one Stripe payment
-  per artist, each a direct charge on that artist's own account, and grants
-  free releases on the spot. The Connect webhook records each payment once it
+- **`CheckoutService`** (`checkout`): turns a cart into one Stripe payment per
+  artist, each a direct charge on that artist's own account, and grants free
+  releases on the spot. The Connect webhook records each payment once it
   settles. Use it for the cart's checkout button.
 - **`PurchaseService`** (`purchases`): a buyer's purchase history, shipping
   progress, and refund requests to the artist. Use it for the purchases
@@ -111,6 +112,32 @@ Each is a property of `ImeServices`, named in brackets.
   moving to a newer version, and going back to the default layout. Use it for
   a release's design editor.
 
+### Getting paid and funding
+
+- **`PaymentAccountService`** (`paymentAccounts`): sellers' Stripe Connect
+  accounts: onboarding artists and designers, and their status. Use it for the
+  payments setup screens.
+- **`BillingService`** (`billing`): a seller's prepaid hosting balance: saving
+  a card, top-ups with an optional extra gift, alert and auto top-up settings,
+  and refunds of unused balance. Use it for the billing screens.
+- **`CostShareService`** (`costShares`): how an artist's hosting costs are
+  split between its managers: viewing the split, proposing a new one, and
+  accepting a share. Use it for the cost-split screen.
+- **`DonationService`** (`donations`): gifts on the donation page, once or
+  monthly, to the platform or the developers. Use it to start a donation
+  checkout.
+- **`PublicCostsService`** (`publicCosts`): the public costs page: what each
+  closed month cost, how it was shared, and the reserve. Use it for that page.
+- **`StripeWebhookService`** (`stripeWebhooks`): both Stripe webhooks. The
+  platform one records top-ups, their card fees, and gifts. The Connect one
+  keeps sellers' account status current and records sales, design purchases,
+  refunds, and lost disputes. Use it for the two webhook routes, passing the
+  raw body and the `Stripe-Signature` header.
+- **`MonthlyCloseService`** (`monthlyClose`): an admin's monthly close:
+  opening a month with the provider's rates, entering bills, then closing it,
+  which issues statements, charges balances, runs auto top-ups, and sends
+  alerts. Use it for the admin billing tools.
+
 ### Moderation
 
 - **`ReportService`** (`reports`): reporting a release, product, comment,
@@ -121,46 +148,22 @@ Each is a property of `ImeServices`, named in brackets.
   profiles, recording copyright claims, and deciding contests. Takedowns
   refund only what was taken down. Use it for the admin tools.
 
-### Getting paid and funding
-
-- **`PaymentAccountService`** (`paymentAccounts`): sellers' Stripe Connect
-  accounts: onboarding artists and designers, and their status. Use it for the
-  payments setup screens.
-- **`BillingService`** (`billing`): a seller's prepaid hosting balance: saving a card,
-  top-ups with an optional extra gift, alert and auto top-up settings, and
-  refunds of unused balance. Use it for the billing screens.
-- **`CostShareService`** (`costShares`): how an artist's hosting costs are split between its
-  managers: viewing the split, proposing a new one, and accepting a share. Use
-  it for the cost-split screen.
-- **`DonationService`** (`donations`): gifts on the donation page, once or monthly, to the
-  platform or the developers. Use it to start a donation checkout.
-- **`PublicCostsService`** (`publicCosts`): the public costs page: what each
-  closed month cost, how it was shared, and the reserve. Use it for that page.
-- **`StripeWebhookService`** (`stripeWebhooks`): both Stripe webhooks. The
-  platform one records top-ups, their card fees, and gifts; the Connect one
-  keeps sellers' account status current and records sales, refunds, and lost
-  disputes. Use it for the two webhook routes,
-  passing the raw body and the `Stripe-Signature` header.
-- **`MonthlyCloseService`** (`monthlyClose`): an admin's monthly close: opening a month with
-  the provider's rates, entering bills, then closing it, which issues
-  statements, charges balances, runs auto top-ups, and sends alerts. Use it for
-  the admin billing tools.
-
 ### Background work (the worker)
 
-- **`FundingJobsService`** (`fundingJobs`): funding's daily work: counting storage, warning
-  lapsed sellers, taking their things off sale, and deleting files nobody owns
-  after 90 days off sale. The worker runs it; nothing else should.
+- **`FundingJobsService`** (`fundingJobs`): funding's daily work: counting
+  storage, warning lapsed sellers, taking their things off sale, and deleting
+  files nobody owns after 90 days off sale.
 - **`ModerationJobsService`** (`moderationJobs`): makes copyright takedowns
-  final once the window to contest them passes with no contest. The worker
-  runs it; nothing else should.
-- **`TranscodeService`** (`transcode`): makes the AAC streaming copy of each lossless upload.
-  The worker runs it; nothing else should.
+  final once the window to contest them passes with no contest.
+- **`TranscodeService`** (`transcode`): makes the AAC streaming copy of each
+  lossless upload.
+
+The worker runs these; nothing else should.
 
 ### Operations
 
-- **`HealthService`** (`health`): whether the database answers. Use it for the health
-  route.
+- **`HealthService`** (`health`): whether the database answers. Use it for the
+  health route.
 
 ## Building blocks other services use
 
@@ -169,21 +172,24 @@ exported as types, for writing stand-ins to pass to `ImeServices`; the others
 are internal.
 
 - **`AccessService`**: the shared permission checks: active user, artist
-  manager, platform admin, and managing a given release, track, or asset.
-- **`FundingService`**: whether an artist's hosting is paid for, and whether
-  an artist or user counts as selling.
+  manager, platform admin, designer of a design, and managing a given
+  release, track, asset, product, variant, or product photo.
+- **`FundingService`**: whether an artist's hosting is paid for, whether a
+  seller is paid up, and whether an artist or user counts as selling.
+- **`SellingGateService`**: what a seller, artist or designer, needs before
+  something goes on sale: funded hosting, and for anything paid, a payment
+  account that can take charges in its currency. Checked when publishing and
+  again at checkout.
+- **`UploadService`**: direct uploads. Hands out a key under a prefix the
+  caller owns and confirms what was uploaded against that kind of file's rules
+  in `storage/media-types.ts`.
+- **`ReleaseFilesService`**: deletes everything a release stores, rows first
+  and files after, for funding's cleanup and final takedowns.
 - **`CloudStorageService`**: object storage on Cloudflare R2: signed upload and
   read links, uploads, and deletes.
 - **`EmailService`**: transactional email through Resend, logged instead of
-  sent when no `RESEND_API_KEY` is set.
-- **`UploadService`**: direct uploads. Hands out a key under a prefix the
-  caller owns and confirms what was uploaded against that kind of file's
-  rules in `storage/media-types.ts`.
-- **`ReleaseFilesService`**: deletes everything a release stores, rows
-  first and files after, for funding's cleanup and final takedowns.
-- **`SellingGateService`**: what an artist needs before something goes on
-  sale: funded hosting, and for anything paid, a payment account that can take
-  charges in its currency. Checked when publishing and at checkout.
+  sent when no `RESEND_API_KEY` is set. The emails themselves are in
+  `email/*-emails.ts`.
 
 ## Conventions
 
@@ -202,7 +208,13 @@ are internal.
   outside it, and files are deleted only after the rows pointing at them.
 - **Webhooks.** Handlers are safe to repeat. An event is handled first and
   claimed after, so a failure is retried by Stripe and a repeat is skipped.
-- **Money.** Amounts are integer minor units (cents). Funding is always USD.
+- **Sales.** Every sale is a direct charge on the seller's own Stripe account
+  (`{ stripeAccount }`), so IME never holds the money. A refund's effects
+  apply once, however many times it is reported.
+- **Email.** An email about something that already happened is sent after it,
+  and a failure to send is logged rather than undoing it.
+- **Money.** Amounts are integer minor units (cents), shown to people with
+  `formatMoney`. Funding is always USD.
 - **Database errors.** Check them against `PostgresErrorCode` from `@ime/db`
   with plain `if` statements.
 
