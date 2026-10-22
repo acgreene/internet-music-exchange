@@ -56,6 +56,25 @@ export type {
   StoreVariant,
 } from './lib/merch/store-service';
 
+// Buying and selling
+export type {
+  ArtistPayment,
+  CartItem,
+  CheckoutInput,
+  CheckoutService,
+  ShippingAddress,
+  StartedCheckout,
+} from './lib/orders/checkout-service';
+export type {
+  PurchaseDetail,
+  PurchaseService,
+} from './lib/orders/purchase-service';
+export type {
+  SaleDetail,
+  SalesService,
+  ShipmentInput,
+} from './lib/orders/sales-service';
+
 // Getting paid and funding
 export { STRIPE_DASHBOARD_URL } from './lib/payments/payment-account-service';
 export type {

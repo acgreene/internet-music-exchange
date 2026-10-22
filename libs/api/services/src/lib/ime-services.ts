@@ -17,6 +17,7 @@ import {
 } from './funding';
 import { HealthService } from './health';
 import { ProductService, StoreService } from './merch';
+import { CheckoutService, PurchaseService, SalesService } from './orders';
 import { PaymentAccountService } from './payments';
 import { CatalogService, ReleaseService } from './releases';
 import { SellingGateService } from './selling';
@@ -50,6 +51,9 @@ export class ImeServices {
   public readonly artistPages: ArtistPageService;
   public readonly products: ProductService;
   public readonly store: StoreService;
+  public readonly checkout: CheckoutService;
+  public readonly purchases: PurchaseService;
+  public readonly sales: SalesService;
   public readonly paymentAccounts: PaymentAccountService;
   public readonly billing: BillingService;
   public readonly costShares: CostShareService;
@@ -88,6 +92,9 @@ export class ImeServices {
       access,
       webAppUrl,
     );
+    this.checkout = new CheckoutService(db, stripe, gate, email, webAppUrl);
+    this.purchases = new PurchaseService(db, email, webAppUrl);
+    this.sales = new SalesService(db, stripe, access, email, webAppUrl);
     this.billing = new BillingService(db, stripe, funding);
     this.costShares = new CostShareService(db, access);
     this.donations = new DonationService(db, stripe, webAppUrl);
@@ -106,6 +113,8 @@ export class ImeServices {
       this.billing,
       this.donations,
       this.paymentAccounts,
+      this.checkout,
+      this.sales,
     );
 
     this.fundingJobs = new FundingJobsService(db, storage, email, webAppUrl);

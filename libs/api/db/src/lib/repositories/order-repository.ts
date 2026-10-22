@@ -15,7 +15,7 @@ import {
   products,
   productVariants,
   releases,
-  users
+  users,
 } from '../tables';
 
 /**
@@ -47,6 +47,11 @@ export interface CheckoutArtistOrderParams {
 }
 
 export interface CreateCheckoutParams {
+  /**
+   * The order to record into. A multi-artist cart is paid one artist at a
+   * time, so each payment records into the same order, created by the first.
+   */
+  orderId?: string;
   userId: string;
   shippingAddress?: Record<string, unknown> | null;
   artistOrders: CheckoutArtistOrderParams[];
@@ -176,13 +181,7 @@ export class OrderRepository {
       const recorded = await this.findRecordedCheckout(tx, params.artistOrders);
       if (recorded) return recorded;
 
-      const [order] = await tx
-        .insert(orders)
-        .values({
-          userId: params.userId,
-          shippingAddress: params.shippingAddress,
-        })
-        .returning({ id: orders.id });
+      const order = await this.upsertOrder(tx, params);
 
       const artistOrderIds: string[] = [];
       const shortVariantIds: string[] = [];
@@ -220,6 +219,33 @@ export class OrderRepository {
         updatedAt: new Date(),
       })
       .where(eq(artistOrders.id, artistOrderId));
+  }
+
+  /**
+   * Mark a settled artist order refunded, so a refund's effects apply once
+   * even when the artist's refund and Stripe's webhook race.
+   *
+   * @param artistOrderId - The id of the artist order.
+   * @returns True when it was settled and is now refunded, false when it was
+   * not settled or was already refunded.
+   */
+  public async markRefunded(artistOrderId: string): Promise<boolean> {
+    const refunded = await this.db
+      .update(artistOrders)
+      .set({
+        status: 'refunded',
+        refundedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(artistOrders.id, artistOrderId),
+          eq(artistOrders.status, 'completed'),
+        ),
+      )
+      .returning({ id: artistOrders.id });
+
+    return refunded.length > 0;
   }
 
   /**
@@ -544,6 +570,36 @@ export class OrderRepository {
       .returning({ artistOrderId: fulfillments.artistOrderId });
 
     return delivered.length > 0;
+  }
+
+  /**
+   * Create the order a checkout records into, or find the one an earlier
+   * payment of the same cart created.
+   *
+   * @param tx - The transaction recording the checkout.
+   * @param params - The order id when the cart has one, the buyer, and the
+   * shipping address.
+   * @returns The order's id.
+   */
+  private async upsertOrder(
+    tx: DbTransaction,
+    params: CreateCheckoutParams,
+  ): Promise<{ id: string }> {
+    const values = {
+      id: params.orderId,
+      userId: params.userId,
+      shippingAddress: params.shippingAddress,
+    };
+    if (!params.orderId) {
+      const [created] = await tx
+        .insert(orders)
+        .values(values)
+        .returning({ id: orders.id });
+      return created;
+    }
+
+    await tx.insert(orders).values(values).onConflictDoNothing();
+    return { id: params.orderId };
   }
 
   /**

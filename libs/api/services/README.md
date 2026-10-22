@@ -73,6 +73,19 @@ Each is a property of `ImeServices`, named in brackets.
   a release's physical editions, and product pages. Use it for anything a
   listener browses before adding merch to the cart.
 
+### Buying and selling
+
+- **`CheckoutService`** (`checkout`): turns a cart into one Stripe payment
+  per artist, each a direct charge on that artist's own account, and grants
+  free releases on the spot. The Connect webhook records each payment once it
+  settles. Use it for the cart's checkout button.
+- **`PurchaseService`** (`purchases`): a buyer's purchase history, shipping
+  progress, and refund requests to the artist. Use it for the purchases
+  screens.
+- **`SalesService`** (`sales`): a manager's sales, the queue of orders to
+  ship, marking them shipped and delivered, refunds, and settled totals. Use
+  it for the sales and fulfillment screens.
+
 ### Getting paid and funding
 
 - **`PaymentAccountService`** (`paymentAccounts`): sellers' Stripe Connect
@@ -90,7 +103,8 @@ Each is a property of `ImeServices`, named in brackets.
   closed month cost, how it was shared, and the reserve. Use it for that page.
 - **`StripeWebhookService`** (`stripeWebhooks`): both Stripe webhooks. The
   platform one records top-ups, their card fees, and gifts; the Connect one
-  keeps sellers' account status current. Use it for the two webhook routes,
+  keeps sellers' account status current and records sales, refunds, and lost
+  disputes. Use it for the two webhook routes,
   passing the raw body and the `Stripe-Signature` header.
 - **`MonthlyCloseService`** (`monthlyClose`): an admin's monthly close: opening a month with
   the provider's rates, entering bills, then closing it, which issues

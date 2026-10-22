@@ -1,6 +1,8 @@
 import type { Email } from './email-service';
+import { formatMoney } from '../money';
 
-const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+/** Funding is always in US dollars. */
+const dollars = (cents: number) => formatMoney(cents, 'usd');
 
 /**
  * The emails funding sends. Plain and practical: what happened, what it

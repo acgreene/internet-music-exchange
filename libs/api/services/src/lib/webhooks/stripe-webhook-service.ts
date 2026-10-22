@@ -2,12 +2,19 @@ import Stripe from 'stripe';
 import { DatabaseRepository } from '@ime/db';
 import { env } from '@ime/env';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
-import { BillingService, DONATION_PURPOSE, DonationService, TOP_UP_PURPOSE } from '../funding';
+import {
+  BillingService,
+  DONATION_PURPOSE,
+  DonationService,
+  TOP_UP_PURPOSE,
+} from '../funding';
+import { CheckoutService, SalesService } from '../orders';
 import { PaymentAccountService } from '../payments';
 
 /**
  * Stripe's webhooks, one route each: the platform's own account (top-ups,
- * card fees, gifts) and sellers' connected accounts (their status).
+ * card fees, gifts) and sellers' connected accounts (their status, and the
+ * sales, refunds, and disputes paid on them).
  *
  * Every handler is safe to repeat, so an event is handled first and claimed
  * after: a failure leaves it unclaimed for Stripe to retry, and a repeat
@@ -27,6 +34,11 @@ export class StripeWebhookService {
       db,
       stripe,
     ),
+    private readonly checkout: CheckoutService = new CheckoutService(
+      db,
+      stripe,
+    ),
+    private readonly sales: SalesService = new SalesService(db, stripe),
     private readonly platformSecret: string = env.STRIPE_WEBHOOK_SECRET,
     private readonly connectSecret: string = env.STRIPE_CONNECT_WEBHOOK_SECRET,
   ) {}
@@ -87,6 +99,33 @@ export class StripeWebhookService {
     if (event.type === 'account.application.deauthorized' && event.account) {
       await this.paymentAccounts.markDisconnected(event.account);
     }
+    // card payments complete at once; slower methods follow up when they clear
+    if (
+      (event.type === 'checkout.session.completed' ||
+        event.type === 'checkout.session.async_payment_succeeded') &&
+      event.account
+    ) {
+      await this.checkout.recordPaidSession(event.data.object, event.account);
+    }
+    // a refund from IME or from the seller's own Stripe dashboard
+    if (event.type === 'charge.refunded' && event.data.object.refunded) {
+      await this.recordRefund(event.data.object.payment_intent);
+    }
+    if (
+      event.type === 'charge.dispute.closed' &&
+      event.data.object.status === 'lost'
+    ) {
+      await this.recordRefund(event.data.object.payment_intent);
+    }
+  }
+
+  private async recordRefund(
+    paymentIntent: string | Stripe.PaymentIntent | null,
+  ): Promise<void> {
+    if (!paymentIntent) return;
+    await this.sales.recordRefund(
+      typeof paymentIntent === 'string' ? paymentIntent : paymentIntent.id,
+    );
   }
 
   private async handle(
