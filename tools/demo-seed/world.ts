@@ -11,7 +11,7 @@ import {
 import { bundleHtml, DESIGN_TEMPLATES, SLOT_TEXT } from './designs';
 import { demoId, Random } from './random';
 import { DEMO_PREFIX } from './storage';
-import { slugify, words } from './words';
+import { type Scene, SCENES, slugify, words } from './words';
 
 type Row<T extends { $inferInsert: unknown }> = T['$inferInsert'];
 
@@ -66,6 +66,26 @@ function monthStart(now: Date, offset: number): Date {
  */
 export function buildWorld(options: WorldOptions) {
   const random = new Random(20261022);
+  // its own source, so adding sound to the world leaves the rest of it as it was
+  const sound = new Random(5010);
+
+  /** A release's genres, tags, and sides, from its artist's scene. */
+  const soundOf = (scene: Scene, kind: string, trackCount: number) => {
+    const genres = sound.sample(scene.genres, sound.int(1, 3));
+    const tags = sound.chance(0.2)
+      ? []
+      : sound.sample(scene.tags, sound.int(1, 4));
+    const record = ['album', 'lp', 'compilation', 'soundtrack', 'remaster'];
+    let sideStarts: number[] = [];
+    if (record.includes(kind) && trackCount >= 6 && sound.chance(0.45)) {
+      const sides = trackCount >= 12 && sound.chance(0.3) ? 4 : 2;
+      sideStarts = Array.from(
+        { length: sides - 1 },
+        (_, i) => Math.round(((i + 1) * trackCount) / sides) + 1,
+      );
+    }
+    return { genres, tags, sideStarts };
+  };
   const { now, bucket, owner } = options;
   const files: DemoFile[] = [];
   const counters = new Map<string, number>();
@@ -135,7 +155,7 @@ export function buildWorld(options: WorldOptions) {
     const handleBase = random.weighted<() => string>([
       [() => name, 3],
       [() => `${name.split(' ')[0]}${random.int(1, 999)}`, 3],
-      [() => `${words.genre(random)} ${name.split(' ')[1]}`, 1],
+      [() => `${random.pick(SCENES).label} ${name.split(' ')[1]}`, 1],
     ])();
     return {
       id: demoId('user', n),
@@ -169,6 +189,7 @@ export function buildWorld(options: WorldOptions) {
     releases: DemoRelease[];
     products: DemoProduct[];
     sells: boolean;
+    scene: Scene;
   }
   interface DemoRelease {
     id: string;
@@ -220,6 +241,7 @@ export function buildWorld(options: WorldOptions) {
       releases: [],
       products: [],
       sells: false,
+      scene: sound.pick(SCENES),
     });
   }
   // the order listeners discover artists in: a few are very popular
@@ -231,7 +253,7 @@ export function buildWorld(options: WorldOptions) {
       id: artist.id,
       name: artist.name,
       handle: artist.handle,
-      bio: random.chance(0.85) ? words.bio(random) : null,
+      bio: random.chance(0.85) ? words.bio(random, artist.scene) : null,
       createdAt: artist.joinedAt,
       suspendedAt:
         artist === suspendedArtist ? new Date(now.getTime() - 9 * DAY) : null,
@@ -388,6 +410,7 @@ export function buildWorld(options: WorldOptions) {
         releasedAt: iso(publishedAt ?? createdAt),
         createdAt,
         publishedAt,
+        ...soundOf(artist.scene, kind, trackCount),
       });
       rows.releasePricing.push({
         releaseId: release.id,

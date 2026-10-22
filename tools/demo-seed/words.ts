@@ -285,32 +285,101 @@ const PLURALS = [
   'Years',
 ];
 
-const GENRE_TAGS = [
-  'dream pop',
-  'post-punk',
-  'lo-fi house',
-  'ambient',
-  'indie folk',
-  'shoegaze',
-  'jazz trio',
-  'synthwave',
-  'garage rock',
-  'bedroom pop',
-  'drone',
-  'math rock',
-  'neo-soul',
-  'chamber pop',
-  'hip hop',
-  'emo',
-  'techno',
-  'americana',
-  'bossa nova',
-  'hardcore',
-  'city pop',
-  'krautrock',
-  'trip hop',
-  'noise rock',
-];
+/**
+ * The sounds demo artists make. Each artist belongs to one scene, which picks
+ * their releases' genres (ids from IME's list) and tags, and names their bio.
+ */
+export const SCENES = [
+  {
+    label: 'shoegaze',
+    genres: ['shoegaze', 'dream-pop', 'noise', 'indie-rock'],
+    tags: ['wall of sound', 'reverb', 'hazy', 'loud', 'fuzz'],
+  },
+  {
+    label: 'post-punk',
+    genres: ['post-punk', 'punk', 'garage-rock', 'indie-rock'],
+    tags: ['angular', 'wiry', 'basement', 'live to tape', 'nervous'],
+  },
+  {
+    label: 'ambient',
+    genres: ['ambient', 'drone', 'new-age', 'experimental'],
+    tags: [
+      'slow',
+      'field recordings',
+      'tape loops',
+      'meditative',
+      'late night',
+    ],
+  },
+  {
+    label: 'indie folk',
+    genres: ['folk', 'singer-songwriter', 'acoustic', 'americana'],
+    tags: [
+      'fingerpicked',
+      'kitchen recording',
+      'winter',
+      'quiet',
+      'storytelling',
+    ],
+  },
+  {
+    label: 'lo-fi house',
+    genres: ['house', 'dance', 'electronic', 'disco'],
+    tags: ['four on the floor', 'sunrise', 'groovy', 'warehouse', 'lo-fi'],
+  },
+  {
+    label: 'techno',
+    genres: ['techno', 'industrial', 'electronic'],
+    tags: ['hypnotic', 'dark', 'modular', 'driving', 'warehouse'],
+  },
+  {
+    label: 'jazz trio',
+    genres: ['jazz', 'soul', 'funk'],
+    tags: ['trio', 'improvised', 'live', 'smoky', 'upright bass'],
+  },
+  {
+    label: 'synthwave',
+    genres: ['synthwave', 'synth-pop', 'electronic'],
+    tags: ['neon', 'retro', 'night drive', 'analog synths'],
+  },
+  {
+    label: 'beat tape',
+    genres: ['hip-hop', 'lo-fi', 'r-and-b', 'trip-hop'],
+    tags: ['boom bap', 'samples', 'beat tape', 'chill', 'late night'],
+  },
+  {
+    label: 'math rock',
+    genres: ['math-rock', 'post-rock', 'emo'],
+    tags: ['odd time', 'twinkly', 'instrumental', 'tapping'],
+  },
+  {
+    label: 'bedroom pop',
+    genres: ['indie-pop', 'pop', 'synth-pop'],
+    tags: ['bedroom pop', 'catchy', 'summer', 'heartbreak'],
+  },
+  {
+    label: 'doom',
+    genres: ['metal', 'hardcore', 'noise'],
+    tags: ['heavy', 'doom', 'sludge', 'loud'],
+  },
+  {
+    label: 'glitch',
+    genres: ['experimental', 'electronic', 'chiptune', 'ambient'],
+    tags: ['glitch', 'modular', '8-bit', 'strange'],
+  },
+  {
+    label: 'dub',
+    genres: ['dub', 'reggae', 'ska'],
+    tags: ['bass heavy', 'echo', 'sound system'],
+  },
+  {
+    label: 'modern classical',
+    genres: ['classical', 'soundtrack', 'ambient'],
+    tags: ['piano', 'strings', 'cinematic', 'minimal'],
+  },
+] as const;
+
+export type Scene = (typeof SCENES)[number];
 
 const CITIES = [
   ['Portland', 'OR', 'US'],
@@ -506,13 +575,11 @@ export const words = {
     ])();
   },
 
-  genre: (random: Random) => random.pick(GENRE_TAGS),
-
-  bio(random: Random): string {
+  bio(random: Random, scene: Scene): string {
     const city = random.pick(CITIES)[0];
     const opener = random
       .pick(BIO_OPENERS)
-      .replace('{genre}', words.genre(random))
+      .replace('{genre}', scene.label)
       .replace('{city}', city);
     const sentence = opener.charAt(0).toUpperCase() + opener.slice(1);
     return `${sentence} ${random.pick(BIO_CLOSERS)}`.trim();
