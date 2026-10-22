@@ -1,5 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { index, pgPolicy, pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  pgPolicy,
+  pgTable,
+  primaryKey,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
 import { artists } from './artists';
 import { users } from './users';

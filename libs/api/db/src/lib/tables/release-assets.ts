@@ -12,7 +12,7 @@ import {
   timestamp,
   unique,
   uniqueIndex,
-  uuid
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { releases } from './releases';

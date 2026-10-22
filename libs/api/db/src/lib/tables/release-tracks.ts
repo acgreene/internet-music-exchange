@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, integer, pgPolicy, pgTable, primaryKey, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgPolicy,
+  pgTable,
+  primaryKey,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { releases } from './releases';
 import { tracks } from './tracks';

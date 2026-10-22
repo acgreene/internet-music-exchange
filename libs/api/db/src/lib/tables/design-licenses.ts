@@ -1,5 +1,15 @@
 import { sql } from 'drizzle-orm';
-import { check, index, integer, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { artists } from './artists';
 import { designs } from './designs';
 import { currencyEnum } from './payout-accounts';

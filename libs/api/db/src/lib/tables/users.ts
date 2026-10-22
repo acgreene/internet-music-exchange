@@ -1,6 +1,18 @@
 import { sql } from 'drizzle-orm';
-import { check, pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { anonRole, authenticatedRole, authUid, authUsers } from 'drizzle-orm/supabase';
+import {
+  check,
+  pgPolicy,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import {
+  anonRole,
+  authenticatedRole,
+  authUid,
+  authUsers,
+} from 'drizzle-orm/supabase';
 
 /**
  * Usernames and artist handles end up in URLs, so they are lowercase letters,

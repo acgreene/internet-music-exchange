@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { check, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  index,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { releases } from './releases';
 import { users } from './users';
 
@@ -7,10 +16,10 @@ import { users } from './users';
  * `upheld` - the artist was right; the release is restored.
  * `rejected` - the takedown stands.
  */
-export const copyrightContestOutcomeEnum = pgEnum(
-  'copyright_contest_outcome',
-  ['upheld', 'rejected'],
-);
+export const copyrightContestOutcomeEnum = pgEnum('copyright_contest_outcome', [
+  'upheld',
+  'rejected',
+]);
 
 export type CopyrightContestOutcome =
   (typeof copyrightContestOutcomeEnum.enumValues)[number];
@@ -29,10 +38,9 @@ export const copyrightContests = pgTable(
       .references(() => releases.id, { onDelete: 'cascade' }),
 
     /** The manager who filed it. */
-    contestedByUserId: uuid('contested_by_user_id').references(
-      () => users.id,
-      { onDelete: 'set null' },
-    ),
+    contestedByUserId: uuid('contested_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     statement: text('statement').notNull(),
 
     outcome: copyrightContestOutcomeEnum('outcome'),

@@ -1,5 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { index, jsonb, pgPolicy, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  jsonb,
+  pgPolicy,
+  pgTable,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { designVersions } from './design-versions';
 import { releases } from './releases';

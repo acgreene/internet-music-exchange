@@ -10,7 +10,7 @@ import {
   text,
   timestamp,
   unique,
-  uuid
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from 'drizzle-orm/supabase';
 import { tracks } from './tracks';

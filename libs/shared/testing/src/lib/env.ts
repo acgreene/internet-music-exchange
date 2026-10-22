@@ -9,7 +9,8 @@ export function stubApiTestEnv(): void {
   process.env['SUPABASE_URL'] ??= 'http://127.0.0.1:54331';
   process.env['SUPABASE_PUBLISHABLE_KEY'] ??= 'sb_publishable_test';
   process.env['SUPABASE_SECRET_KEY'] ??= 'sb_secret_test';
-  process.env['R2_ENDPOINT'] ??= 'https://test-account.r2.cloudflarestorage.com';
+  process.env['R2_ENDPOINT'] ??=
+    'https://test-account.r2.cloudflarestorage.com';
   process.env['R2_ACCESS_KEY_ID'] ??= 'test-access-key-id';
   process.env['R2_SECRET_ACCESS_KEY'] ??= 'test-secret-access-key';
   process.env['R2_BUCKET'] ??= 'test-bucket';

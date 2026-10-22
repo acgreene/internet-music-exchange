@@ -1,5 +1,13 @@
 import { sql } from 'drizzle-orm';
-import { bigint, check, date, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  check,
+  date,
+  pgTable,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { artists } from './artists';
 import { users } from './users';
 

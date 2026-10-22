@@ -1,5 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { check, date, index, pgEnum, pgPolicy, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  date,
+  index,
+  pgEnum,
+  pgPolicy,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { artists } from './artists';
 

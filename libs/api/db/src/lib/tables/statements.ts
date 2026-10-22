@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { check, date, integer, jsonb, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  date,
+  integer,
+  jsonb,
+  pgTable,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { billingPeriods } from './billing-periods';
 import { users } from './users';
 

@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, pgEnum, pgPolicy, pgTable, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  integer,
+  pgEnum,
+  pgPolicy,
+  pgTable,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { anonRole, authenticatedRole } from 'drizzle-orm/supabase';
 import { products } from './products';
 

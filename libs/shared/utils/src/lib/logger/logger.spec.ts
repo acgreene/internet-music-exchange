@@ -6,7 +6,9 @@ describe('Logger', () => {
   });
 
   it('logs with the level and scope in the line', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
 
     new Logger('api').error('database unreachable');
 
@@ -18,7 +20,9 @@ describe('Logger', () => {
   });
 
   it('drops messages below the minimum level', () => {
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    const debugSpy = vi
+      .spyOn(console, 'debug')
+      .mockImplementation(() => undefined);
 
     new Logger('api', LogLevel.Info).debug('noise');
 
@@ -26,7 +30,9 @@ describe('Logger', () => {
   });
 
   it('passes extra details through to the console', () => {
-    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const infoSpy = vi
+      .spyOn(console, 'info')
+      .mockImplementation(() => undefined);
 
     new Logger('api').info('listening', { port: 3000 });
 
@@ -34,7 +40,9 @@ describe('Logger', () => {
   });
 
   it('child loggers extend the scope', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined);
 
     new Logger('api').child('db').warn('slow query');
 

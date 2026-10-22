@@ -35,8 +35,7 @@ export interface TopUpInput {
  * records the top-up once it succeeds.
  */
 export type TopUpResult =
-  | { status: 'succeeded' }
-  | { status: 'requires_action'; clientSecret: string };
+  { status: 'succeeded' } | { status: 'requires_action'; clientSecret: string };
 
 export interface BillingSettingsInput {
   alertThresholdAmount?: number | null;
