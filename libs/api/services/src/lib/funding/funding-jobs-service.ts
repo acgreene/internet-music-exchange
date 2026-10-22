@@ -129,8 +129,10 @@ export class FundingJobsService {
   private async takeOffSale(userId: string, billingUrl: string): Promise<void> {
     const shares = await this.db.funding.listSharesPaidBy(userId);
     const artistIds = shares.map((share) => share.artistId);
-    await this.db.funding.takeArtistsOffSale(artistIds);
-    await this.db.funding.takeDesignsOffSale(userId);
+    await this.db.transaction(async (repos) => {
+      await repos.funding.takeArtistsOffSale(artistIds);
+      await repos.funding.takeDesignsOffSale(userId);
+    });
 
     // every manager of an affected artist hears about it, not only the payer
     for (const artistId of artistIds) {
@@ -165,13 +167,20 @@ export class FundingJobsService {
       this.db.releaseAssets.listAudioFilesForRelease(releaseId, 'stream'),
     ]);
 
-    for (const asset of assets) {
-      await this.db.releaseAssets.deleteAssetById(asset.id);
-      await this.storage.deleteObject(asset.objectKey);
-    }
-    for (const file of [...originals, ...streamCopies]) {
-      await this.db.releaseAssets.deleteAudioFile(file.trackId, file.variant);
-      await this.storage.deleteObject(file.objectKey);
+    const files = [...originals, ...streamCopies];
+
+    await this.db.transaction(async (repos) => {
+      for (const asset of assets) {
+        await repos.releaseAssets.deleteAssetById(asset.id);
+      }
+      for (const file of files) {
+        await repos.releaseAssets.deleteAudioFile(file.trackId, file.variant);
+      }
+    });
+
+    // files go only once nothing points at them
+    for (const { objectKey } of [...assets, ...files]) {
+      await this.storage.deleteObject(objectKey);
     }
   }
 }

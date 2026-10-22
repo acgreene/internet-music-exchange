@@ -29,6 +29,7 @@ const STATELESS_AUTH_OPTIONS = {
  */
 export class AuthService {
   constructor(
+    private readonly db: DatabaseRepository = new DatabaseRepository(),
     /**
      * Client bound to the publishable key for user-scoped operations.
      */
@@ -45,7 +46,6 @@ export class AuthService {
       env.SUPABASE_SECRET_KEY,
       STATELESS_AUTH_OPTIONS,
     ),
-    private readonly db: DatabaseRepository = new DatabaseRepository(),
   ) {}
 
   /**

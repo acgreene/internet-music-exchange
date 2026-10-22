@@ -1,14 +1,12 @@
 import { ApiRoute } from '@ime/models';
-import { ArtistPageService } from '@ime/services';
+import type { ArtistPageService } from '@ime/services';
 import { AbstractRouter } from '../abstract-router';
 
 /**
  * Serves the data a client needs to render a release as an artist page.
  */
 export class ArtistPagesRouter extends AbstractRouter {
-  constructor(
-    private readonly aps: ArtistPageService = new ArtistPageService(),
-  ) {
+  constructor(private readonly aps: ArtistPageService) {
     super();
     this.register();
   }

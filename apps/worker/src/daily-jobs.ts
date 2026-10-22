@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises';
-import { FundingJobsService } from '@ime/services';
+import type { FundingJobsService } from '@ime/services';
 import { Logger } from '@ime/utils';
 
 /**
@@ -14,8 +14,10 @@ const log = new Logger('worker').child('daily-jobs');
  * Run funding's daily work (storage counts, lapse warnings, taking lapsed
  * sellers off sale, cleaning up long-off-sale files) until told to stop.
  */
-export async function runDailyJobs(stop: AbortSignal): Promise<void> {
-  const jobs = new FundingJobsService();
+export async function runDailyJobs(
+  jobs: FundingJobsService,
+  stop: AbortSignal,
+): Promise<void> {
   log.info(`checking for daily work every ${CHECK_MINUTES} minutes`);
 
   while (!stop.aborted) {

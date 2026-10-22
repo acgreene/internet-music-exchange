@@ -6,7 +6,6 @@ import {
   type PayoutAccount,
 } from '@ime/db';
 import { env } from '@ime/env';
-import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
 
 /**
@@ -55,7 +54,6 @@ export class PaymentAccountService {
     private readonly db: DatabaseRepository = new DatabaseRepository(),
     private readonly stripe: Stripe = new Stripe(env.STRIPE_SECRET_KEY),
     private readonly access: AccessService = new AccessService(db),
-    private readonly connectWebhookSecret: string = env.STRIPE_CONNECT_WEBHOOK_SECRET,
     private readonly webAppUrl: string = env.WEB_APP_URL,
   ) {}
 
@@ -163,54 +161,34 @@ export class PaymentAccountService {
   }
 
   /**
-   * Handle a webhook from Stripe about a connected account. Each event is
-   * handled once: it is claimed and applied in one transaction, so a failure
-   * leaves it unclaimed for Stripe to retry, and a repeat delivery does
-   * nothing.
-   *
-   * @param payload - The raw request body, exactly as received.
-   * @param signature - The `Stripe-Signature` header.
-   * @throws ApiError 400 when the signature does not check out.
+   * Bring IME's copy of a connected account up to date with Stripe, as when
+   * Stripe says it changed. Reads the account fresh, so events arriving out of
+   * order cannot leave stale status behind.
    */
-  public async handleConnectWebhook(
-    payload: string,
-    signature: string,
-  ): Promise<void> {
-    let event: Stripe.Event;
+  public async syncFromStripe(stripeAccountId: string): Promise<void> {
+    let account: Stripe.Account;
     try {
-      event = this.stripe.webhooks.constructEvent(
-        payload,
-        signature,
-        this.connectWebhookSecret,
-      );
-    } catch {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        'Invalid Stripe signature.',
-      );
+      account = await this.stripe.accounts.retrieve(stripeAccountId);
+    } catch (error) {
+      // IME can no longer read an account the seller disconnected
+      if (error instanceof Stripe.errors.StripePermissionError) {
+        return this.markDisconnected(stripeAccountId);
+      }
+      throw error;
     }
+    await this.sync(account);
+  }
 
-    await this.db.transaction(async (repos) => {
-      const firstDelivery = await repos.payments.claimEvent({
-        id: event.id,
-        type: event.type,
-        payload: event,
-      });
-      if (!firstDelivery) return;
-
-      if (event.type === 'account.updated') {
-        await this.sync(repos, event.data.object);
-      }
-      // the seller disconnected IME from their Stripe account
-      if (event.type === 'account.application.deauthorized' && event.account) {
-        await repos.payments.syncAccountFromStripe(event.account, {
-          chargesEnabled: false,
-          payoutsEnabled: false,
-          detailsSubmitted: false,
-          defaultCurrency: null,
-        });
-      }
+  /**
+   * Record that a seller disconnected IME from their Stripe account. Nothing
+   * of theirs can be sold until they connect again.
+   */
+  public async markDisconnected(stripeAccountId: string): Promise<void> {
+    await this.db.payments.syncAccountFromStripe(stripeAccountId, {
+      chargesEnabled: false,
+      payoutsEnabled: false,
+      detailsSubmitted: false,
+      defaultCurrency: null,
     });
   }
 
@@ -251,10 +229,7 @@ export class PaymentAccountService {
   ): Promise<PayoutAccountStatus> {
     if (!account) return NOT_CONNECTED;
 
-    await this.sync(
-      this.db,
-      await this.stripe.accounts.retrieve(account.stripeAccountId),
-    );
+    await this.syncFromStripe(account.stripeAccountId);
     return this.toStatus(
       await this.db.payments.getAccountByStripeAccountId(
         account.stripeAccountId,
@@ -262,9 +237,9 @@ export class PaymentAccountService {
     );
   }
 
-  private sync(repos: DatabaseRepository, account: Stripe.Account) {
+  private sync(account: Stripe.Account) {
     const currency = account.default_currency;
-    return repos.payments.syncAccountFromStripe(account.id, {
+    return this.db.payments.syncAccountFromStripe(account.id, {
       chargesEnabled: account.charges_enabled,
       payoutsEnabled: account.payouts_enabled,
       detailsSubmitted: account.details_submitted,

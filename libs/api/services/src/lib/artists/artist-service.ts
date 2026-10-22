@@ -344,19 +344,21 @@ export class ArtistService {
       );
     }
 
-    if (!(await this.db.artists.removeManager(managerUserId, artistId))) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.Conflict,
-        'An artist must keep at least one manager.',
-      );
-    }
+    await this.db.transaction(async (repos) => {
+      if (!(await repos.artists.removeManager(managerUserId, artistId))) {
+        throw new ApiError(
+          ApiErrorKind.Http,
+          HttpStatus.Conflict,
+          'An artist must keep at least one manager.',
+        );
+      }
 
-    // a pending split offered to them can no longer be accepted
-    const offers = await this.db.funding.listOffers(artistId);
-    if (offers.some((offer) => offer.userId === managerUserId)) {
-      await this.db.funding.withdrawOffers(artistId);
-    }
+      // a pending split offered to them can no longer be accepted
+      const offers = await repos.funding.listOffers(artistId);
+      if (offers.some((offer) => offer.userId === managerUserId)) {
+        await repos.funding.withdrawOffers(artistId);
+      }
+    });
   }
 
   private validName(name: string): string {

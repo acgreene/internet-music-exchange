@@ -140,7 +140,7 @@ export class ReleaseService {
    * price, and its artwork and assets.
    */
   public async getForManager(userId: string, releaseId: string) {
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
 
     const [tracks, originals, streamCopies, pricing, assets] =
       await Promise.all([
@@ -164,7 +164,7 @@ export class ReleaseService {
     releaseId: string,
     input: UpdateReleaseInput,
   ): Promise<Release> {
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
 
     if (input.slug !== undefined) {
       if (!isValidSlug(input.slug)) {
@@ -218,7 +218,7 @@ export class ReleaseService {
    * @throws ApiError 409 when the release is not a draft.
    */
   public async delete(userId: string, releaseId: string): Promise<void> {
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
     if (release.status !== 'draft') {
       throw new ApiError(
         ApiErrorKind.Http,
@@ -265,7 +265,7 @@ export class ReleaseService {
     releaseId: string,
     input: PricingInput,
   ) {
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
 
     let currency: Currency | null = null;
     if (input.mode !== 'free') {
@@ -311,7 +311,7 @@ export class ReleaseService {
    */
   public async publish(userId: string, releaseId: string): Promise<Release> {
     await this.access.requireActiveUser(userId);
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
     const artist = await this.db.artists.getById(release.artistId);
 
     if (release.status === 'published') return release;
@@ -349,7 +349,7 @@ export class ReleaseService {
    * @throws ApiError 409 when the release is not published.
    */
   public async archive(userId: string, releaseId: string): Promise<Release> {
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
     if (release.status !== 'published') {
       throw new ApiError(
         ApiErrorKind.Http,
@@ -370,22 +370,25 @@ export class ReleaseService {
     releaseId: string,
     input: { title: string; durationMs?: number | null },
   ): Promise<Track> {
-    const release = await this.requireReleaseManager(userId, releaseId);
-    const tracks = await this.db.releases.listTracks(releaseId);
-    const lastPosition = Math.max(0, ...tracks.map((t) => t.position));
+    const release = await this.access.requireReleaseManager(userId, releaseId);
+    const title = this.validTitle(input.title);
 
-    const track = await this.db.releases.createTrack({
-      artistId: release.artistId,
-      title: this.validTitle(input.title),
-      durationMs: input.durationMs,
+    return this.db.transaction(async (repos) => {
+      const tracks = await repos.releases.listTracks(releaseId);
+      const lastPosition = Math.max(0, ...tracks.map((t) => t.position));
+
+      const track = await repos.releases.createTrack({
+        artistId: release.artistId,
+        title,
+        durationMs: input.durationMs,
+      });
+      await repos.releases.addTrackToRelease(
+        releaseId,
+        track.id,
+        lastPosition + 1,
+      );
+      return track;
     });
-    await this.db.releases.addTrackToRelease(
-      releaseId,
-      track.id,
-      lastPosition + 1,
-    );
-
-    return track;
   }
 
   /**
@@ -396,7 +399,7 @@ export class ReleaseService {
     trackId: string,
     input: TrackInput,
   ): Promise<void> {
-    const track = await this.requireTrackManager(userId, trackId);
+    const track = await this.access.requireTrackManager(userId, trackId);
 
     await this.db.releases.updateTrackById(track.id, {
       title:
@@ -413,7 +416,7 @@ export class ReleaseService {
     releaseId: string,
     trackId: string,
   ): Promise<void> {
-    await this.requireReleaseManager(userId, releaseId);
+    await this.access.requireReleaseManager(userId, releaseId);
     await this.db.releases.removeTrackFromRelease(releaseId, trackId);
   }
 
@@ -428,7 +431,7 @@ export class ReleaseService {
     releaseId: string,
     trackIds: string[],
   ): Promise<void> {
-    await this.requireReleaseManager(userId, releaseId);
+    await this.access.requireReleaseManager(userId, releaseId);
 
     const current = (await this.db.releases.listTracks(releaseId))
       .map((track) => track.trackId)
@@ -459,7 +462,7 @@ export class ReleaseService {
     trackId: string,
     isPreview: boolean,
   ): Promise<void> {
-    await this.requireReleaseManager(userId, releaseId);
+    await this.access.requireReleaseManager(userId, releaseId);
     await this.requireTrackOnRelease(releaseId, trackId);
     await this.db.releases.setTrackPreview(releaseId, trackId, isPreview);
   }
@@ -475,8 +478,8 @@ export class ReleaseService {
     trackId: string,
     contentType: string,
   ): Promise<UploadTarget> {
-    const release = await this.requireReleaseManager(userId, releaseId);
-    await this.requireUploadsAllowed(release.artistId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
+    await this.access.requireUploadsAllowed(release.artistId);
     await this.requireTrackOnRelease(releaseId, trackId);
     if (!TRACK_AUDIO_FORMATS[contentType]) {
       throw new ApiError(
@@ -506,7 +509,7 @@ export class ReleaseService {
     objectKey: string,
     durationMs?: number | null,
   ): Promise<void> {
-    await this.requireReleaseManager(userId, releaseId);
+    await this.access.requireReleaseManager(userId, releaseId);
     await this.requireTrackOnRelease(releaseId, trackId);
 
     const stored = await this.requireUpload(
@@ -528,26 +531,27 @@ export class ReleaseService {
       this.db.releaseAssets.getAudioFile(trackId, 'stream'),
     ]);
 
-    await this.db.releaseAssets.upsertAudioFile({
-      trackId,
-      variant: 'original',
-      format,
-      bucket: this.storage.bucket,
-      objectKey,
-      byteSize: stored.byteSize,
+    await this.db.transaction(async (repos) => {
+      await repos.releaseAssets.upsertAudioFile({
+        trackId,
+        variant: 'original',
+        format,
+        bucket: this.storage.bucket,
+        objectKey,
+        byteSize: stored.byteSize,
+      });
+      if (durationMs !== undefined) {
+        await repos.releases.updateTrackById(trackId, { durationMs });
+      }
+      // the streaming copy was made from the old original
+      if (stream) await repos.releaseAssets.deleteAudioFile(trackId, 'stream');
     });
-    if (durationMs !== undefined) {
-      await this.db.releases.updateTrackById(trackId, { durationMs });
-    }
 
+    // files go only once nothing points at them
     if (previous && previous.objectKey !== objectKey) {
       await this.storage.deleteObject(previous.objectKey);
     }
-    // the streaming copy was made from the old original
-    if (stream) {
-      await this.db.releaseAssets.deleteAudioFile(trackId, 'stream');
-      await this.storage.deleteObject(stream.objectKey);
-    }
+    if (stream) await this.storage.deleteObject(stream.objectKey);
   }
 
   /**
@@ -561,8 +565,8 @@ export class ReleaseService {
     kind: ReleaseAssetKind,
     contentType: string,
   ): Promise<UploadTarget> {
-    const release = await this.requireReleaseManager(userId, releaseId);
-    await this.requireUploadsAllowed(release.artistId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
+    await this.access.requireUploadsAllowed(release.artistId);
     if (!RELEASE_ASSET_RULES[kind].types.includes(contentType)) {
       throw new ApiError(
         ApiErrorKind.Http,
@@ -590,7 +594,7 @@ export class ReleaseService {
     releaseId: string,
     input: AssetInput,
   ): Promise<ReleaseAsset> {
-    await this.requireReleaseManager(userId, releaseId);
+    await this.access.requireReleaseManager(userId, releaseId);
 
     const stored = await this.requireUpload(
       input.objectKey,
@@ -647,7 +651,7 @@ export class ReleaseService {
     assetId: string,
     changes: AssetChanges,
   ): Promise<void> {
-    const asset = await this.requireAssetManager(userId, assetId);
+    const asset = await this.access.requireAssetManager(userId, assetId);
     if (
       changes.requiresPurchase &&
       (asset.kind === 'cover' || asset.kind === 'back_cover')
@@ -668,7 +672,7 @@ export class ReleaseService {
    * @throws ApiError 409 when deleting a published release's cover.
    */
   public async deleteAsset(userId: string, assetId: string): Promise<void> {
-    const asset = await this.requireAssetManager(userId, assetId);
+    const asset = await this.access.requireAssetManager(userId, assetId);
     if (asset.kind === 'cover') {
       const release = await this.db.releases.getById(asset.releaseId);
       if (release?.status === 'published') {
@@ -695,7 +699,7 @@ export class ReleaseService {
     releaseId: string,
     username: string,
   ): Promise<void> {
-    const release = await this.requireReleaseManager(userId, releaseId);
+    const release = await this.access.requireReleaseManager(userId, releaseId);
     if (release.status !== 'published' && release.status !== 'archived') {
       throw new ApiError(
         ApiErrorKind.Http,
@@ -756,75 +760,6 @@ export class ReleaseService {
     }
 
     return missing;
-  }
-
-  private async requireReleaseManager(
-    userId: string,
-    releaseId: string,
-  ): Promise<Release> {
-    const release = await this.db.releases.getById(releaseId);
-    if (!release) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.NotFound,
-        'Release not found.',
-      );
-    }
-    await this.access.requireManager(userId, release.artistId);
-    return release;
-  }
-
-  /**
-   * Uploads pause while an artist is suspended or off sale for unpaid hosting.
-   */
-  private async requireUploadsAllowed(artistId: string): Promise<void> {
-    const artist = await this.db.artists.getById(artistId);
-    if (artist?.suspendedAt) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.Forbidden,
-        'This artist is suspended.',
-      );
-    }
-    if (artist?.offSaleAt) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.Conflict,
-        'Uploads are paused until the hosting balance is topped up.',
-      );
-    }
-  }
-
-  private async requireTrackManager(
-    userId: string,
-    trackId: string,
-  ): Promise<Track> {
-    const track = await this.db.releases.getTrackById(trackId);
-    if (!track) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.NotFound,
-        'Track not found.',
-      );
-    }
-    await this.access.requireManager(userId, track.artistId);
-    return track;
-  }
-
-  private async requireAssetManager(
-    userId: string,
-    assetId: string,
-  ): Promise<ReleaseAsset> {
-    const asset = await this.db.releaseAssets.getAssetById(assetId);
-    if (!asset) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.NotFound,
-        'Asset not found.',
-      );
-    }
-    await this.requireReleaseManager(userId, asset.releaseId);
-    return asset;
   }
 
   private async requireTrackOnRelease(

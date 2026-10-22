@@ -1,25 +1,16 @@
 import { ApiRoute } from '@ime/models';
-import type { AuthService, HealthService } from '@ime/services';
+import type { ImeServices } from '@ime/services';
 import { RootRouter } from './root-router';
 
 const mockPing = vi.fn();
 
-vi.mock('@ime/db', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  // Constructed eagerly down the router graph by ArtistPageService.
-  DatabaseRepository: vi.fn(),
-}));
+const mockServices = {
+  auth: { getUser: vi.fn() },
+  health: { isDatabaseReachable: mockPing },
+  artistPages: { renderRelease: vi.fn() },
+} as unknown as ImeServices;
 
-const mockAuthService = {
-  getUser: vi.fn(),
-} as unknown as AuthService;
-
-const mockHealthService = {
-  isDatabaseReachable: mockPing,
-} as unknown as HealthService;
-
-const createApp = () =>
-  new RootRouter(mockAuthService, mockHealthService).router;
+const createApp = () => new RootRouter(mockServices).router;
 
 afterEach(() => {
   vi.resetAllMocks();

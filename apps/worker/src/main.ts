@@ -1,3 +1,4 @@
+import { ImeServices } from '@ime/services';
 import { Logger } from '@ime/utils';
 import { runDailyJobs } from './daily-jobs';
 import { runTranscoding } from './transcoding';
@@ -7,6 +8,7 @@ import { runTranscoding } from './transcoding';
  * by side, until it is stopped.
  */
 const log = new Logger('worker');
+const services = new ImeServices();
 
 const stop = new AbortController();
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
@@ -16,7 +18,10 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   });
 }
 
-Promise.all([runTranscoding(stop.signal), runDailyJobs(stop.signal)]).then(
+Promise.all([
+  runTranscoding(services.transcode, stop.signal),
+  runDailyJobs(services.fundingJobs, stop.signal),
+]).then(
   () => process.exit(0),
   (error) => {
     log.error('worker crashed', error);

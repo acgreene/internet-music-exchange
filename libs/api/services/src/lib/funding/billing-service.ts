@@ -157,8 +157,10 @@ export class BillingService {
     if (!billing.stripePaymentMethodId) return;
 
     // auto top-up has nothing to charge without a card
-    await this.db.funding.updateSettings(userId, { autoTopUpMode: 'off' });
-    await this.db.funding.setPaymentMethod(userId, null);
+    await this.db.transaction(async (repos) => {
+      await repos.funding.updateSettings(userId, { autoTopUpMode: 'off' });
+      await repos.funding.setPaymentMethod(userId, null);
+    });
     await this.stripe.paymentMethods.detach(billing.stripePaymentMethodId);
   }
 
@@ -481,13 +483,17 @@ export class BillingService {
     if (!billing?.lapsedAt) return;
     if ((await this.db.funding.getBalance(userId)) <= 0) return;
 
-    await this.db.funding.clearLapse(userId);
-    for (const share of await this.db.funding.listSharesPaidBy(userId)) {
-      // another manager sharing the costs may still be lapsed
-      if (await this.funding.isArtistFunded(share.artistId)) {
-        await this.db.funding.putArtistsOnSale([share.artistId]);
+    await this.db.transaction(async (repos) => {
+      await repos.funding.clearLapse(userId);
+      // checked inside the transaction, where this seller is no longer lapsed
+      const funding = new FundingService(repos);
+      for (const share of await repos.funding.listSharesPaidBy(userId)) {
+        // another manager sharing the costs may still be lapsed
+        if (await funding.isArtistFunded(share.artistId)) {
+          await repos.funding.putArtistsOnSale([share.artistId]);
+        }
       }
-    }
-    await this.db.funding.putDesignsOnSale(userId);
+      await repos.funding.putDesignsOnSale(userId);
+    });
   }
 }

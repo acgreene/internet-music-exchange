@@ -34,8 +34,8 @@ const UNPRICED: ArtistPagePrice = {
  */
 export class ArtistPageService {
   constructor(
-    private readonly storage: CloudStorageService = new CloudStorageService(),
     private readonly db: DatabaseRepository = new DatabaseRepository(),
+    private readonly storage: CloudStorageService = new CloudStorageService(),
   ) {}
 
   /**

@@ -1,16 +1,12 @@
-import {
-  DatabaseRepository,
-  type MonthlyUsage,
-  type PlatformCostCategory,
-  type StatementLine,
-} from '@ime/db';
+import { DatabaseRepository, type MonthlyUsage, type PlatformCostCategory, type StatementLine } from '@ime/db';
 import { env } from '@ime/env';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { Logger } from '@ime/utils';
 import { AccessService } from '../access/access-service';
 import { EmailService, fundingEmails } from '../email';
 import { BillingService } from './billing-service';
-import { FundingService, monthSpan } from './funding-service';
+import { FundingService } from './funding-service';
+import { monthSpan } from './month-span';
 
 /**
  * The most any seller pays toward shared costs in a month while there are few
@@ -72,7 +68,9 @@ export class MonthlyCloseService {
   /**
    * Open a month for billing at the provider's rates.
    *
+   * @param adminUserId
    * @param month - The first day of the month, `YYYY-MM-01`.
+   * @param rates
    * @throws ApiError 400 for a date that is not the first of a month.
    */
   public async openMonth(

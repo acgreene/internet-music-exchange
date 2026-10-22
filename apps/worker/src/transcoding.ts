@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from 'node:timers/promises';
-import { TranscodeService } from '@ime/services';
+import type { TranscodeService } from '@ime/services';
 import { Logger } from '@ime/utils';
 
 /** How long to wait before looking again when there is nothing to do. */
@@ -11,8 +11,10 @@ const log = new Logger('worker').child('transcoding');
 /**
  * Make streaming copies of lossless uploads until told to stop.
  */
-export async function runTranscoding(stop: AbortSignal): Promise<void> {
-  const transcoder = new TranscodeService();
+export async function runTranscoding(
+  transcoder: TranscodeService,
+  stop: AbortSignal,
+): Promise<void> {
   // files ffmpeg could not read are skipped until the worker restarts, so a
   // corrupt upload is not retried every few seconds
   const failed = new Set<string>();

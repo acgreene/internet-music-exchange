@@ -1,9 +1,17 @@
-import { type Artist, DatabaseRepository, type User } from '@ime/db';
+import {
+  type Artist,
+  DatabaseRepository,
+  type Release,
+  type ReleaseAsset,
+  type Track,
+  type User,
+} from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 
 /**
  * Permission checks shared by every service: who is acting, whether they may
- * act at all, and whether they may act for a given artist.
+ * act at all, and whether they may act for a given artist or something that
+ * belongs to one.
  */
 export class AccessService {
   constructor(
@@ -74,5 +82,93 @@ export class AccessService {
         'Admins only.',
       );
     }
+  }
+
+  /**
+   * Require that a user manages the artist a release belongs to.
+   *
+   * @throws ApiError 404 when the release does not exist, 403 when the user
+   * does not manage its artist.
+   */
+  public async requireReleaseManager(
+    userId: string,
+    releaseId: string,
+  ): Promise<Release> {
+    const release = await this.db.releases.getById(releaseId);
+    if (!release) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Release not found.',
+      );
+    }
+    await this.requireManager(userId, release.artistId);
+    return release;
+  }
+
+  /**
+   * Require that an artist may upload files: uploads pause while it is
+   * suspended or off sale for unpaid hosting.
+   *
+   * @throws ApiError 403 when suspended, 409 when off sale.
+   */
+  public async requireUploadsAllowed(artistId: string): Promise<void> {
+    const artist = await this.db.artists.getById(artistId);
+    if (artist?.suspendedAt) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Forbidden,
+        'This artist is suspended.',
+      );
+    }
+    if (artist?.offSaleAt) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Conflict,
+        'Uploads are paused until the hosting balance is topped up.',
+      );
+    }
+  }
+
+  /**
+   * Require that a user manages the artist a track belongs to.
+   *
+   * @throws ApiError 404 when the track does not exist, 403 otherwise.
+   */
+  public async requireTrackManager(
+    userId: string,
+    trackId: string,
+  ): Promise<Track> {
+    const track = await this.db.releases.getTrackById(trackId);
+    if (!track) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Track not found.',
+      );
+    }
+    await this.requireManager(userId, track.artistId);
+    return track;
+  }
+
+  /**
+   * Require that a user manages the release an asset belongs to.
+   *
+   * @throws ApiError 404 when the asset does not exist, 403 otherwise.
+   */
+  public async requireAssetManager(
+    userId: string,
+    assetId: string,
+  ): Promise<ReleaseAsset> {
+    const asset = await this.db.releaseAssets.getAssetById(assetId);
+    if (!asset) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Asset not found.',
+      );
+    }
+    await this.requireReleaseManager(userId, asset.releaseId);
+    return asset;
   }
 }

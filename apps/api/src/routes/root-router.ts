@@ -1,5 +1,5 @@
 import { logger } from 'hono/logger';
-import { AuthService, HealthService } from '@ime/services';
+import type { ImeServices } from '@ime/services';
 import { Logger } from '@ime/utils';
 import { UsersRouter } from './users/users-router';
 import { AuthRouter } from './auth';
@@ -9,13 +9,10 @@ import { AbstractRouter } from './abstract-router';
 
 export class RootRouter extends AbstractRouter {
   /**
-   * Owns the single auth service for the process and hands it to every router
-   * that needs one, so all of them — and their auth middleware — share it.
+   * Hands each router the services it needs, all from the one set the
+   * process builds at startup.
    */
-  constructor(
-    private readonly authService = new AuthService(),
-    private readonly healthService = new HealthService(),
-  ) {
+  constructor(private readonly services: ImeServices) {
     super();
     this.register();
   }
@@ -24,16 +21,17 @@ export class RootRouter extends AbstractRouter {
     const httpLog = new Logger('api').child('http');
     this.routes.use(logger((line, ...rest) => httpLog.debug(line, ...rest)));
 
-    const authRouter = new AuthRouter(this.authService).router;
+    const authRouter = new AuthRouter(this.services.auth).router;
     this.routes.route('/', authRouter);
 
-    const healthRouter = new HealthRouter(this.healthService).router;
+    const healthRouter = new HealthRouter(this.services.health).router;
     this.routes.route('/', healthRouter);
 
-    const usersRouter = new UsersRouter(this.authService).router;
+    const usersRouter = new UsersRouter(this.services.auth).router;
     this.routes.route('/', usersRouter);
 
-    const designerPagesRouter = new ArtistPagesRouter().router;
+    const designerPagesRouter = new ArtistPagesRouter(this.services.artistPages)
+      .router;
     this.routes.route('/', designerPagesRouter);
   }
 }
