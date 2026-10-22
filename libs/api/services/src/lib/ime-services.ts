@@ -7,6 +7,7 @@ import { ArtistService } from './artists';
 import { AuthService } from './auth';
 import { CommentService, FollowService } from './community';
 import {
+  DesignGalleryService,
   DesignMarketplaceService,
   DesignService,
   ReleaseDesignService,
@@ -76,6 +77,7 @@ export class ImeServices {
   public readonly comments: CommentService;
   public readonly designs: DesignService;
   public readonly designMarketplace: DesignMarketplaceService;
+  public readonly gallery: DesignGalleryService;
   public readonly releaseDesigns: ReleaseDesignService;
   public readonly reports: ReportService;
   public readonly moderation: ModerationService;
@@ -133,6 +135,7 @@ export class ImeServices {
       gate,
       webAppUrl,
     );
+    this.gallery = new DesignGalleryService(db, storage, email);
     this.releaseDesigns = new ReleaseDesignService(
       db,
       storage,

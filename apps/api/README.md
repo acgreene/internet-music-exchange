@@ -200,6 +200,9 @@ Managers, designers, and owners are checked by the service, which answers 403.
 | GET | `/api/marketplace/designs` | P | `designMarketplace.browse` |
 | GET | `/api/marketplace/search?q=` | P | `designMarketplace.search` |
 | GET | `/api/marketplace/designs/:designId` | P | `designMarketplace.getDesign` |
+| GET | `/api/gallery/designs` | P | `gallery.list` |
+| GET | `/api/gallery/designs/:designId` | P | `gallery.get` |
+| POST | `/api/gallery/designs/:designId/commission` | U | `gallery.requestCommission` |
 | GET | `/api/artists/:artistId/designs` | U | `designMarketplace.listLicensed` |
 | POST | `/api/artists/:artistId/designs/:designId/acquire` | U | `designMarketplace.acquire` |
 | GET | `/api/releases/:releaseId/design` | U | `releaseDesigns.getForRelease` |

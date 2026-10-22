@@ -24,6 +24,7 @@ export * from './fulfillments';
 export * from './designs';
 export * from './design-versions';
 export * from './design-licenses';
+export * from './commission-requests';
 export * from './release-designs';
 export * from './release-design-images';
 export * from './artist-images';

@@ -52,6 +52,7 @@ export class RootRouter extends AbstractRouter {
         services.designs,
         services.designMarketplace,
         services.releaseDesigns,
+        services.gallery,
       ),
       new OrdersRouter(
         guard,

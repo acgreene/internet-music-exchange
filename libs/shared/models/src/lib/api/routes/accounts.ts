@@ -12,6 +12,8 @@ export const publicUserSchema = z.object({
   username: z.string().nullable(),
   name: z.string().nullable(),
   createdAt: timestampSchema,
+  /** A designer who welcomes requests for custom designs. */
+  openToCommissions: z.boolean(),
 });
 
 export type PublicUser = z.infer<typeof publicUserSchema>;
@@ -30,6 +32,7 @@ export type OwnUser = z.infer<typeof ownUserSchema>;
 export const updateProfileRequestSchema = z.object({
   username: z.string().optional(),
   name: z.string().nullable().optional(),
+  openToCommissions: z.boolean().optional(),
 });
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;

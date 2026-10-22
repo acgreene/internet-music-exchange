@@ -303,6 +303,15 @@ export enum ApiRoute {
   /** A public design's marketplace page. */
   MarketplaceDesign = '/api/marketplace/designs/:designId',
 
+  /** Public designs on show to everyone, ready to preview. */
+  GalleryDesigns = '/api/gallery/designs',
+
+  /** One design in the gallery, with releases that use it. */
+  GalleryDesign = '/api/gallery/designs/:designId',
+
+  /** Ask a design's designer for a custom design. */
+  GalleryCommission = '/api/gallery/designs/:designId/commission',
+
   /** The designs an artist holds licenses for. */
   ArtistDesigns = '/api/artists/:artistId/designs',
 

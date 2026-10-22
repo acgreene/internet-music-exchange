@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
   pgPolicy,
   pgTable,
@@ -47,6 +48,9 @@ export const users = pgTable(
 
     /** Set by a platform admin. A suspended user keeps their library but cannot post, publish, or sell. */
     suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+
+    /** A designer who welcomes requests for custom designs. */
+    openToCommissions: boolean('open_to_commissions').notNull().default(false),
   },
   (table) => [
     check(

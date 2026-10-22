@@ -10,6 +10,8 @@ export interface Email {
   to: string;
   subject: string;
   text: string;
+  /** Where replies go, when not to IME. */
+  replyTo?: string;
 }
 
 /**
@@ -43,7 +45,13 @@ export class EmailService {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: this.from, ...email }),
+      body: JSON.stringify({
+        from: this.from,
+        to: email.to,
+        subject: email.subject,
+        text: email.text,
+        reply_to: email.replyTo,
+      }),
     });
     if (!response.ok) {
       throw new Error(

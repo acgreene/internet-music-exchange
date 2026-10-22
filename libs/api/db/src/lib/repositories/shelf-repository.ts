@@ -27,6 +27,7 @@ import {
   products,
   type ProductType,
   productVariants,
+  designVersions,
   releaseDesigns,
   type ReleaseKind,
   releasePricing,
@@ -156,6 +157,34 @@ export class ShelfRepository {
               ),
             ),
         ),
+      ),
+    )
+      .orderBy(desc(releases.publishedAt))
+      .limit(limit);
+  }
+
+  /**
+   * The newest releases that render through a particular design, any version.
+   */
+  public async listUsingDesign(
+    designId: string,
+    limit: number,
+  ): Promise<ShelfRelease[]> {
+    return this.releaseShelf(
+      exists(
+        this.db
+          .select({ id: releaseDesigns.releaseId })
+          .from(releaseDesigns)
+          .innerJoin(
+            designVersions,
+            eq(designVersions.id, releaseDesigns.designVersionId),
+          )
+          .where(
+            and(
+              eq(releaseDesigns.releaseId, releases.id),
+              eq(designVersions.designId, designId),
+            ),
+          ),
       ),
     )
       .orderBy(desc(releases.publishedAt))

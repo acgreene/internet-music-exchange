@@ -45,7 +45,8 @@ Each is a property of `ImeServices`, named in brackets.
   auth middleware, and when a user deletes their account (it refuses while
   they are an artist's only manager).
 - **`UserService`** (`users`): a user's own and public profile, username
-  availability, and editing username and display name. Use it for
+  availability, and editing username, display name, and whether a designer
+  is open to commissions. Use it for
   `/users/<username>` and the profile settings screens.
 - **`ArtistService`** (`artists`): creating artists, their public profile,
   handle, bio, images, links, and managers. Use it for `/artists/<handle>` and
@@ -119,6 +120,10 @@ Each is a property of `ImeServices`, named in brackets.
   the marketplace: browsing and searching public designs, the designs an
   artist holds licenses for, and getting one, free at once or paid on the
   designer's own Stripe checkout. Use it for the marketplace screens.
+- **`DesignGalleryService`** (`gallery`): the public design gallery: every
+  listed design with a short-lived link to preview it, the releases using
+  one, and passing a request for a custom design on to its designer by
+  email, limited so no one floods a designer. Use it for `/designs`.
 - **`ReleaseDesignService`** (`releaseDesigns`): dressing a release in a
   licensed design: applying it, filling in its slots, uploading slot images,
   moving to a newer version, and going back to the default layout. Use it for

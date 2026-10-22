@@ -1,5 +1,6 @@
 import { ApiRoute, HttpMethod } from '@ime/models';
 import type {
+  DesignGalleryService,
   DesignMarketplaceService,
   DesignService,
   ReleaseDesignService,
@@ -8,8 +9,9 @@ import { AbstractRouter } from '../abstract-router';
 import type { RouteGuard } from '../route-guard';
 
 /**
- * Creative pages: designers build and sell designs, artists find and get
- * them on the marketplace, and managers dress their releases in them.
+ * Creative pages: designers build and sell designs, anyone browses and
+ * previews them in the gallery, artists get them on the marketplace, and
+ * managers dress their releases in them.
  */
 export class DesignsRouter extends AbstractRouter {
   constructor(
@@ -17,6 +19,7 @@ export class DesignsRouter extends AbstractRouter {
     private readonly designs: DesignService,
     private readonly marketplace: DesignMarketplaceService,
     private readonly releaseDesigns: ReleaseDesignService,
+    private readonly gallery: DesignGalleryService,
   ) {
     super(guard);
     this.register();
@@ -25,6 +28,7 @@ export class DesignsRouter extends AbstractRouter {
   protected register(): void {
     this.registerDesigner();
     this.registerMarketplace();
+    this.registerGallery();
     this.registerReleaseDesigns();
   }
 
@@ -108,6 +112,27 @@ export class DesignsRouter extends AbstractRouter {
       'user',
       ({ userId, params, body }) =>
         this.designs.grant(userId, params.designId, body.artistHandle),
+    );
+  }
+
+  private registerGallery(): void {
+    this.handle(HttpMethod.Get, ApiRoute.GalleryDesigns, 'public', () =>
+      this.gallery.list(),
+    );
+
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.GalleryDesign,
+      'public',
+      ({ params }) => this.gallery.get(params.designId),
+    );
+
+    this.handle(
+      HttpMethod.Post,
+      ApiRoute.GalleryCommission,
+      'user',
+      ({ userId, params, body }) =>
+        this.gallery.requestCommission(userId, params.designId, body.message),
     );
   }
 

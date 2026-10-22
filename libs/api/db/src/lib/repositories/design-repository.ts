@@ -5,6 +5,7 @@ import {
   eq,
   exists,
   getTableColumns,
+  gte,
   ilike,
   inArray,
   isNotNull,
@@ -15,6 +16,8 @@ import {
 } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
+  artists,
+  commissionRequests,
   type Currency,
   type Design,
   type DesignLicense,
@@ -771,6 +774,73 @@ export class DesignRepository {
       )
       .innerJoin(releases, eq(releases.id, releaseDesigns.releaseId))
       .where(eq(designVersions.designId, designId));
+  }
+
+  /**
+   * How many releases on sale render through each of some designs.
+   *
+   * @param designIds - The designs to count for.
+   * @returns A count per design that has any.
+   */
+  public async countReleasesUsing(
+    designIds: string[],
+  ): Promise<Map<string, number>> {
+    if (designIds.length === 0) return new Map();
+    const rows = await this.db
+      .select({ designId: designVersions.designId, count: count() })
+      .from(releaseDesigns)
+      .innerJoin(
+        designVersions,
+        eq(designVersions.id, releaseDesigns.designVersionId),
+      )
+      .innerJoin(releases, eq(releases.id, releaseDesigns.releaseId))
+      .innerJoin(artists, eq(artists.id, releases.artistId))
+      .where(
+        and(
+          inArray(designVersions.designId, designIds),
+          eq(releases.status, 'published'),
+          isNull(artists.suspendedAt),
+          isNull(artists.offSaleAt),
+        ),
+      )
+      .groupBy(designVersions.designId);
+    return new Map(rows.map((row) => [row.designId, row.count]));
+  }
+
+  /**
+   * Record someone asking a designer for a custom design.
+   */
+  public async addCommissionRequest(params: {
+    designerUserId: string;
+    requesterUserId: string;
+    designId: string | null;
+    message: string;
+  }): Promise<void> {
+    await this.db.insert(commissionRequests).values(params);
+  }
+
+  /**
+   * How many commission requests someone has sent since a moment, to anyone
+   * or to one designer.
+   */
+  public async countCommissionRequestsSince(
+    requesterUserId: string,
+    since: Date,
+    designerUserId?: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ count: count() })
+      .from(commissionRequests)
+      .where(
+        and(
+          eq(commissionRequests.requesterUserId, requesterUserId),
+          gte(commissionRequests.createdAt, since),
+          designerUserId === undefined
+            ? undefined
+            : eq(commissionRequests.designerUserId, designerUserId),
+        ),
+      );
+    return row?.count ?? 0;
   }
 
   /**

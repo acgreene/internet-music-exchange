@@ -9,6 +9,7 @@ import {
   uploadTargetSchema,
 } from '../general';
 import { HttpMethod } from '../http-method';
+import { shelfItemSchema } from './catalog';
 import {
   currencySchema,
   pricingModeSchema,
@@ -119,6 +120,42 @@ export const marketplaceDesignSchema = z.object({
 });
 
 export type MarketplaceDesignResponse = z.infer<typeof marketplaceDesignSchema>;
+
+/**
+ * A design as the public gallery shows it, with what is needed to preview it
+ * with stand-in content.
+ */
+export const galleryDesignSchema = z.object({
+  design: designSummarySchema,
+  /** Who made it. Null when the designer has left IME. */
+  designer: z
+    .object({
+      username: z.string().nullable(),
+      name: z.string().nullable(),
+      openToCommissions: z.boolean(),
+    })
+    .nullable(),
+  slots: z.array(designSlotSchema),
+  /** A short-lived link to its latest version, to render the preview. */
+  bundleUrl: z.string(),
+  /** How many releases on sale use it. */
+  releaseCount: z.number().int(),
+});
+
+export type GalleryDesign = z.infer<typeof galleryDesignSchema>;
+
+/**
+ * A design's gallery page: the design, and releases that use it.
+ */
+export const galleryDesignPageSchema = galleryDesignSchema.extend({
+  releases: z.array(shelfItemSchema),
+});
+
+export type GalleryDesignPage = z.infer<typeof galleryDesignPageSchema>;
+
+export const commissionRequestSchema = z.object({ message: z.string() });
+
+export type CommissionRequest = z.infer<typeof commissionRequestSchema>;
 
 /**
  * How getting a design went: licensed at once, or a payment to make on the
@@ -270,6 +307,18 @@ export const designContracts = {
   },
   [ApiRoute.MarketplaceDesign]: {
     [HttpMethod.Get]: { response: marketplaceDesignSchema },
+  },
+  [ApiRoute.GalleryDesigns]: {
+    [HttpMethod.Get]: { response: z.array(galleryDesignSchema) },
+  },
+  [ApiRoute.GalleryDesign]: {
+    [HttpMethod.Get]: { response: galleryDesignPageSchema },
+  },
+  [ApiRoute.GalleryCommission]: {
+    [HttpMethod.Post]: {
+      request: commissionRequestSchema,
+      response: ackSchema,
+    },
   },
   [ApiRoute.ArtistDesigns]: {
     [HttpMethod.Get]: { response: z.array(designSummarySchema) },

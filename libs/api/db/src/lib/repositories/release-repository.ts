@@ -1,13 +1,4 @@
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  exists,
-  isNull,
-  ne,
-  sql,
-} from 'drizzle-orm';
+import { and, asc, desc, eq, exists, isNull, ne, sql } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
   artists,

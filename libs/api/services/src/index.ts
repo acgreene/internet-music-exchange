@@ -89,6 +89,7 @@ export type {
   DesignVersionInput,
   ManagedDesign,
 } from './lib/designs/design-service';
+export type { DesignGalleryService } from './lib/designs/design-gallery-service';
 export type {
   DesignAcquisition,
   DesignMarketplaceService,

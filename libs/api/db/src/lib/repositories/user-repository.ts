@@ -6,6 +6,7 @@ import { type User, users } from '../tables';
 export interface UpdateUserParams {
   username?: string | null;
   name?: string | null;
+  openToCommissions?: boolean;
 }
 
 const DEFAULT_SEARCH_LIMIT = 20;

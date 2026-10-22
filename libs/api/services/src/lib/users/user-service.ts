@@ -12,6 +12,8 @@ const NAME_MAX_LENGTH = 100;
 export interface UpdateProfileParams {
   username?: string;
   name?: string | null;
+  /** Whether the user, as a designer, welcomes custom design requests. */
+  openToCommissions?: boolean;
 }
 
 /**
@@ -77,7 +79,7 @@ export class UserService {
   }
 
   /**
-   * Change a user's username or display name.
+   * Change a user's username, display name, or openness to commissions.
    *
    * @throws ApiError 400 for a malformed username or overlong name, 409 when
    * the username is taken.
@@ -109,6 +111,7 @@ export class UserService {
       await this.db.users.updateById(userId, {
         username: params.username,
         name,
+        openToCommissions: params.openToCommissions,
       });
     } catch (error) {
       if (getPostgresErrorCode(error) === PostgresErrorCode.UniqueViolation) {
