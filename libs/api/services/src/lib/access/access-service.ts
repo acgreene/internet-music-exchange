@@ -1,6 +1,9 @@
 import {
   type Artist,
   DatabaseRepository,
+  type Product,
+  type ProductImage,
+  type ProductVariant,
   type Release,
   type ReleaseAsset,
   type Track,
@@ -170,5 +173,68 @@ export class AccessService {
     }
     await this.requireReleaseManager(userId, asset.releaseId);
     return asset;
+  }
+
+  /**
+   * Require that a user manages the artist a product belongs to.
+   *
+   * @throws ApiError 404 when the product does not exist, 403 otherwise.
+   */
+  public async requireProductManager(
+    userId: string,
+    productId: string,
+  ): Promise<Product> {
+    const product = await this.db.products.getById(productId);
+    if (!product) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Product not found.',
+      );
+    }
+    await this.requireManager(userId, product.artistId);
+    return product;
+  }
+
+  /**
+   * Require that a user manages the product a variant belongs to.
+   *
+   * @throws ApiError 404 when the variant does not exist, 403 otherwise.
+   */
+  public async requireVariantManager(
+    userId: string,
+    variantId: string,
+  ): Promise<{ variant: ProductVariant; product: Product }> {
+    const variant = await this.db.products.getVariantById(variantId);
+    if (!variant) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Variant not found.',
+      );
+    }
+    const product = await this.requireProductManager(userId, variant.productId);
+    return { variant, product };
+  }
+
+  /**
+   * Require that a user manages the product a gallery photo belongs to.
+   *
+   * @throws ApiError 404 when the image does not exist, 403 otherwise.
+   */
+  public async requireProductImageManager(
+    userId: string,
+    imageId: string,
+  ): Promise<ProductImage> {
+    const image = await this.db.products.getImageById(imageId);
+    if (!image) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Image not found.',
+      );
+    }
+    await this.requireProductManager(userId, image.productId);
+    return image;
   }
 }

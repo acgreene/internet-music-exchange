@@ -63,6 +63,16 @@ Each is a property of `ImeServices`, named in brackets.
   release data, the artist's customization, and a signed link to the design
   bundle. Use it when the web or mobile app shows a designed release page.
 
+### Merch
+
+- **`ProductService`** (`products`): a manager's side of merch: products and
+  their option axes, variants with price and stock, photos, per-zone shipping
+  rates, publishing, and archiving. Use it for every screen where an artist
+  builds or restocks merch.
+- **`StoreService`** (`store`): a listener's side of merch: an artist's store,
+  a release's physical editions, and product pages. Use it for anything a
+  listener browses before adding merch to the cart.
+
 ### Getting paid and funding
 
 - **`PaymentAccountService`** (`paymentAccounts`): sellers' Stripe Connect
@@ -114,6 +124,12 @@ are internal.
   read links, uploads, and deletes.
 - **`EmailService`**: transactional email through Resend, logged instead of
   sent when no `RESEND_API_KEY` is set.
+- **`UploadService`**: direct uploads. Hands out a key under a prefix the
+  caller owns and confirms what was uploaded against that kind of file's
+  rules in `storage/media-types.ts`.
+- **`SellingGateService`**: what an artist needs before something goes on
+  sale: funded hosting, and for anything paid, a payment account that can take
+  charges in its currency. Checked when publishing and at checkout.
 
 ## Conventions
 

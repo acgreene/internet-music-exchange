@@ -232,6 +232,40 @@ export class ProductRepository {
   }
 
   /**
+   * Find a variant by its id.
+   *
+   * @param variantId - The id of the variant to look up.
+   * @returns The variant row, or null when no variant has that id.
+   */
+  public async getVariantById(
+    variantId: string,
+  ): Promise<ProductVariant | null> {
+    const [variant] = await this.db
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.id, variantId))
+      .limit(1);
+
+    return variant ?? null;
+  }
+
+  /**
+   * Find a gallery photo by its id.
+   *
+   * @param imageId - The id of the image to look up.
+   * @returns The image row, or null when no image has that id.
+   */
+  public async getImageById(imageId: string): Promise<ProductImage | null> {
+    const [image] = await this.db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.id, imageId))
+      .limit(1);
+
+    return image ?? null;
+  }
+
+  /**
    * List a product's buyable variants.
    *
    * @param productId - The id of the product whose variants to list.

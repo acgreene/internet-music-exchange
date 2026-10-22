@@ -16,8 +16,10 @@ import {
   PublicCostsService,
 } from './funding';
 import { HealthService } from './health';
+import { ProductService, StoreService } from './merch';
 import { PaymentAccountService } from './payments';
 import { CatalogService, ReleaseService } from './releases';
+import { SellingGateService } from './selling';
 import { CloudStorageService, UploadService } from './storage';
 import { TranscodeService } from './transcoding';
 import { UserService } from './users';
@@ -46,6 +48,8 @@ export class ImeServices {
   public readonly releases: ReleaseService;
   public readonly catalog: CatalogService;
   public readonly artistPages: ArtistPageService;
+  public readonly products: ProductService;
+  public readonly store: StoreService;
   public readonly paymentAccounts: PaymentAccountService;
   public readonly billing: BillingService;
   public readonly costShares: CostShareService;
@@ -66,14 +70,17 @@ export class ImeServices {
     const access = new AccessService(db);
     const funding = new FundingService(db);
     const uploads = new UploadService(storage);
+    const gate = new SellingGateService(db, funding);
     const webAppUrl = env.WEB_APP_URL;
 
     this.auth = new AuthService(db);
     this.users = new UserService(db);
     this.artists = new ArtistService(db, storage, access);
-    this.releases = new ReleaseService(db, storage, access, funding, uploads);
+    this.releases = new ReleaseService(db, storage, access, gate, uploads);
     this.catalog = new CatalogService(db, storage);
     this.artistPages = new ArtistPageService(db, storage);
+    this.products = new ProductService(db, storage, access, gate, uploads);
+    this.store = new StoreService(db, storage);
 
     this.paymentAccounts = new PaymentAccountService(
       db,

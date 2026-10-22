@@ -37,6 +37,25 @@ export type {
 } from './lib/releases/catalog-service';
 export type { ArtistPageService } from './lib/artist-pages/artist-page-service';
 
+// Merch
+export type {
+  CreateProductInput,
+  ManagedProduct,
+  ProductImageChanges,
+  ProductImageInput,
+  ProductService,
+  ShippingRateInput,
+  UpdateProductInput,
+  VariantChanges,
+  VariantInput,
+} from './lib/merch/product-service';
+export type {
+  ProductPage,
+  StoreItem,
+  StoreService,
+  StoreVariant,
+} from './lib/merch/store-service';
+
 // Getting paid and funding
 export { STRIPE_DASHBOARD_URL } from './lib/payments/payment-account-service';
 export type {

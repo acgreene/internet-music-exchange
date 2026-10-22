@@ -12,7 +12,7 @@ import {
 } from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
-import { FundingService } from '../funding';
+import { SellingGateService } from '../selling';
 import {
   firstAvailable,
   isValidSlug,
@@ -84,7 +84,7 @@ export class ReleaseService {
     private readonly db: DatabaseRepository = new DatabaseRepository(),
     private readonly storage: CloudStorageService = new CloudStorageService(),
     private readonly access: AccessService = new AccessService(db),
-    private readonly funding: FundingService = new FundingService(db),
+    private readonly gate: SellingGateService = new SellingGateService(db),
     private readonly uploads: UploadService = new UploadService(storage),
   ) {}
 
@@ -707,23 +707,14 @@ export class ReleaseService {
     }
     if (!cover) missing.push('upload cover art');
 
-    if (!pricing) {
-      missing.push('set a price');
-    } else if (pricing.mode !== 'free') {
-      const account = await this.db.payments.getAccountByArtistId(
+    if (!pricing) missing.push('set a price');
+
+    missing.push(
+      ...(await this.gate.missingToSell(
         release.artistId,
-      );
-      if (!account?.chargesEnabled) {
-        missing.push('finish setting up your payment account');
-      } else if (account.defaultCurrency !== pricing.currency) {
-        missing.push('set the price again in your selling currency');
-      }
-    }
-
-    if (!(await this.funding.isArtistFunded(release.artistId))) {
-      missing.push("top up the artist's hosting balance");
-    }
-
+        pricing?.currency ?? null,
+      )),
+    );
     return missing;
   }
 

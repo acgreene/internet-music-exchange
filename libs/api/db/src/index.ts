@@ -9,3 +9,10 @@ export * from './lib/postgres-error-code';
  * object and not have to recall all the individual repositories.
  */
 export * from './lib/database-repository';
+
+/**
+ * The shapes repository queries return, as types only, so services can name
+ * them. Checkout also needs to catch the stock error by class.
+ */
+export type * from './lib/repositories';
+export { InsufficientStockError } from './lib/repositories/order-repository';
