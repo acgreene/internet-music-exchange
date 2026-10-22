@@ -302,8 +302,9 @@ export class CrateRepository {
   }
 
   /**
-   * Releases kept by the people who kept any of some seed releases, with how
-   * many such people kept each.
+   * Releases kept by the people who kept any of some seed releases, scored
+   * by how many such people kept each against how many keep it at all, so a
+   * record everyone keeps does not crowd out a kindred one.
    */
   public async scoreKeptAlongside(
     seedIds: string[],
@@ -314,11 +315,20 @@ export class CrateRepository {
       sql`, `,
     );
     const rows = await this.db.execute<{ release_id: string; score: number }>(
-      sql`select theirs.release_id, count(distinct theirs.user_id)::int as score
-          from ${entitlements} mine
-          join ${entitlements} theirs on theirs.user_id = mine.user_id
-          where mine.release_id in (${seeds}) and theirs.release_id not in (${seeds})
-          group by theirs.release_id
+      sql`select shared.release_id,
+            shared.keepers / sqrt(totals.keepers)::float as score
+          from (
+            select theirs.release_id, count(distinct theirs.user_id) as keepers
+            from ${entitlements} mine
+            join ${entitlements} theirs on theirs.user_id = mine.user_id
+            where mine.release_id in (${seeds}) and theirs.release_id not in (${seeds})
+            group by theirs.release_id
+          ) shared
+          join (
+            select release_id, count(distinct user_id) as keepers
+            from ${entitlements}
+            group by release_id
+          ) totals on totals.release_id = shared.release_id
           order by score desc
           limit ${limit}`,
     );
