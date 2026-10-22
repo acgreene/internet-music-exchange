@@ -585,6 +585,12 @@ export const words = {
     return `${sentence} ${random.pick(BIO_CLOSERS)}`.trim();
   },
 
+  /** Where an artist is based: usually a city, sometimes only a country. */
+  place(random: Random): { city: string | null; country: string } {
+    const [city, , country] = random.pick(CITIES);
+    return { city: random.chance(0.85) ? city : null, country };
+  },
+
   comment: (random: Random) => random.pick(COMMENTS),
   reportNote: (random: Random) => random.pick(REPORT_NOTES),
 

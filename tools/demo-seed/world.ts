@@ -66,8 +66,9 @@ function monthStart(now: Date, offset: number): Date {
  */
 export function buildWorld(options: WorldOptions) {
   const random = new Random(20261022);
-  // its own source, so adding sound to the world leaves the rest of it as it was
+  // their own sources, so adding sound and places leaves the rest as it was
   const sound = new Random(5010);
+  const places = new Random(7311);
 
   /** A release's genres, tags, and sides, from its artist's scene. */
   const soundOf = (scene: Scene, kind: string, trackCount: number) => {
@@ -254,6 +255,9 @@ export function buildWorld(options: WorldOptions) {
       name: artist.name,
       handle: artist.handle,
       bio: random.chance(0.85) ? words.bio(random, artist.scene) : null,
+      ...(places.chance(0.9)
+        ? words.place(places)
+        : { city: null, country: null }),
       createdAt: artist.joinedAt,
       suspendedAt:
         artist === suspendedArtist ? new Date(now.getTime() - 9 * DAY) : null,
