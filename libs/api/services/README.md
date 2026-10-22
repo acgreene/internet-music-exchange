@@ -59,9 +59,10 @@ Each is a property of `ImeServices`, named in brackets.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release pages, browsing
   and search, the feed of followed artists, the library, and the URLs that stream, download, and open
   assets. Use it for anything a listener sees or plays.
-- **`ArtistPageService`** (`artistPages`): renders a release through its creative-page design:
-  release data, the artist's customization, and a signed link to the design
-  bundle. Use it when the web or mobile app shows a designed release page.
+- **`ArtistPageService`** (`artistPages`): what a client needs to render a
+  release page: the release data with its cover, and when the artist applied
+  a design, a signed link to its bundle and their slot values with images as
+  signed links. Without a design, the client shows the default layout.
 
 ### Merch
 
@@ -94,6 +95,21 @@ Each is a property of `ImeServices`, named in brackets.
 - **`CommentService`** (`comments`): comments on releases: reading, posting,
   editing your own, and deleting your own or, as a manager, any on your
   artist's releases. Use it for a release page's comments.
+
+### Creative pages
+
+- **`DesignService`** (`designs`): a designer's side: creating designs,
+  uploading versions with their slots, pricing, publishing, archiving,
+  granting private designs to artists, usage per version, and sales. Use it
+  for the designer screens.
+- **`DesignMarketplaceService`** (`designMarketplace`): an artist's side of
+  the marketplace: browsing and searching public designs, the designs an
+  artist holds licenses for, and getting one, free at once or paid on the
+  designer's own Stripe checkout. Use it for the marketplace screens.
+- **`ReleaseDesignService`** (`releaseDesigns`): dressing a release in a
+  licensed design: applying it, filling in its slots, uploading slot images,
+  moving to a newer version, and going back to the default layout. Use it for
+  a release's design editor.
 
 ### Getting paid and funding
 

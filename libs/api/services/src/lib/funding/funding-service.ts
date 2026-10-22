@@ -19,12 +19,19 @@ export class FundingService {
     if (shares.length === 0) return false;
 
     for (const share of shares) {
-      const billing = await this.db.funding.getBilling(share.userId);
-      if (!billing?.stripePaymentMethodId || billing.lapsedAt) return false;
-      if ((await this.db.funding.getBalance(share.userId)) <= 0) return false;
+      if (!(await this.isSellerFunded(share.userId))) return false;
     }
-
     return true;
+  }
+
+  /**
+   * Report whether a seller is paid up: a card on file, a positive balance,
+   * and no lapse. A designer needs this to publish a design.
+   */
+  public async isSellerFunded(userId: string): Promise<boolean> {
+    const billing = await this.db.funding.getBilling(userId);
+    if (!billing?.stripePaymentMethodId || billing.lapsedAt) return false;
+    return (await this.db.funding.getBalance(userId)) > 0;
   }
 
   /**

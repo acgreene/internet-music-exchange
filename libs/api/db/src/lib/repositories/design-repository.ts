@@ -6,6 +6,7 @@ import {
   exists,
   getTableColumns,
   ilike,
+  inArray,
   isNotNull,
   isNull,
   max,
@@ -29,6 +30,7 @@ import {
   type ReleaseDesignImage,
   releaseDesignImages,
   releaseDesigns,
+  releases,
 } from '../tables';
 
 /**
@@ -542,7 +544,8 @@ export class DesignRepository {
    * artist can no longer use the design.
    *
    * @param stripePaymentIntentId - The payment that was refunded.
-   * @returns The refunded license, or null when no license matches.
+   * @returns The refunded license, or null when no license matches or it was
+   *   already refunded.
    */
   public async markRefunded(
     stripePaymentIntentId: string,
@@ -550,7 +553,13 @@ export class DesignRepository {
     const [license] = await this.db
       .update(designLicenses)
       .set({ refundedAt: new Date() })
-      .where(eq(designLicenses.stripePaymentIntentId, stripePaymentIntentId))
+      .where(
+        and(
+          eq(designLicenses.stripePaymentIntentId, stripePaymentIntentId),
+          // a refund's effects apply once
+          isNull(designLicenses.refundedAt),
+        ),
+      )
       .returning();
 
     return license ?? null;
@@ -720,5 +729,100 @@ export class DesignRepository {
       .returning();
 
     return image ?? null;
+  }
+
+  /**
+   * Find a slot image by its id.
+   *
+   * @param imageId - The id of the image.
+   * @returns The image row, or null when there is none.
+   */
+  public async getReleaseDesignImage(
+    imageId: string,
+  ): Promise<ReleaseDesignImage | null> {
+    const [image] = await this.db
+      .select()
+      .from(releaseDesignImages)
+      .where(eq(releaseDesignImages.id, imageId))
+      .limit(1);
+
+    return image ?? null;
+  }
+
+  /**
+   * List the releases rendering with any version of a design.
+   *
+   * @param designId - The id of the design.
+   * @returns Each release with its artist and title.
+   */
+  public async listReleasesUsingDesign(
+    designId: string,
+  ): Promise<{ releaseId: string; artistId: string; title: string }[]> {
+    return this.db
+      .select({
+        releaseId: releases.id,
+        artistId: releases.artistId,
+        title: releases.title,
+      })
+      .from(releaseDesigns)
+      .innerJoin(
+        designVersions,
+        eq(designVersions.id, releaseDesigns.designVersionId),
+      )
+      .innerJoin(releases, eq(releases.id, releaseDesigns.releaseId))
+      .where(eq(designVersions.designId, designId));
+  }
+
+  /**
+   * Return an artist's releases that use a design to the default layout, as
+   * when the artist's license for it is refunded.
+   *
+   * @param designId - The id of the design.
+   * @param artistId - The id of the artist.
+   */
+  public async clearDesignFromArtist(
+    designId: string,
+    artistId: string,
+  ): Promise<void> {
+    await this.db
+      .delete(releaseDesigns)
+      .where(
+        and(
+          inArray(
+            releaseDesigns.releaseId,
+            this.db
+              .select({ id: releases.id })
+              .from(releases)
+              .where(eq(releases.artistId, artistId)),
+          ),
+          inArray(
+            releaseDesigns.designVersionId,
+            this.db
+              .select({ id: designVersions.id })
+              .from(designVersions)
+              .where(eq(designVersions.designId, designId)),
+          ),
+        ),
+      );
+  }
+
+  /**
+   * List the paid licenses of a design that have not been refunded, as when
+   * refunding everyone who bought a design that was taken down.
+   *
+   * @param designId - The id of the design.
+   * @returns The license rows.
+   */
+  public async listPaidLicenses(designId: string): Promise<DesignLicense[]> {
+    return this.db
+      .select()
+      .from(designLicenses)
+      .where(
+        and(
+          eq(designLicenses.designId, designId),
+          eq(designLicenses.source, 'purchase'),
+          isNull(designLicenses.refundedAt),
+        ),
+      );
   }
 }

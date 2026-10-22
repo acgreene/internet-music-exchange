@@ -6,6 +6,11 @@ import { ArtistPageService } from './artist-pages';
 import { ArtistService } from './artists';
 import { AuthService } from './auth';
 import { CommentService, FollowService } from './community';
+import {
+  DesignMarketplaceService,
+  DesignService,
+  ReleaseDesignService,
+} from './designs';
 import { EmailService } from './email';
 import {
   BillingService,
@@ -57,6 +62,9 @@ export class ImeServices {
   public readonly sales: SalesService;
   public readonly follows: FollowService;
   public readonly comments: CommentService;
+  public readonly designs: DesignService;
+  public readonly designMarketplace: DesignMarketplaceService;
+  public readonly releaseDesigns: ReleaseDesignService;
   public readonly paymentAccounts: PaymentAccountService;
   public readonly billing: BillingService;
   public readonly costShares: CostShareService;
@@ -100,6 +108,20 @@ export class ImeServices {
     this.sales = new SalesService(db, stripe, access, email, webAppUrl);
     this.follows = new FollowService(db, access);
     this.comments = new CommentService(db, access);
+    this.designs = new DesignService(db, storage, access, gate, uploads);
+    this.designMarketplace = new DesignMarketplaceService(
+      db,
+      stripe,
+      access,
+      gate,
+      webAppUrl,
+    );
+    this.releaseDesigns = new ReleaseDesignService(
+      db,
+      storage,
+      access,
+      uploads,
+    );
     this.billing = new BillingService(db, stripe, funding);
     this.costShares = new CostShareService(db, access);
     this.donations = new DonationService(db, stripe, webAppUrl);
@@ -120,6 +142,7 @@ export class ImeServices {
       this.paymentAccounts,
       this.checkout,
       this.sales,
+      this.designMarketplace,
     );
 
     this.fundingJobs = new FundingJobsService(db, storage, email, webAppUrl);

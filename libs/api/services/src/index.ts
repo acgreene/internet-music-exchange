@@ -80,6 +80,25 @@ export { COMMENT_MAX_LENGTH } from './lib/community/comment-service';
 export type { CommentService } from './lib/community/comment-service';
 export type { FollowService } from './lib/community/follow-service';
 
+// Creative pages
+export type {
+  CreateDesignInput,
+  DesignChanges,
+  DesignService,
+  DesignVersionInput,
+  ManagedDesign,
+} from './lib/designs/design-service';
+export type {
+  DesignAcquisition,
+  DesignMarketplaceService,
+  MarketplaceDesign,
+} from './lib/designs/design-marketplace-service';
+export type {
+  ManagedReleaseDesign,
+  ReleaseDesignService,
+  SlotImage,
+} from './lib/designs/release-design-service';
+
 // Getting paid and funding
 export { STRIPE_DASHBOARD_URL } from './lib/payments/payment-account-service';
 export type {

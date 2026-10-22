@@ -711,7 +711,7 @@ export class ReleaseService {
 
     missing.push(
       ...(await this.gate.missingToSell(
-        release.artistId,
+        { artistId: release.artistId },
         pricing?.currency ?? null,
       )),
     );

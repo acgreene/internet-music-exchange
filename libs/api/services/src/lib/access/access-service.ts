@@ -1,6 +1,7 @@
 import {
   type Artist,
   DatabaseRepository,
+  type Design,
   type Product,
   type ProductImage,
   type ProductVariant,
@@ -236,5 +237,33 @@ export class AccessService {
     }
     await this.requireProductManager(userId, image.productId);
     return image;
+  }
+
+  /**
+   * Require that a user is the designer of a design.
+   *
+   * @throws ApiError 404 when the design does not exist, 403 when it is
+   * someone else's.
+   */
+  public async requireDesigner(
+    userId: string,
+    designId: string,
+  ): Promise<Design> {
+    const design = await this.db.designs.getById(designId);
+    if (!design) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.NotFound,
+        'Design not found.',
+      );
+    }
+    if (design.designerUserId !== userId) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Forbidden,
+        'You did not make this design.',
+      );
+    }
+    return design;
   }
 }

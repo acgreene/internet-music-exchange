@@ -1,4 +1,4 @@
-import { DatabaseRepository } from '@ime/db';
+import { DatabaseRepository, type ReleaseDesignDetails } from '@ime/db';
 import {
   ApiError,
   ApiErrorKind,
@@ -9,15 +9,8 @@ import {
 } from '@ime/models';
 import { CloudStorageService } from '../storage';
 
-/** The design a release falls back to until its artist picks one. */
-export const TRACER_DESIGN_BUNDLE_KEY = 'tracer/sample-design/index.html';
-
-/** The slot values that go with the fallback design. */
-const TRACER_DESIGN_CUSTOMIZATION: ArtistPageCustomization = {
-  tagline: 'pressed for the internet music exchange',
-};
-
-const BUNDLE_URL_EXPIRY_SECONDS = 300;
+/** Long enough to load the page, short enough that a leaked link soon dies. */
+const URL_EXPIRY_SECONDS = 300;
 
 /** A release with no pricing row still has to render as something. */
 const UNPRICED: ArtistPagePrice = {
@@ -28,9 +21,13 @@ const UNPRICED: ArtistPagePrice = {
 };
 
 /**
- * Assembles what a client needs to render a release as a designer page: the
- * release data, the artist's customization, and a short-lived URL to the design
- * bundle in object storage.
+ * Assembles what a client needs to render a release page: the release data,
+ * and when the artist applied a design, a short-lived URL to its bundle and
+ * their slot values. A release without a design renders in the default
+ * layout.
+ *
+ * A design is third-party code, so it receives only what is mapped here:
+ * never database rows, and every file through a signed URL.
  */
 export class ArtistPageService {
   constructor(
@@ -62,25 +59,21 @@ export class ArtistPageService {
       );
     }
 
-    const [trackRows, pricing, design] = await Promise.all([
+    const [trackRows, pricing, cover, design] = await Promise.all([
       this.db.releases.listTracks(releaseId),
       this.db.releases.getPricing(releaseId),
+      this.db.releaseAssets.getCover(releaseId),
       this.db.designs.getReleaseDesign(releaseId),
     ]);
 
-    const bundleUrl = await this.storage.getObjectSignedUrl(
-      design?.objectKey ?? TRACER_DESIGN_BUNDLE_KEY,
-      BUNDLE_URL_EXPIRY_SECONDS,
-    );
-
     return {
-      bundleUrl,
+      bundleUrl: design ? await this.signedUrl(design.objectKey) : null,
       payload: {
         release: {
           id: release.id,
           title: release.title,
           artistName: release.artistName,
-          // Mapped field by field so database columns never reach the design.
+          coverUrl: cover ? await this.signedUrl(cover.objectKey) : null,
           tracks: trackRows.map((track) => ({
             position: track.position,
             title: track.title,
@@ -95,8 +88,34 @@ export class ArtistPageService {
               }
             : UNPRICED,
         },
-        customization: design?.customization ?? TRACER_DESIGN_CUSTOMIZATION,
+        customization: design ? await this.customization(design) : {},
       },
     };
+  }
+
+  /**
+   * The artist's slot values as the design reads them: text as written, and
+   * each image slot's uploaded image as a signed URL. Values for slots the
+   * version does not have are left out.
+   */
+  private async customization(
+    design: ReleaseDesignDetails,
+  ): Promise<ArtistPageCustomization> {
+    const values: ArtistPageCustomization = {};
+    for (const slot of design.slots) {
+      const value = design.customization[slot.name];
+      if (value === undefined) continue;
+      if (slot.kind === 'text') {
+        values[slot.name] = value;
+        continue;
+      }
+      const image = await this.db.designs.getReleaseDesignImage(value);
+      if (image) values[slot.name] = await this.signedUrl(image.objectKey);
+    }
+    return values;
+  }
+
+  private signedUrl(objectKey: string): Promise<string> {
+    return this.storage.getObjectSignedUrl(objectKey, URL_EXPIRY_SECONDS);
   }
 }

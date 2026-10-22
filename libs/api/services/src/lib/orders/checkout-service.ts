@@ -460,7 +460,7 @@ export class CheckoutService {
       !payout ||
       !currency ||
       lines.some((line) => line.currency !== currency) ||
-      !(await this.gate.canSell(artistId, currency))
+      !(await this.gate.canSell({ artistId }, currency))
     ) {
       throw new ApiError(
         ApiErrorKind.Http,

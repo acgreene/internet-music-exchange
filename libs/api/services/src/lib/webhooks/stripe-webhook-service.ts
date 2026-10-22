@@ -8,13 +8,14 @@ import {
   DonationService,
   TOP_UP_PURPOSE,
 } from '../funding';
+import { DesignMarketplaceService } from '../designs';
 import { CheckoutService, SalesService } from '../orders';
 import { PaymentAccountService } from '../payments';
 
 /**
  * Stripe's webhooks, one route each: the platform's own account (top-ups,
  * card fees, gifts) and sellers' connected accounts (their status, and the
- * sales, refunds, and disputes paid on them).
+ * sales, design purchases, refunds, and disputes paid on them).
  *
  * Every handler is safe to repeat, so an event is handled first and claimed
  * after: a failure leaves it unclaimed for Stripe to retry, and a repeat
@@ -39,6 +40,10 @@ export class StripeWebhookService {
       stripe,
     ),
     private readonly sales: SalesService = new SalesService(db, stripe),
+    private readonly designs: DesignMarketplaceService = new DesignMarketplaceService(
+      db,
+      stripe,
+    ),
     private readonly platformSecret: string = env.STRIPE_WEBHOOK_SECRET,
     private readonly connectSecret: string = env.STRIPE_CONNECT_WEBHOOK_SECRET,
   ) {}
@@ -106,6 +111,7 @@ export class StripeWebhookService {
       event.account
     ) {
       await this.checkout.recordPaidSession(event.data.object, event.account);
+      await this.designs.recordPaidSession(event.data.object);
     }
     // a refund from IME or from the seller's own Stripe dashboard
     if (event.type === 'charge.refunded' && event.data.object.refunded) {
@@ -123,9 +129,11 @@ export class StripeWebhookService {
     paymentIntent: string | Stripe.PaymentIntent | null,
   ): Promise<void> {
     if (!paymentIntent) return;
-    await this.sales.recordRefund(
-      typeof paymentIntent === 'string' ? paymentIntent : paymentIntent.id,
-    );
+    const id =
+      typeof paymentIntent === 'string' ? paymentIntent : paymentIntent.id;
+    // a payment is either a sale or a design purchase; the other ignores it
+    await this.sales.recordRefund(id);
+    await this.designs.recordRefund(id);
   }
 
   private async handle(

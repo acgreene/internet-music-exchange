@@ -21,11 +21,16 @@ export interface ArtistPageRelease {
   id: string;
   title: string;
   artistName: string;
+  /** Signed URL to the cover art. Every design shows it. */
+  coverUrl: string | null;
   tracks: ArtistPageTrack[];
   price: ArtistPagePrice;
 }
 
-/** Text and asset URL overrides */
+/**
+ * The artist's slot values, keyed by slot name: the text of a text slot, or
+ * a signed URL to the image of an image slot.
+ */
 export type ArtistPageCustomization = Record<string, string>;
 
 /**
@@ -37,8 +42,11 @@ export interface ArtistPageRenderPayload {
 }
 
 export interface ArtistPageRenderResponse {
-  /** Signed URL to the design bundle in object storage. */
-  bundleUrl: string;
+  /**
+   * Signed URL to the design bundle in object storage, or null when the
+   * release uses the default layout.
+   */
+  bundleUrl: string | null;
   payload: ArtistPageRenderPayload;
 }
 

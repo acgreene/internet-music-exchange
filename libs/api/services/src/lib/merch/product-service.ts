@@ -293,7 +293,10 @@ export class ProductService {
     if (variants.length === 0) missing.push('add a variant');
     if (rates.length === 0) missing.push('set a shipping rate');
     missing.push(
-      ...(await this.gate.missingToSell(product.artistId, product.currency)),
+      ...(await this.gate.missingToSell(
+        { artistId: product.artistId },
+        product.currency,
+      )),
     );
     if (missing.length > 0) {
       throw new ApiError(

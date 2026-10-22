@@ -1,9 +1,29 @@
 @if (rendered(); as page) {
-  <ime-artist-page-host
-    (purchaseRequested)="onPurchaseRequested()"
-    [bundleUrl]="page.bundleUrl"
-    [payload]="page.payload"
-  />
+  @if (page.bundleUrl; as bundleUrl) {
+    <ime-artist-page-host
+      (purchaseRequested)="onPurchaseRequested()"
+      [bundleUrl]="bundleUrl"
+      [payload]="page.payload"
+    />
+  } @else {
+    <!-- the default layout, for releases without a design -->
+    <article>
+      @if (page.payload.release.coverUrl; as coverUrl) {
+        <img
+          [src]="coverUrl"
+          [alt]="page.payload.release.title + ' cover art'"
+        />
+      }
+      <h1>{{ page.payload.release.title }}</h1>
+      <p>{{ page.payload.release.artistName }}</p>
+      <ol>
+        @for (track of page.payload.release.tracks; track track.position) {
+          <li>{{ track.title }}</li>
+        }
+      </ol>
+      <button type="button" (click)="onPurchaseRequested()">Buy</button>
+    </article>
+  }
 } @else if (error(); as message) {
   <p>{{ message }}</p>
 }

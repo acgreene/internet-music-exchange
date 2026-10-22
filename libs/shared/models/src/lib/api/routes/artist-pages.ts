@@ -17,12 +17,13 @@ const artistPageReleaseSchema = z.object({
   id: z.string(),
   title: z.string(),
   artistName: z.string(),
+  coverUrl: z.string().nullable(),
   tracks: z.array(artistPageTrackSchema),
   price: artistPagePriceSchema,
 });
 
 export const artistPageRenderResponseSchema = z.object({
-  bundleUrl: z.string(),
+  bundleUrl: z.string().nullable(),
   payload: z.object({
     release: artistPageReleaseSchema,
     customization: z.record(z.string(), z.string()),
