@@ -83,7 +83,7 @@ export class PaymentAccountService {
 
     return this.onboardingLink(
       account.stripeAccountId,
-      `/manage/artists/${artistId}/payments`,
+      `/studio/artists/${artistId}/payments`,
     );
   }
 
@@ -109,7 +109,7 @@ export class PaymentAccountService {
 
     return this.onboardingLink(
       account.stripeAccountId,
-      '/manage/designs/payments',
+      '/studio/designs/payments',
     );
   }
 

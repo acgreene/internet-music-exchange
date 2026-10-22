@@ -2,8 +2,10 @@ import { Route } from '@angular/router';
 import { signedInGuard, signedOutGuard } from '@ime/client-data';
 import { listeningRoutes } from '@ime/client-listening';
 import { AppShell } from './shell/app-shell';
+import { studioRoutes } from './studio/studio.routes';
 
 export const appRoutes: Route[] = [
+  ...studioRoutes,
   {
     path: '',
     component: AppShell,

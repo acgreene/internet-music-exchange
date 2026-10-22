@@ -20,6 +20,7 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { paymentLabel, shippingLabel } from './purchase-labels';
+import { currentValue } from '@ime/client-data';
 
 /**
  * One purchase: what was bought, what it cost, its shipping, and a way to
@@ -44,7 +45,7 @@ import { paymentLabel, shippingLabel } from './purchase-labels';
       <a class="text-sm text-ink-muted hover:underline" routerLink="/purchases"
         >← Purchases</a
       >
-      @if (detail.value(); as detail) {
+      @if (detail.hasValue() ? detail.value() : null; as detail) {
         <header class="flex flex-col gap-1">
           <h1 class="text-2xl font-semibold tracking-tight">
             @if (detail.artist; as artist) {
@@ -201,12 +202,10 @@ export class PurchasePage {
 
   protected readonly itemsTotal = computed(
     () =>
-      this.detail
-        .value()
-        ?.items.reduce(
-          (sum, item) => sum + item.unitPrice * item.quantity,
-          0,
-        ) ?? 0,
+      currentValue(this.detail)?.items.reduce(
+        (sum, item) => sum + item.unitPrice * item.quantity,
+        0,
+      ) ?? 0,
   );
 
   private readonly refund = signal({ message: '' });

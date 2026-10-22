@@ -16,6 +16,7 @@ import {
   ReleaseCardComponent,
   SpinnerComponent,
 } from '@ime/ui';
+import { currentValue } from '@ime/client-data';
 
 const PAGE_SIZE = 48;
 
@@ -101,12 +102,12 @@ export class LibraryPage {
   protected readonly loadingMore = signal(false);
 
   protected readonly items = computed(() => [
-    ...(this.firstPage.value() ?? []),
+    ...(currentValue(this.firstPage) ?? []),
     ...this.more(),
   ]);
   protected readonly hasMore = computed(
     () =>
-      (this.firstPage.value()?.length ?? 0) === PAGE_SIZE &&
+      (currentValue(this.firstPage)?.length ?? 0) === PAGE_SIZE &&
       this.lastPageSize() === PAGE_SIZE,
   );
 

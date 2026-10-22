@@ -701,7 +701,7 @@ export class CheckoutService {
             lines,
             order,
             items.some((item) => item.productVariantId),
-            `${this.webAppUrl}/manage/artists/${artistId}/sales`,
+            `${this.webAppUrl}/studio/artists/${artistId}/sales`,
           ),
         );
       }

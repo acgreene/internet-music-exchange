@@ -9,7 +9,7 @@ import {
   resource,
 } from '@angular/core';
 import { ApiClient, unwrap } from '@ime/api-client';
-import { SessionService } from '@ime/client-data';
+import { SessionService, currentValue } from '@ime/client-data';
 import { ApiError, HttpStatus, type ReleaseKind } from '@ime/models';
 import {
   CoverComponent,
@@ -34,7 +34,7 @@ import { releaseKindLabel } from '../releases/release-labels';
     SpinnerComponent,
   ],
   template: `
-    @if (profile.value(); as profile) {
+    @if (profile.hasValue() ? profile.value() : null; as profile) {
       <div class="mx-auto flex max-w-5xl flex-col gap-8">
         @if (profile.headerUrl; as headerUrl) {
           <img
@@ -95,7 +95,10 @@ import { releaseKindLabel } from '../releases/release-labels';
           <h2 id="discography-heading" class="text-lg font-semibold">
             Discography
           </h2>
-          @if (discography.value(); as releases) {
+          @if (
+            discography.hasValue() ? discography.value() : null;
+            as releases
+          ) {
             <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               @for (release of releases; track release.id) {
                 <li>
@@ -157,7 +160,7 @@ export class ArtistPage {
   /** Whether the signed-in viewer follows the artist. */
   private readonly followed = resource({
     params: () => {
-      const artistId = this.profile.value()?.artist.id;
+      const artistId = currentValue(this.profile)?.artist.id;
       const userId = this.session.user()?.id;
       return artistId && userId ? { artistId, userId } : undefined;
     },
@@ -167,15 +170,17 @@ export class ArtistPage {
       ).includes(params.artistId),
   });
 
-  protected readonly following = computed(() => this.followed.value() ?? false);
+  protected readonly following = computed(
+    () => currentValue(this.followed) ?? false,
+  );
   protected readonly followerCount = linkedSignal(
-    () => this.profile.value()?.followerCount ?? 0,
+    () => currentValue(this.profile)?.followerCount ?? 0,
   );
 
   constructor() {
     effect(() => {
       if (this.isNotFound(this.profile.error())) this.meta.notFound();
-      const profile = this.profile.value();
+      const profile = currentValue(this.profile);
       if (!profile) return;
       this.meta.set({
         title: profile.artist.name,

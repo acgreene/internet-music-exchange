@@ -16,10 +16,11 @@ const SIZES = {
 
 /**
  * Styles a native button or link as a button, so it keeps all of its own
- * behavior and accessibility.
+ * behavior and accessibility. On a label it dresses a file picker: put the
+ * file input inside, visually hidden.
  */
 @Directive({
-  selector: 'button[imeButton], a[imeButton]',
+  selector: 'button[imeButton], a[imeButton], label[imeButton]',
   host: {
     '[class]': 'classes()',
     '[attr.aria-busy]': 'busy() || null',

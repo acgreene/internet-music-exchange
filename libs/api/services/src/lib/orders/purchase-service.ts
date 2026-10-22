@@ -108,7 +108,7 @@ export class PurchaseService {
       this.db.users.getById(userId),
       this.db.artists.listManagers(purchase.artistId),
     ]);
-    const saleUrl = `${this.webAppUrl}/manage/artists/${purchase.artistId}/sales/${purchase.id}`;
+    const saleUrl = `${this.webAppUrl}/studio/artists/${purchase.artistId}/sales/${purchase.id}`;
 
     for (const manager of managers) {
       const address = await this.db.users.getEmail(manager.userId);

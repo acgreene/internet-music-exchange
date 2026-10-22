@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
-import { SessionService } from '@ime/client-data';
+import { SessionService, currentValue } from '@ime/client-data';
 import type { ReleaseCardWithArtist } from '@ime/models';
 import {
   AlertComponent,
@@ -57,7 +57,7 @@ const FEED_SIZE = 8;
           <h2 id="feed-heading" class="text-xl font-semibold">
             New from artists you follow
           </h2>
-          @if (feed.value(); as items) {
+          @if (feed.hasValue() ? feed.value() : null; as items) {
             @if (items.length) {
               <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 @for (item of items; track item.releaseId) {
@@ -146,12 +146,12 @@ export class DiscoverPage {
   protected readonly loadingMore = signal(false);
 
   protected readonly releases = computed(() => [
-    ...(this.recent.value() ?? []),
+    ...(currentValue(this.recent) ?? []),
     ...this.more(),
   ]);
   protected readonly hasMore = computed(
     () =>
-      (this.recent.value()?.length ?? 0) === PAGE_SIZE &&
+      (currentValue(this.recent)?.length ?? 0) === PAGE_SIZE &&
       this.lastPageSize() === PAGE_SIZE,
   );
 

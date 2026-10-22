@@ -36,9 +36,11 @@ export class PageMetaService {
   }
 
   /**
-   * Answer a server render with 404, so search engines drop the address.
+   * Title the page as missing, and answer a server render with 404 so search
+   * engines drop the address.
    */
   public notFound(): void {
+    this.title.setTitle('Not found · IME');
     if (this.response) this.response.status = 404;
   }
 }

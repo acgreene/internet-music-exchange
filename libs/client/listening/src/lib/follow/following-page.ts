@@ -11,6 +11,7 @@ import { ApiClient, unwrap } from '@ime/api-client';
 import type { FollowedArtist } from '@ime/models';
 import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
 import { FollowButton } from './follow-button';
+import { currentValue } from '@ime/client-data';
 
 const PAGE_SIZE = 50;
 
@@ -91,12 +92,12 @@ export class FollowingPage {
   protected readonly loadingMore = signal(false);
 
   protected readonly artists = computed(() => [
-    ...(this.firstPage.value() ?? []),
+    ...(currentValue(this.firstPage) ?? []),
     ...this.more(),
   ]);
   protected readonly hasMore = computed(
     () =>
-      (this.firstPage.value()?.length ?? 0) === PAGE_SIZE &&
+      (currentValue(this.firstPage)?.length ?? 0) === PAGE_SIZE &&
       this.lastPageSize() === PAGE_SIZE,
   );
 

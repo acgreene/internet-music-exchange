@@ -445,7 +445,7 @@ export class ModerationService {
         note,
         contestable
           ? {
-              url: `${this.webAppUrl}/manage/artists/${release.artistId}/releases/${releaseId}`,
+              url: `${this.webAppUrl}/studio/releases/${releaseId}`,
               days: CONTEST_DAYS,
             }
           : null,

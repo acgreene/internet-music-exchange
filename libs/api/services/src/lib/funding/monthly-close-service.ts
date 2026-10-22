@@ -303,7 +303,7 @@ export class MonthlyCloseService {
     }
 
     const address = await this.db.users.getEmail(userId);
-    const billingUrl = `${this.webAppUrl}/manage/billing`;
+    const billingUrl = `${this.webAppUrl}/studio/billing`;
 
     if (balance < 0) {
       await this.db.funding.markLapsed(userId);

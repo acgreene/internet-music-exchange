@@ -17,6 +17,7 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { paymentLabel, shippingLabel } from './purchase-labels';
+import { currentValue } from '@ime/client-data';
 
 const PAGE_SIZE = 25;
 
@@ -104,12 +105,12 @@ export class PurchasesPage {
   protected readonly loadingMore = signal(false);
 
   protected readonly purchases = computed(() => [
-    ...(this.firstPage.value() ?? []),
+    ...(currentValue(this.firstPage) ?? []),
     ...this.more(),
   ]);
   protected readonly hasMore = computed(
     () =>
-      (this.firstPage.value()?.length ?? 0) === PAGE_SIZE &&
+      (currentValue(this.firstPage)?.length ?? 0) === PAGE_SIZE &&
       this.lastPageSize() === PAGE_SIZE,
   );
 

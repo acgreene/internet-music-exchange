@@ -75,7 +75,7 @@ export class FundingJobsService {
    * pay for off sale when it ends.
    */
   public async checkLapses(now: Date): Promise<void> {
-    const billingUrl = `${this.webAppUrl}/manage/billing`;
+    const billingUrl = `${this.webAppUrl}/studio/billing`;
 
     for (const billing of await this.db.funding.listLapsedSince(now)) {
       const lapsedAt = billing.lapsedAt as Date;

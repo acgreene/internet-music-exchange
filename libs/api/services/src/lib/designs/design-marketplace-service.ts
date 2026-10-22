@@ -191,7 +191,7 @@ export class DesignMarketplaceService {
       artistId,
       userId,
     };
-    const returnUrl = `${this.webAppUrl}/manage/artists/${artistId}/designs`;
+    const returnUrl = `${this.webAppUrl}/studio/artists/${artistId}/designs`;
     const session = await this.stripe.checkout.sessions.create(
       {
         mode: 'payment',

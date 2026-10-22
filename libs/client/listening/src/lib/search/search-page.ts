@@ -46,7 +46,7 @@ import {
         <button imeButton type="submit">Search</button>
       </form>
 
-      @if (results.value(); as results) {
+      @if (results.hasValue() ? results.value() : null; as results) {
         @if (!results.artists.length && !results.releases.length) {
           <p class="text-ink-muted">Nothing matches “{{ query() }}”.</p>
         }

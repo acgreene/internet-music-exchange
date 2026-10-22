@@ -14,6 +14,7 @@ import {
   PlayerService,
   type QueueTrack,
   SessionService,
+  currentValue,
 } from '@ime/client-data';
 import { ApiError, HttpStatus, type TracklistItem } from '@ime/models';
 import {
@@ -47,7 +48,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
     SpinnerComponent,
   ],
   template: `
-    @if (page.value(); as page) {
+    @if (page.hasValue() ? page.value() : null; as page) {
       <div
         class="mx-auto grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1fr)_18rem]"
       >
@@ -202,7 +203,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
     } @else {
       <ime-spinner />
     }
-    @if (viewerPage.error()) {
+    @if (viewerPage.error() && page.hasValue()) {
       <ime-alert tone="error"
         >Your copy of this release could not be checked.</ime-alert
       >
@@ -244,30 +245,32 @@ export class ReleasePage {
   });
 
   protected readonly owned = computed(
-    () => this.viewerPage.value()?.owned ?? false,
+    () => currentValue(this.viewerPage)?.owned ?? false,
   );
   protected readonly extras = computed(
     () =>
-      (this.viewerPage.value() ?? this.page.value())?.assets.filter(
+      (currentValue(this.viewerPage) ?? currentValue(this.page))?.assets.filter(
         (asset) => asset.kind !== 'cover',
       ) ?? [],
   );
   protected readonly managesArtist = computed(() => {
-    const artistId = this.page.value()?.artist.id;
+    const artistId = currentValue(this.page)?.artist.id;
     return (
-      this.managedArtists.value()?.some((artist) => artist.id === artistId) ??
-      false
+      currentValue(this.managedArtists)?.some(
+        (artist) => artist.id === artistId,
+      ) ?? false
     );
   });
   protected readonly kindLabel = computed(() => {
-    const kind = this.page.value()?.release.kind;
+    const kind = currentValue(this.page)?.release.kind;
     return kind ? releaseKindLabel(kind) : '';
   });
 
   /** The tracks this viewer may stream, in running order. */
   protected readonly playable = computed(
     () =>
-      this.page.value()?.tracks.filter((track) => this.canPlay(track)) ?? [],
+      currentValue(this.page)?.tracks.filter((track) => this.canPlay(track)) ??
+      [],
   );
 
   protected readonly assetLabel = assetKindLabel;
@@ -275,7 +278,7 @@ export class ReleasePage {
   constructor() {
     effect(() => {
       if (this.isNotFound(this.page.error())) this.meta.notFound();
-      const page = this.page.value();
+      const page = currentValue(this.page);
       if (!page) return;
       this.meta.set({
         title: `${page.release.title} by ${page.artist.name}`,
@@ -287,7 +290,8 @@ export class ReleasePage {
 
   protected canPlay(track: TracklistItem): boolean {
     return (
-      this.owned() || (track.isPreview && (this.page.value()?.onSale ?? false))
+      this.owned() ||
+      (track.isPreview && (currentValue(this.page)?.onSale ?? false))
     );
   }
 
@@ -303,7 +307,7 @@ export class ReleasePage {
    * Queue every track this viewer may play, starting from the one chosen.
    */
   protected async play(from?: TracklistItem): Promise<void> {
-    const page = this.page.value();
+    const page = currentValue(this.page);
     if (!page) return;
     const queue: QueueTrack[] = this.playable().map((track) => ({
       releaseId: page.release.id,

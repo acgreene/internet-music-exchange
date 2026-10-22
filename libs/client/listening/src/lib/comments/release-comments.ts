@@ -18,7 +18,7 @@ import {
 } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
-import { SessionService } from '@ime/client-data';
+import { SessionService, currentValue } from '@ime/client-data';
 import type { CommentResponse } from '@ime/models';
 import {
   AlertComponent,
@@ -230,10 +230,10 @@ export class ReleaseComments {
   });
 
   protected readonly comments = linkedSignal<CommentResponse[]>(
-    () => this.firstPage.value()?.comments ?? [],
+    () => currentValue(this.firstPage)?.comments ?? [],
   );
   protected readonly total = linkedSignal(
-    () => this.firstPage.value()?.total ?? 0,
+    () => currentValue(this.firstPage)?.total ?? 0,
   );
   protected readonly loadingMore = signal(false);
   protected readonly actionError = signal<string | null>(null);
