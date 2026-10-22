@@ -4,3 +4,4 @@ export * from './health';
 export * from './artist-pages';
 export * from './accounts';
 export * from './artists';
+export * from './releases';

@@ -6,6 +6,7 @@ import { ArtistPagesRouter } from './artist-pages';
 import { ArtistsRouter } from './artists';
 import { AuthRouter } from './auth';
 import { HealthRouter } from './health';
+import { ReleasesRouter } from './releases';
 import { RouteGuard } from './route-guard';
 import { UsersRouter } from './users';
 
@@ -29,6 +30,7 @@ export class RootRouter extends AbstractRouter {
       new AuthRouter(guard, services.auth),
       new UsersRouter(guard, services.auth, services.users, services.artists),
       new ArtistsRouter(guard, services.artists),
+      new ReleasesRouter(guard, services.releases),
       new ArtistPagesRouter(guard, services.artistPages),
     ];
     for (const router of routers) this.routes.route('/', router.router);

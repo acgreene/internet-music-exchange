@@ -75,4 +75,51 @@ export enum ApiRoute {
 
   /** Remove one of an artist's managers. */
   ArtistManager = '/api/artists/:artistId/managers/:userId',
+
+  // Releases, for managers
+
+  /** POST starts a draft release; GET lists every release of the artist. */
+  ArtistReleases = '/api/artists/:artistId/releases',
+
+  /** A release with everything its managers edit. */
+  Release = '/api/releases/:releaseId',
+
+  /** Set how a release is priced. */
+  ReleasePricing = '/api/releases/:releaseId/pricing',
+
+  /** Put a release on sale. */
+  ReleasePublish = '/api/releases/:releaseId/publish',
+
+  /** Withdraw a release from the catalog. Owners keep it. */
+  ReleaseArchive = '/api/releases/:releaseId/archive',
+
+  /** POST adds a track; PUT sets the track order. */
+  ReleaseTracks = '/api/releases/:releaseId/tracks',
+
+  /** Rename a track or set its length. */
+  Track = '/api/tracks/:trackId',
+
+  /** Take a track off a release. */
+  ReleaseTrack = '/api/releases/:releaseId/tracks/:trackId',
+
+  /** Whether anyone may stream a track as a preview. */
+  ReleaseTrackPreview = '/api/releases/:releaseId/tracks/:trackId/preview',
+
+  /** Somewhere to upload a track's audio. */
+  TrackAudioUploads = '/api/releases/:releaseId/tracks/:trackId/audio/uploads',
+
+  /** Record a track's uploaded audio. */
+  TrackAudio = '/api/releases/:releaseId/tracks/:trackId/audio',
+
+  /** Somewhere to upload artwork or another release asset. */
+  ReleaseAssetUploads = '/api/releases/:releaseId/assets/uploads',
+
+  /** Record an uploaded release asset. */
+  ReleaseAssets = '/api/releases/:releaseId/assets',
+
+  /** PATCH changes an asset's details; DELETE removes it. */
+  ReleaseAsset = '/api/assets/:assetId',
+
+  /** Give a listener a release, by username. */
+  ReleaseGifts = '/api/releases/:releaseId/gifts',
 }

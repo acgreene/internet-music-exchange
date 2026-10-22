@@ -8,6 +8,7 @@ import {
   artistPageContracts,
   authContracts,
   healthContracts,
+  releaseContracts,
 } from './routes';
 
 export type { ApiContract, RouteContracts } from './contract';
@@ -27,6 +28,7 @@ export const API_CONTRACTS = {
   ...artistPageContracts,
   ...accountContracts,
   ...artistContracts,
+  ...releaseContracts,
 } as const satisfies Record<ApiRoute, RouteContracts>;
 
 /**

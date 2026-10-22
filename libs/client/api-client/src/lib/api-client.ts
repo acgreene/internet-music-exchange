@@ -6,6 +6,7 @@ import { UsersClient } from './user';
 import { SupabaseSingleton } from './auth';
 import { ArtistPagesClient } from './artist-pages';
 import { ArtistsClient } from './artists';
+import { ReleasesClient } from './releases';
 
 /**
  * SDK for the IME API.
@@ -28,6 +29,11 @@ export class ApiClient {
    * Artists' profiles, and what their managers edit.
    */
   public readonly artists = new ArtistsClient(this.transport);
+
+  /**
+   * Releases, for their artist's managers.
+   */
+  public readonly releases = new ReleasesClient(this.transport);
 
   public readonly artistPages = new ArtistPagesClient(
     this.transport,
