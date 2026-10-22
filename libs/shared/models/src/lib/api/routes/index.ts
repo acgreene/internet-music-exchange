@@ -7,3 +7,4 @@ export * from './artists';
 export * from './releases';
 export * from './catalog';
 export * from './merch';
+export * from './orders';

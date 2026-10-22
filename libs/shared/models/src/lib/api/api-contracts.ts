@@ -10,6 +10,7 @@ import {
   catalogContracts,
   healthContracts,
   merchContracts,
+  orderContracts,
   releaseContracts,
 } from './routes';
 
@@ -33,6 +34,7 @@ export const API_CONTRACTS = {
   ...releaseContracts,
   ...catalogContracts,
   ...merchContracts,
+  ...orderContracts,
 } as const satisfies Record<ApiRoute, RouteContracts>;
 
 /**

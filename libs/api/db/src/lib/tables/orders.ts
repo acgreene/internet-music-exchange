@@ -11,6 +11,19 @@ import { authenticatedRole, authUid } from 'drizzle-orm/supabase';
 import { users } from './users';
 
 /**
+ * Where an order ships. `country` is an ISO 3166-1 alpha-2 code.
+ */
+export interface ShippingAddress {
+  name: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state?: string | null;
+  postalCode: string;
+  country: string;
+}
+
+/**
  * A single checkout, the cart a buyer pays in one session. It groups one
  * `artist_orders` row per artist in the cart, since a multi-artist cart settles
  * as one direct charge per artist.
@@ -38,7 +51,7 @@ export const orders = pgTable(
      * `purge_order_pii_on_user_delete` trigger clears it when the buyer's
      * account is deleted (the same event that nulls `user_id`).
      */
-    shippingAddress: jsonb('shipping_address'),
+    shippingAddress: jsonb('shipping_address').$type<ShippingAddress>(),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()

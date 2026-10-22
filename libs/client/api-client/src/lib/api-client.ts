@@ -8,6 +8,7 @@ import { ArtistPagesClient } from './artist-pages';
 import { ArtistsClient } from './artists';
 import { CatalogClient } from './catalog';
 import { MerchClient } from './merch';
+import { OrdersClient } from './orders';
 import { ReleasesClient } from './releases';
 
 /**
@@ -41,6 +42,11 @@ export class ApiClient {
    * Merch: stores and product pages, and what managers build.
    */
   public readonly merch = new MerchClient(this.transport);
+
+  /**
+   * Checkout, purchases, and sales.
+   */
+  public readonly orders = new OrdersClient(this.transport);
 
   /**
    * Releases, for their artist's managers.

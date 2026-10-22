@@ -6,6 +6,7 @@ import {
   type Currency,
   DatabaseRepository,
   InsufficientStockError,
+  type ShippingAddress,
   type ShippingZone,
 } from '@ime/db';
 import { env } from '@ime/env';
@@ -38,18 +39,7 @@ export type CartItem =
     }
   | { variantId: string; quantity: number };
 
-/**
- * Where physical items ship. `country` is an ISO 3166-1 alpha-2 code.
- */
-export type ShippingAddress = {
-  name: string;
-  line1: string;
-  line2?: string | null;
-  city: string;
-  state?: string | null;
-  postalCode: string;
-  country: string;
-};
+export type { ShippingAddress };
 
 export interface CheckoutInput {
   items: CartItem[];

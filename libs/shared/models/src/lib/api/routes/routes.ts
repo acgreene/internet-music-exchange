@@ -195,4 +195,39 @@ export enum ApiRoute {
 
   /** A product page. */
   CatalogProduct = '/api/catalog/products/:productId',
+
+  // Buying and selling
+
+  /** Check a cart out: one payment per artist, free releases granted. */
+  Checkout = '/api/checkout',
+
+  /** The signed-in user's purchases. */
+  MyPurchases = '/api/me/purchases',
+
+  /** One of the signed-in user's purchases. */
+  Purchase = '/api/purchases/:artistOrderId',
+
+  /** Ask the artist to refund a purchase. */
+  PurchaseRefundRequest = '/api/purchases/:artistOrderId/refund-request',
+
+  /** An artist's sales. */
+  ArtistSales = '/api/artists/:artistId/sales',
+
+  /** An artist's paid sales still waiting to ship, oldest first. */
+  ArtistSalesToShip = '/api/artists/:artistId/sales/to-ship',
+
+  /** An artist's settled sales totals, per currency. */
+  ArtistSalesTotals = '/api/artists/:artistId/sales/totals',
+
+  /** One sale, with what is needed to ship it. */
+  Sale = '/api/sales/:artistOrderId',
+
+  /** Mark a sale shipped, with its tracking. */
+  SaleShipment = '/api/sales/:artistOrderId/shipment',
+
+  /** Mark a shipped sale delivered. */
+  SaleDelivered = '/api/sales/:artistOrderId/delivered',
+
+  /** Refund a sale in full. */
+  SaleRefund = '/api/sales/:artistOrderId/refund',
 }

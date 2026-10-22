@@ -8,6 +8,7 @@ import { AuthRouter } from './auth';
 import { CatalogRouter } from './catalog';
 import { HealthRouter } from './health';
 import { MerchRouter } from './merch';
+import { OrdersRouter } from './orders';
 import { ReleasesRouter } from './releases';
 import { RouteGuard } from './route-guard';
 import { UsersRouter } from './users';
@@ -35,6 +36,12 @@ export class RootRouter extends AbstractRouter {
       new ReleasesRouter(guard, services.releases),
       new CatalogRouter(guard, services.catalog),
       new MerchRouter(guard, services.products, services.store),
+      new OrdersRouter(
+        guard,
+        services.checkout,
+        services.purchases,
+        services.sales,
+      ),
       new ArtistPagesRouter(guard, services.artistPages),
     ];
     for (const router of routers) this.routes.route('/', router.router);

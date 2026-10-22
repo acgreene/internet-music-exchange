@@ -15,6 +15,7 @@ import {
   products,
   productVariants,
   releases,
+  type ShippingAddress,
   users,
 } from '../tables';
 
@@ -53,7 +54,7 @@ export interface CreateCheckoutParams {
    */
   orderId?: string;
   userId: string;
-  shippingAddress?: Record<string, unknown> | null;
+  shippingAddress?: ShippingAddress | null;
   artistOrders: CheckoutArtistOrderParams[];
 }
 
@@ -117,7 +118,7 @@ export interface SaleListItem {
   currency: Currency;
   createdAt: Date;
   buyerName: string | null;
-  shippingAddress: unknown;
+  shippingAddress: ShippingAddress | null;
   fulfillmentStatus: FulfillmentStatus | null;
   trackingNumber: string | null;
 }

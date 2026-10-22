@@ -6,6 +6,7 @@ import {
   type OrderItemDetail,
   type SaleListItem,
   type SalesTotals,
+  type ShippingAddress,
 } from '@ime/db';
 import { env } from '@ime/env';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
@@ -24,7 +25,7 @@ export interface SaleDetail {
   items: OrderItemDetail[];
   fulfillment: Fulfillment | null;
   buyerName: string | null;
-  shippingAddress: unknown;
+  shippingAddress: ShippingAddress | null;
 }
 
 export interface ShipmentInput {
