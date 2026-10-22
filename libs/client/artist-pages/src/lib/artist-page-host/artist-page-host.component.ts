@@ -52,8 +52,15 @@ export class ArtistPageHost {
 
   protected readonly frameHeight = signal(INITIAL_FRAME_HEIGHT_PX);
 
+  /**
+   * Set once the host listens for messages. The frame only loads after,
+   * since a design says it is ready as soon as it loads, and a frame in a
+   * server render would load before the page hydrates.
+   */
+  protected readonly listening = signal(false);
+
   private readonly iframeElementRef =
-    viewChild.required<ElementRef<HTMLIFrameElement>>('frame');
+    viewChild<ElementRef<HTMLIFrameElement>>('frame');
 
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -72,6 +79,7 @@ export class ArtistPageHost {
       destroyRef.onDestroy(() =>
         window.removeEventListener('message', onMessage),
       );
+      this.listening.set(true);
     });
   }
 
@@ -81,7 +89,7 @@ export class ArtistPageHost {
    * @private
    */
   private handleMessage(messageEvent: MessageEvent): void {
-    const frameWindow = this.iframeElementRef().nativeElement.contentWindow;
+    const frameWindow = this.iframeElementRef()?.nativeElement.contentWindow;
 
     // don't do anything if the message source isn't coming from the frame
     if (!frameWindow || messageEvent.source !== frameWindow) {
@@ -109,7 +117,7 @@ export class ArtistPageHost {
   }
 
   private initializeIFrame(): void {
-    this.iframeElementRef().nativeElement.contentWindow?.postMessage(
+    this.iframeElementRef()?.nativeElement.contentWindow?.postMessage(
       {
         type: ArtistPageProtocolMessage.Init,
         payload: this.payload(),
