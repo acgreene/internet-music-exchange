@@ -6,37 +6,7 @@
       <ime-wordmark />
     </a>
 
-    <form
-      class="hidden max-w-xl flex-1 md:block"
-      role="search"
-      (submit)="search($event, query.value)"
-    >
-      <label
-        class="flex items-center gap-2.5 rounded-control border border-line bg-canvas px-3 focus-within:outline-2 focus-within:outline-accent"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          class="size-4 shrink-0 fill-none stroke-ink stroke-2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-4-4" />
-        </svg>
-        <input
-          #query
-          class="h-10 w-full bg-transparent text-[15px] outline-none placeholder:text-ink-subtle"
-          type="search"
-          aria-label="Search artists and releases"
-          aria-keyshortcuts="/"
-          placeholder="Search artists and releases"
-        />
-        <kbd
-          class="rounded border border-hairline px-1.5 font-mono text-[11px] text-ink-muted"
-          aria-hidden="true"
-          >/</kbd
-        >
-      </label>
-    </form>
+    <ime-search-box class="hidden max-w-xl flex-1 md:block" shortcut />
 
     <div class="flex-1"></div>
 

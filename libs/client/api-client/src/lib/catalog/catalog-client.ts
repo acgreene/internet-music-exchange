@@ -1,6 +1,7 @@
 import {
   ApiRoute,
   type CatalogHome,
+  type CatalogSearchQuery,
   type FeedItem,
   type LibraryItem,
   type PageQuery,
@@ -8,6 +9,7 @@ import {
   type ReleaseCardWithArtist,
   type ReleasePageResponse,
   type SearchResults,
+  type SearchSuggestions,
   type SignedUrlResponse,
 } from '@ime/models';
 import type { ApiResult } from '../api-result';
@@ -36,8 +38,18 @@ export class CatalogClient {
     return this.transport.get(ApiRoute.CatalogHome);
   }
 
-  public search(query: string): Promise<ApiResult<SearchResults>> {
-    return this.transport.get(ApiRoute.CatalogSearch, { query: { q: query } });
+  /**
+   * Releases matching words and filters, with counts for every filter.
+   */
+  public search(query: CatalogSearchQuery): Promise<ApiResult<SearchResults>> {
+    return this.transport.get(ApiRoute.CatalogSearch, { query });
+  }
+
+  /**
+   * Artists, releases, and tags for what someone has typed so far.
+   */
+  public suggest(q: string): Promise<ApiResult<SearchSuggestions>> {
+    return this.transport.get(ApiRoute.CatalogSuggest, { query: { q } });
   }
 
   /**

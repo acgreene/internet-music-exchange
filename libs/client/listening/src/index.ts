@@ -7,3 +7,4 @@ export * from './lib/player/player-bar';
 export * from './lib/releases/release-labels';
 export * from './lib/reporting/report-button';
 export * from './lib/reporting/report-labels';
+export * from './lib/search/search-box';

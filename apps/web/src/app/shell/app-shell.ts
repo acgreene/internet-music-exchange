@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  type ElementRef,
   inject,
   viewChild,
 } from '@angular/core';
@@ -14,7 +13,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { CartService, SessionService } from '@ime/client-data';
-import { PlayerBar } from '@ime/client-listening';
+import { PlayerBar, SearchBox } from '@ime/client-listening';
 import { ButtonDirective, WordmarkComponent } from '@ime/ui';
 
 /**
@@ -33,6 +32,7 @@ import { ButtonDirective, WordmarkComponent } from '@ime/ui';
     CdkMenuTrigger,
     ButtonDirective,
     PlayerBar,
+    SearchBox,
     WordmarkComponent,
   ],
   host: { '(document:keydown)': 'focusSearch($event)' },
@@ -43,7 +43,7 @@ export class AppShell {
   protected readonly cart = inject(CartService);
   private readonly router = inject(Router);
 
-  private readonly query = viewChild<ElementRef<HTMLInputElement>>('query');
+  private readonly searchBox = viewChild(SearchBox);
 
   protected readonly navigation = computed(() => [
     { label: 'Discover', path: '/' },
@@ -79,13 +79,7 @@ export class AppShell {
       ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
     if (event.key !== '/' || typing || event.metaKey || event.ctrlKey) return;
     event.preventDefault();
-    this.query()?.nativeElement.focus();
-  }
-
-  protected async search(event: Event, query: string): Promise<void> {
-    event.preventDefault();
-    const q = query.trim();
-    if (q) await this.router.navigate(['/search'], { queryParams: { q } });
+    this.searchBox()?.focus();
   }
 
   protected async signOut(): Promise<void> {

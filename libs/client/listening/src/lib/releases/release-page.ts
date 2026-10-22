@@ -134,17 +134,23 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                 aria-label="Genres and tags"
               >
                 @for (genre of page.release.genres; track genre) {
-                  <li
-                    class="rounded-full border border-ink px-2.5 py-0.5 text-sm font-medium"
-                  >
-                    {{ genreName(genre) }}
+                  <li>
+                    <a
+                      class="block rounded-full border border-ink px-2.5 py-0.5 text-sm font-medium hover:bg-wash"
+                      routerLink="/search"
+                      [queryParams]="{ genres: genre }"
+                      >{{ genreName(genre) }}</a
+                    >
                   </li>
                 }
                 @for (tag of page.release.tags; track tag) {
-                  <li
-                    class="rounded-full border border-line px-2.5 py-0.5 text-sm text-ink-muted"
-                  >
-                    {{ tag }}
+                  <li>
+                    <a
+                      class="block rounded-full border border-line px-2.5 py-0.5 text-sm text-ink-muted hover:bg-wash"
+                      routerLink="/search"
+                      [queryParams]="{ q: tag }"
+                      >{{ tag }}</a
+                    >
                   </li>
                 }
               </ul>

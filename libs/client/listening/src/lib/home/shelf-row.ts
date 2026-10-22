@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { PricingResponse, Shelf } from '@ime/models';
+import type { Shelf } from '@ime/models';
 import { CoverComponent, MoneyPipe } from '@ime/ui';
-import { formatMoney } from '@ime/utils';
 import { productTypeLabel } from '../merch/merch-labels';
+import { releasePriceLabel } from '../releases/release-labels';
 
 /**
  * One home page shelf: a titled row of records or merch that scrolls
@@ -85,15 +85,9 @@ export class ShelfRow {
   public readonly shelf = input.required<Shelf>();
 
   protected readonly typeLabel = productTypeLabel;
+  protected readonly priceLabel = releasePriceLabel;
 
   protected headingId(): string {
     return `shelf-${this.shelf().id}`;
-  }
-
-  protected priceLabel(pricing: PricingResponse | null): string {
-    if (!pricing || pricing.mode === 'free') return 'Free';
-    const amount = formatMoney(pricing.minimumPrice, pricing.currency ?? 'usd');
-    if (pricing.mode === 'fixed') return amount;
-    return pricing.minimumPrice > 0 ? `${amount} or more` : 'Name your price';
   }
 }

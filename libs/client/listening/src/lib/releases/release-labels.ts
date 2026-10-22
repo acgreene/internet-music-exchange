@@ -1,4 +1,9 @@
-import type { ReleaseAssetKind, ReleaseKind } from '@ime/models';
+import type {
+  PricingResponse,
+  ReleaseAssetKind,
+  ReleaseKind,
+} from '@ime/models';
+import { formatMoney } from '@ime/utils';
 
 const KIND_LABELS: Record<ReleaseKind, string> = {
   single: 'Single',
@@ -30,4 +35,12 @@ export function releaseKindLabel(kind: ReleaseKind): string {
 
 export function assetKindLabel(kind: ReleaseAssetKind): string {
   return ASSET_LABELS[kind];
+}
+
+/** What a release costs, as a card or result shows it. */
+export function releasePriceLabel(pricing: PricingResponse | null): string {
+  if (!pricing || pricing.mode === 'free') return 'Free';
+  const amount = formatMoney(pricing.minimumPrice, pricing.currency ?? 'usd');
+  if (pricing.mode === 'fixed') return amount;
+  return pricing.minimumPrice > 0 ? `${amount} or more` : 'Name your price';
 }
