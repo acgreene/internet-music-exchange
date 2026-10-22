@@ -18,8 +18,10 @@ import type { ApiTransport } from '../api-transport';
 export class CratesClient {
   constructor(private readonly transport: ApiTransport) {}
 
-  /** Public crates, the most recently changed first. */
-  public listPublic(page?: PageQuery): Promise<ApiResult<CrateCard[]>> {
+  /** Public crates, the most recently changed first, or by name with `q`. */
+  public listPublic(
+    page?: PageQuery & { q?: string },
+  ): Promise<ApiResult<CrateCard[]>> {
     return this.transport.get(ApiRoute.Crates, { query: page });
   }
 

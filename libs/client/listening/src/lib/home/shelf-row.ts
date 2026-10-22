@@ -19,7 +19,11 @@ import { releasePriceLabel } from '../releases/release-labels';
         [id]="headingId()"
         class="text-2xl font-extrabold tracking-[-0.035em]"
       >
-        {{ shelf().title }}
+        @if (shelf().link; as link) {
+          <a class="hover:underline" [routerLink]="link">{{ shelf().title }}</a>
+        } @else {
+          {{ shelf().title }}
+        }
         <span class="text-base font-medium tracking-normal text-ink-muted">{{
           shelf().reason
         }}</span>

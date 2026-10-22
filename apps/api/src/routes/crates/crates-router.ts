@@ -33,7 +33,9 @@ export class CratesRouter extends AbstractRouter {
     );
 
     this.handle(HttpMethod.Get, ApiRoute.Crates, 'public', ({ query }) =>
-      this.crates.listPublic(query.limit, query.offset),
+      query.q?.trim()
+        ? this.crates.search(query.q.trim(), query.limit ?? 6)
+        : this.crates.listPublic(query.limit, query.offset),
     );
 
     this.handle(HttpMethod.Post, ApiRoute.Crates, 'user', ({ userId, body }) =>

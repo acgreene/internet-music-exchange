@@ -149,6 +149,8 @@ export const shelfSchema = z.object({
   title: z.string(),
   /** Why the shelf exists, as the listener reads it. */
   reason: z.string(),
+  /** Where the whole shelf lives, such as the crate it comes from. */
+  link: z.string().optional(),
   items: z.array(shelfItemSchema),
 });
 

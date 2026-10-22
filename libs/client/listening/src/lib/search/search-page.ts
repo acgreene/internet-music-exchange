@@ -37,6 +37,7 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { formatMoney } from '@ime/utils';
+import { CrateCard } from '../crates/crate-card';
 import { ShelfRow } from '../home/shelf-row';
 import { releasePriceLabel } from '../releases/release-labels';
 import { SearchBox } from './search-box';
@@ -68,6 +69,7 @@ const OPTION =
     AlertComponent,
     ButtonDirective,
     CoverComponent,
+    CrateCard,
     RouterLink,
     SearchBox,
     ShelfRow,
@@ -397,6 +399,20 @@ const OPTION =
               </section>
             }
 
+            @if (crates.value()?.length) {
+              <section
+                class="flex flex-col gap-3"
+                aria-labelledby="crates-heading"
+              >
+                <h2 id="crates-heading" class="text-lg font-bold">Crates</h2>
+                <ul class="grid grid-cols-3 gap-4 sm:grid-cols-6">
+                  @for (crate of crates.value(); track crate.id) {
+                    <li><ime-crate-card [crate]="crate" /></li>
+                  }
+                </ul>
+              </section>
+            }
+
             <section
               class="flex flex-col gap-4"
               aria-labelledby="releases-heading"
@@ -531,6 +547,16 @@ export class SearchPage {
       unwrap(await this.api.catalog.search({ ...params, limit: PAGE_SIZE })),
   });
   protected readonly found = computed(() => currentValue(this.results));
+
+  /** Public crates by name, when the search is words alone. */
+  protected readonly crates = resource({
+    params: () =>
+      this.chips().length ? undefined : this.state().q || undefined,
+    loader: async ({ params }) => {
+      const result = await this.api.crates.listPublic({ q: params, limit: 6 });
+      return result.ok ? result.data : [];
+    },
+  });
   protected readonly facets = computed(() => this.found()?.facets);
 
   private readonly more = linkedSignal<SearchRelease[], SearchRelease[]>({

@@ -136,7 +136,7 @@ export const crateFromRecordsRequestSchema = z.object({
 export const crateContracts = {
   [ApiRoute.Crates]: {
     [HttpMethod.Get]: {
-      query: pageQuerySchema,
+      query: pageQuerySchema.extend({ q: z.string().optional() }),
       response: z.array(crateCardSchema),
     },
     [HttpMethod.Post]: {

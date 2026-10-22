@@ -16,6 +16,8 @@ const SHELF_SIZE = 12;
 const MIN_SHELF_SIZE = 6;
 /** How many shelves the home page shows at once. */
 const SHELVES_SHOWN = 6;
+/** How many recent public crates the featured one is picked from. */
+const FEATURE_POOL = 40;
 /** How many designed releases the home page shows off. */
 const SHOWCASE_SIZE = 3;
 
@@ -161,6 +163,11 @@ export class ShelfService {
       }
     }
 
+    // one of today's shelves is a crate someone made, after the first
+    const crate = await this.featuredCrate(day);
+    if (crate) shelves.splice(1, 0, crate);
+    shelves.splice(SHELVES_SHOWN);
+
     const [formats, designed] = await Promise.all([
       this.db.shelves.countFormats(),
       this.db.shelves.listDesigned(SHOWCASE_SIZE),
@@ -170,6 +177,32 @@ export class ShelfService {
       designed: await this.cards.releases(designed),
       formats,
     };
+  }
+
+  /**
+   * A public crate for today's home page, picked by the date among the most
+   * recently changed ones with enough records still on sale.
+   */
+  private async featuredCrate(day: string): Promise<Shelf | null> {
+    const crates = (await this.db.crates.listPublic(FEATURE_POOL)).sort(
+      (a, b) => dailyRank(day, a.id) - dailyRank(day, b.id),
+    );
+    for (const crate of crates) {
+      const items = (await this.db.crates.listItems(crate.id))
+        .filter((item) => item.available)
+        .slice(0, SHELF_SIZE);
+      if (items.length < MIN_SHELF_SIZE) continue;
+      return {
+        id: 'crate',
+        title: crate.name,
+        reason: crate.ownerUsername
+          ? `a crate by @${crate.ownerUsername}`
+          : 'a crate from someone on IME',
+        link: `/crates/${crate.id}`,
+        items: await this.cards.releases(items),
+      };
+    }
+    return null;
   }
 
   private async cook(recipe: Recipe, userId?: string): Promise<ShelfItem[]> {
