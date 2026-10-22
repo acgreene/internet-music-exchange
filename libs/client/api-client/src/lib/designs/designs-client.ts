@@ -9,6 +9,8 @@ import {
   type DesignSale,
   type DesignSummary,
   type DesignVersionResponse,
+  type GalleryDesign,
+  type GalleryDesignPage,
   type ManagedDesignResponse,
   type MarketplaceDesignResponse,
   type PageQuery,
@@ -26,6 +28,38 @@ import type { ApiTransport } from '../api-transport';
  */
 export class DesignsClient {
   constructor(private readonly transport: ApiTransport) {}
+
+  /**
+   * Every design in the public gallery, with links to preview each.
+   */
+  public listGallery(): Promise<ApiResult<GalleryDesign[]>> {
+    return this.transport.get(ApiRoute.GalleryDesigns);
+  }
+
+  /**
+   * One design's gallery page, with releases that use it.
+   */
+  public getGalleryDesign(
+    designId: string,
+  ): Promise<ApiResult<GalleryDesignPage>> {
+    return this.transport.get(ApiRoute.GalleryDesign, {
+      params: { designId },
+    });
+  }
+
+  /**
+   * Ask a design's designer for a custom design. They get the message and
+   * the asker's email to reply to.
+   */
+  public requestCommission(
+    designId: string,
+    message: string,
+  ): Promise<ApiResult<AckResponse>> {
+    return this.transport.post(ApiRoute.GalleryCommission, {
+      params: { designId },
+      body: { message },
+    });
+  }
 
   /**
    * Public release page designs, newest first.

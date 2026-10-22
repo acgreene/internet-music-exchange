@@ -10,7 +10,7 @@ import {
 import { form, FormField, required, submit } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
-import { currentValue } from '@ime/client-data';
+import { currentValue, SessionService } from '@ime/client-data';
 import {
   AlertComponent,
   ButtonDirective,
@@ -65,6 +65,29 @@ import { designPriceLabel } from './design-price';
           </button>
         </div>
       </div>
+
+      <label
+        class="flex items-start gap-3 rounded-card border border-line bg-surface p-4"
+      >
+        <input
+          type="checkbox"
+          class="mt-1"
+          [checked]="openToCommissions()"
+          [disabled]="savingCommissions()"
+          (change)="setOpenToCommissions($any($event.target).checked)"
+        />
+        <span class="flex flex-col gap-0.5">
+          <span class="font-semibold">Take requests for custom designs</span>
+          <span class="text-sm text-ink-muted">
+            Your designs in the gallery offer a way to ask you for one. Requests
+            arrive by email with the asker's address; you arrange the work and
+            deliver it as a private design.
+          </span>
+        </span>
+      </label>
+      @if (commissionsError(); as message) {
+        <ime-alert tone="error">{{ message }}</ime-alert>
+      }
 
       @if (creating()) {
         <form
@@ -175,6 +198,24 @@ import { designPriceLabel } from './design-price';
 export class MyDesignsPage {
   private readonly api = inject(ApiClient);
   private readonly router = inject(Router);
+  private readonly session = inject(SessionService);
+
+  protected readonly openToCommissions = computed(
+    () => this.session.user()?.openToCommissions ?? false,
+  );
+  protected readonly savingCommissions = signal(false);
+  protected readonly commissionsError = signal<string | null>(null);
+
+  protected async setOpenToCommissions(open: boolean): Promise<void> {
+    this.savingCommissions.set(true);
+    this.commissionsError.set(null);
+    const result = await this.api.user.updateProfile({
+      openToCommissions: open,
+    });
+    if (result.ok) await this.session.refresh();
+    else this.commissionsError.set(result.error.message);
+    this.savingCommissions.set(false);
+  }
 
   protected readonly designsResource = resource({
     loader: async () => unwrap(await this.api.designs.listMine()),

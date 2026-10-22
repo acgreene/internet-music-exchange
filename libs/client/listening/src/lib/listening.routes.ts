@@ -18,6 +18,18 @@ export const listeningRoutes: Route[] = [
       import('./search/search-page').then((m) => m.SearchPage),
   },
   {
+    path: 'designs',
+    title: 'Design gallery · IME',
+    loadComponent: () =>
+      import('./designs/gallery-page').then((m) => m.GalleryPage),
+  },
+  {
+    path: 'designs/:designId',
+    title: 'Design · IME',
+    loadComponent: () =>
+      import('./designs/design-page').then((m) => m.DesignPage),
+  },
+  {
     path: 'following',
     title: 'Following · IME',
     canActivate: [signedInGuard],

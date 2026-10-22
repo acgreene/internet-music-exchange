@@ -90,8 +90,8 @@ const PAGE_SIZE = 24;
                 ]"
                 >Hear a designed release</a
               >
-              <a class="link font-semibold" routerLink="/studio/marketplace"
-                >Find a design for your music</a
+              <a class="link font-semibold" routerLink="/designs"
+                >Browse the design gallery</a
               >
             </div>
           </div>

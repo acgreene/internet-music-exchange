@@ -47,6 +47,7 @@ export class AppShell {
 
   protected readonly navigation = computed(() => [
     { label: 'Discover', path: '/' },
+    { label: 'Designs', path: '/designs' },
     ...(this.session.isSignedIn()
       ? [
           { label: 'Library', path: '/library' },
