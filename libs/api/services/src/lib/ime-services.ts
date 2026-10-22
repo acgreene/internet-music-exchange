@@ -5,6 +5,7 @@ import { AccessService } from './access/access-service';
 import { ArtistPageService } from './artist-pages';
 import { ArtistService } from './artists';
 import { AuthService } from './auth';
+import { CommentService, FollowService } from './community';
 import { EmailService } from './email';
 import {
   BillingService,
@@ -54,6 +55,8 @@ export class ImeServices {
   public readonly checkout: CheckoutService;
   public readonly purchases: PurchaseService;
   public readonly sales: SalesService;
+  public readonly follows: FollowService;
+  public readonly comments: CommentService;
   public readonly paymentAccounts: PaymentAccountService;
   public readonly billing: BillingService;
   public readonly costShares: CostShareService;
@@ -95,6 +98,8 @@ export class ImeServices {
     this.checkout = new CheckoutService(db, stripe, gate, email, webAppUrl);
     this.purchases = new PurchaseService(db, email, webAppUrl);
     this.sales = new SalesService(db, stripe, access, email, webAppUrl);
+    this.follows = new FollowService(db, access);
+    this.comments = new CommentService(db, access);
     this.billing = new BillingService(db, stripe, funding);
     this.costShares = new CostShareService(db, access);
     this.donations = new DonationService(db, stripe, webAppUrl);

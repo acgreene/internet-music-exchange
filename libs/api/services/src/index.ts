@@ -75,6 +75,11 @@ export type {
   ShipmentInput,
 } from './lib/orders/sales-service';
 
+// Community
+export { COMMENT_MAX_LENGTH } from './lib/community/comment-service';
+export type { CommentService } from './lib/community/comment-service';
+export type { FollowService } from './lib/community/follow-service';
+
 // Getting paid and funding
 export { STRIPE_DASHBOARD_URL } from './lib/payments/payment-account-service';
 export type {

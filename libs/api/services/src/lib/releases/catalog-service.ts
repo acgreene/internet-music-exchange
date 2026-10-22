@@ -43,7 +43,8 @@ export interface ReleasePage {
 
 /**
  * The listener's side of releases: release pages, browsing and search, the
- * library, and the URLs that stream, download, and open what they may access.
+ * feed of followed artists, the library, and the URLs that stream, download,
+ * and open what they may access.
  *
  * Every file served counts toward its artist's hosting usage.
  */
@@ -181,6 +182,17 @@ export class CatalogService {
   }
 
   /**
+   * New music from the artists a listener follows, most recently published
+   * first.
+   */
+  public async getFeed(userId: string, limit = DEFAULT_PAGE_SIZE, offset = 0) {
+    return this.withCovers(
+      await this.db.social.listFeedReleases(userId, limit, offset),
+      (release) => release.releaseId,
+    );
+  }
+
+  /**
    * A URL that streams one track. Preview tracks of a release on sale stream
    * for anyone; everything else needs ownership.
    *
@@ -198,9 +210,11 @@ export class CatalogService {
       trackId,
       viewerUserId,
     );
-    if (
-      !(access.owns || access.isManager || (track.isPreview && access.onSale))
-    ) {
+    if (!(
+      access.owns ||
+      access.isManager ||
+      (track.isPreview && access.onSale)
+    )) {
       throw new ApiError(
         ApiErrorKind.Http,
         HttpStatus.Forbidden,

@@ -57,7 +57,7 @@ Each is a property of `ImeServices`, named in brackets.
   and artwork uploads, pricing, publishing, archiving, and gifting. Use it for
   every screen where an artist builds or edits a release.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release pages, browsing
-  and search, the library, and the URLs that stream, download, and open
+  and search, the feed of followed artists, the library, and the URLs that stream, download, and open
   assets. Use it for anything a listener sees or plays.
 - **`ArtistPageService`** (`artistPages`): renders a release through its creative-page design:
   release data, the artist's customization, and a signed link to the design
@@ -85,6 +85,15 @@ Each is a property of `ImeServices`, named in brackets.
 - **`SalesService`** (`sales`): a manager's sales, the queue of orders to
   ship, marking them shipped and delivered, refunds, and settled totals. Use
   it for the sales and fulfillment screens.
+
+### Community
+
+- **`FollowService`** (`follows`): following and unfollowing artists, which
+  ones a listener follows, follower counts, and a manager's list of followers
+  with removal. Use it for follow buttons and the followers screen.
+- **`CommentService`** (`comments`): comments on releases: reading, posting,
+  editing your own, and deleting your own or, as a manager, any on your
+  artist's releases. Use it for a release page's comments.
 
 ### Getting paid and funding
 
