@@ -48,6 +48,10 @@ export class CatalogRouter extends AbstractRouter {
       ({ query }) => this.search.suggest(query.q),
     );
 
+    this.handle(HttpMethod.Get, ApiRoute.CatalogPlaces, 'public', () =>
+      this.search.listPlaces(),
+    );
+
     this.handle(
       HttpMethod.Get,
       ApiRoute.CatalogDiscography,

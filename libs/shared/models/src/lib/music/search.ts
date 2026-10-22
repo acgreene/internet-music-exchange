@@ -1,3 +1,4 @@
+import { countryName } from '../places/countries';
 import { GENRES, type GenreId } from './genres';
 
 /** The formats a release can be found in. Every release is digital. */
@@ -52,11 +53,21 @@ export interface SearchFilters {
   year?: string;
   kind?: SearchKindId;
   designed?: boolean;
+  /** Where the artist is based: a two-letter country code. */
+  country?: string;
+  /** A city in that country. */
+  city?: string;
+}
+
+/** A place artists on IME are based, which search can read. */
+export interface KnownPlace {
+  country: string;
+  city: string | null;
 }
 
 /** A filter IME recognized in what someone typed. */
 export interface ReadFilter {
-  key: 'genre' | 'format' | 'under' | 'year' | 'kind' | 'designed';
+  key: 'genre' | 'format' | 'under' | 'year' | 'kind' | 'designed' | 'place';
   value: string;
   label: string;
 }
@@ -66,6 +77,10 @@ export function priceLabel(under: number): string {
   // a ceiling one cent over whole dollars came from "up to"
   if (under % 100 === 1) return `Up to $${(under - 1) / 100}`;
   return `Under $${Math.round(under / 100)}`;
+}
+
+export function placeName(country: string, city?: string | null): string {
+  return city || countryName(country);
 }
 
 export function yearLabel(year: string): string {
@@ -130,6 +145,7 @@ const KIND_WORDS: Record<string, SearchKindId> = {
 /** Words that only join filters together, dropped once filters are read. */
 const GLUE = new Set([
   'a',
+  'based',
   'an',
   'and',
   'by',
@@ -164,15 +180,49 @@ function phrase(text: string): string {
     .trim();
 }
 
+/** Other names for countries, beside their English names. */
+const COUNTRY_ALIASES: Record<string, string> = {
+  uk: 'GB',
+  britain: 'GB',
+  'great britain': 'GB',
+  england: 'GB',
+  scotland: 'GB',
+  wales: 'GB',
+  usa: 'US',
+  america: 'US',
+};
+
+/** Cities and countries by how they are typed, from IME's own places. */
+function placePhrases(places: KnownPlace[]): Map<string, KnownPlace> {
+  const phrases = new Map<string, KnownPlace>();
+  const countries = new Set(places.map((place) => place.country));
+  for (const place of places) {
+    const key = place.city && phrase(place.city);
+    // places come most common first, so a shared city name means the busier one
+    if (key && !phrases.has(key)) phrases.set(key, place);
+  }
+  for (const country of countries) {
+    phrases.set(phrase(countryName(country)), { country, city: null });
+  }
+  for (const [alias, country] of Object.entries(COUNTRY_ALIASES)) {
+    if (countries.has(country)) phrases.set(alias, { country, city: null });
+  }
+  return phrases;
+}
+
 const PRICE_PATTERN =
   /\b(?:under|below|less than|cheaper than|up to)\s*[$€]?\s*(\d{1,4})(?:\s*(?:dollars|bucks|euros|usd|eur))?\b/;
 
 /**
  * Read the filters in a one-line search, like "shoegaze on vinyl under $20"
- * or "90s hip hop tapes", by fixed rules over IME's own lists. The words
- * that are not filters are left as the text to search for.
+ * or "90s hip hop tapes from Glasgow", by fixed rules over IME's own lists
+ * and the places its artists are based. The words that are not filters are
+ * left as the text to search for.
  */
-export function parseSearch(text: string): {
+export function parseSearch(
+  text: string,
+  places: KnownPlace[] = [],
+): {
   filters: SearchFilters;
   read: ReadFilter[];
 } {
@@ -195,7 +245,22 @@ export function parseSearch(text: string): {
 
   const words = rest.split(' ').filter(Boolean);
   const left: string[] = [];
+  const placeAt = places.length ? placePhrases(places) : null;
   for (let i = 0; i < words.length; i++) {
+    const place =
+      placeAt && !filters.country ? matchPlace(words, i, placeAt) : null;
+    if (place) {
+      filters.country = place.country;
+      filters.city = place.city ?? undefined;
+      read.push({
+        key: 'place',
+        value: place.city ? `${place.city}|${place.country}` : place.country,
+        label: `Based in ${placeName(place.country, place.city)}`,
+      });
+      i += place.length - 1;
+      continue;
+    }
+
     const genre = matchGenre(words, i);
     if (genre) {
       if (!filters.genres.includes(genre.id)) {
@@ -250,6 +315,18 @@ export function parseSearch(text: string): {
     ? left.filter((word) => !GLUE.has(word)).join(' ')
     : text.trim();
   return { filters, read };
+}
+
+function matchPlace(
+  words: string[],
+  start: number,
+  phrases: Map<string, KnownPlace>,
+): (KnownPlace & { length: number }) | null {
+  for (let length = 3; length >= 1; length--) {
+    const place = phrases.get(words.slice(start, start + length).join(' '));
+    if (place) return { ...place, length };
+  }
+  return null;
 }
 
 function matchGenre(

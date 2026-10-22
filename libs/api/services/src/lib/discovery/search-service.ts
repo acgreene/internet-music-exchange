@@ -5,6 +5,7 @@ import {
 } from '@ime/db';
 import {
   type CatalogSearchQuery,
+  type PlaceCount,
   isGenreId,
   PRICE_CEILINGS,
   type SearchRelease,
@@ -50,24 +51,35 @@ export class SearchService {
       search.under === undefined &&
       !search.releasedFrom &&
       !search.kind &&
-      !search.designed;
+      !search.designed &&
+      !search.country;
 
-    const [rows, total, genres, formats, prices, years, kinds, designed] =
-      await Promise.all([
-        this.db.search.searchReleases(
-          search,
-          sort,
-          Math.min(query.limit ?? PAGE_SIZE, PAGE_SIZE * 2),
-          query.offset ?? 0,
-        ),
-        this.db.search.countReleases(search),
-        this.db.search.countGenres(search),
-        this.db.search.countFormats(search),
-        this.db.search.countPrices(search, PRICE_CEILINGS),
-        this.db.search.countYears(search),
-        this.db.search.countKinds(search),
-        this.db.search.countDesigned(search),
-      ]);
+    const [
+      rows,
+      total,
+      genres,
+      formats,
+      prices,
+      years,
+      kinds,
+      designed,
+      places,
+    ] = await Promise.all([
+      this.db.search.searchReleases(
+        search,
+        sort,
+        Math.min(query.limit ?? PAGE_SIZE, PAGE_SIZE * 2),
+        query.offset ?? 0,
+      ),
+      this.db.search.countReleases(search),
+      this.db.search.countGenres(search),
+      this.db.search.countFormats(search),
+      this.db.search.countPrices(search, PRICE_CEILINGS),
+      this.db.search.countYears(search),
+      this.db.search.countKinds(search),
+      this.db.search.countDesigned(search),
+      this.db.search.countPlaces(search),
+    ]);
     const [cards, editions, artists, merch] = await Promise.all([
       this.cards.releases(rows),
       this.db.search.listEditions(rows.map((row) => row.id)),
@@ -88,8 +100,16 @@ export class SearchService {
       total,
       artists: artists.filter((artist) => !artist.offSaleAt),
       merch: await this.cards.products(merch),
-      facets: { genres, formats, prices, years, kinds, designed },
+      facets: { genres, formats, prices, years, kinds, designed, places },
     };
+  }
+
+  /**
+   * Every place an artist with music on sale is based, for reading places
+   * out of what people type.
+   */
+  public async listPlaces(): Promise<PlaceCount[]> {
+    return this.db.search.listPlaces();
   }
 
   /**
@@ -135,6 +155,8 @@ export class SearchService {
       ...releasedBetween(query.year),
       kind: query.kind,
       designed: query.designed === '1',
+      country: query.country,
+      city: query.country ? query.city?.trim() || undefined : undefined,
     };
   }
 }

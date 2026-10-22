@@ -62,9 +62,11 @@ Each is a property of `ImeServices`, named in brackets.
   few designed releases and how much of each format is on offer. Use it for
   the home page.
 - **`SearchService`** (`search`): searching the catalog: releases by words
-  and filters (genre, format, price, year, kind, designed pages) with how
-  many releases each filter value would leave, every format a release is
-  sold in, matching artists and merch, and suggestions while someone types.
+  and filters (genre, format, price, year, kind, designed pages, where the
+  artist is based) with how many releases each filter value would leave,
+  every format a release is sold in, matching artists and merch, the places
+  artists are based for reading them out of a search, and suggestions while
+  someone types.
   Use it for the search box and the results page.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release
   pages, browsing, the feed of followed artists, the library, and

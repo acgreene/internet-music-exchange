@@ -3,6 +3,7 @@ import {
   arrayOverlaps,
   asc,
   count,
+  countDistinct,
   desc,
   eq,
   exists,
@@ -54,15 +55,25 @@ export interface ReleaseSearch {
   releasedTo?: string;
   kind?: ReleaseKind;
   designed?: boolean;
+  /** Where the artist is based: a country code, and optionally a city in it. */
+  country?: string;
+  city?: string;
 }
 
 export type SearchFacet =
-  'genres' | 'format' | 'under' | 'released' | 'kind' | 'designed';
+  'genres' | 'format' | 'under' | 'released' | 'kind' | 'designed' | 'place';
 
 export type ReleaseSearchSort = 'relevance' | 'newest' | 'most-kept' | 'price';
 
 export interface FacetCount<T = string> {
   value: T;
+  count: number;
+}
+
+/** A place artists are based, with how many releases or artists are there. */
+export interface PlaceCount {
+  country: string;
+  city: string | null;
   count: number;
 }
 
@@ -221,6 +232,40 @@ export class SearchRepository {
     return ceilings.map((value, i) => ({ value, count: counts[i] }));
   }
 
+  /** How many releases come from each place, keeping the other filters. */
+  public async countPlaces(search: ReleaseSearch): Promise<PlaceCount[]> {
+    const rows = await this.db
+      .select({ country: artists.country, city: artists.city, count: count() })
+      .from(releases)
+      .innerJoin(artists, eq(artists.id, releases.artistId))
+      .leftJoin(releasePricing, eq(releasePricing.releaseId, releases.id))
+      .where(
+        and(onSale, this.where(search, 'place'), isNotNull(artists.country)),
+      )
+      .groupBy(artists.country, artists.city)
+      .orderBy(desc(count()));
+    return rows as PlaceCount[];
+  }
+
+  /**
+   * Every place an artist with music on sale is based, with how many such
+   * artists are there. Search reads these places out of what people type.
+   */
+  public async listPlaces(): Promise<PlaceCount[]> {
+    const rows = await this.db
+      .select({
+        country: artists.country,
+        city: artists.city,
+        count: countDistinct(artists.id),
+      })
+      .from(releases)
+      .innerJoin(artists, eq(artists.id, releases.artistId))
+      .where(and(onSale, isNotNull(artists.country)))
+      .groupBy(artists.country, artists.city)
+      .orderBy(desc(countDistinct(artists.id)));
+    return rows as PlaceCount[];
+  }
+
   public async countDesigned(search: ReleaseSearch): Promise<number> {
     return this.countWhere(this.where({ ...search, designed: true }));
   }
@@ -369,6 +414,12 @@ export class SearchRepository {
         : undefined,
       omit !== 'kind' && search.kind
         ? eq(releases.kind, search.kind)
+        : undefined,
+      omit !== 'place' && search.country
+        ? eq(artists.country, search.country)
+        : undefined,
+      omit !== 'place' && search.country && search.city
+        ? sql`lower(${artists.city}) = lower(${search.city})`
         : undefined,
       omit !== 'designed' && search.designed
         ? exists(

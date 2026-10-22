@@ -111,7 +111,10 @@ Managers, designers, and owners are checked by the service, which answers 403.
 | Method | Route | Access | Service call |
 | --- | --- | --- | --- |
 | GET | `/api/catalog/releases` | P | `catalog.listRecent` |
-| GET | `/api/catalog/search?q=` | P | `catalog.search` |
+| GET | `/api/catalog/home` | O | `shelves.getHome` |
+| GET | `/api/catalog/search?q=&genres=&format=&under=&year=&kind=&designed=&country=&city=&sort=` | P | `search.search` |
+| GET | `/api/catalog/suggest?q=` | P | `search.suggest` |
+| GET | `/api/catalog/places` | P | `search.listPlaces` |
 | GET | `/api/catalog/artists/:handle` | P | `artists.getProfile` |
 | GET | `/api/catalog/artists/:handle/releases` | P | `catalog.listDiscography` |
 | GET | `/api/catalog/artists/:handle/releases/:slug` | O | `catalog.getReleasePage` |

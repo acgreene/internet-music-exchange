@@ -14,6 +14,7 @@ import { type Params, Router } from '@angular/router';
 import { ApiClient } from '@ime/api-client';
 import { GENRES, parseSearch, type SearchSuggestions } from '@ime/models';
 import { CoverComponent } from '@ime/ui';
+import { KnownPlaces } from './known-places';
 import { paramsForPhrase } from './search-params';
 
 const TYPING_PAUSE_MS = 150;
@@ -75,7 +76,7 @@ interface Group {
           [value]="text()"
           (input)="type($event)"
           (keydown)="key($event)"
-          (focus)="focused.set(true)"
+          (focus)="onFocus()"
           (blur)="focused.set(false)"
         />
         @if (shortcut()) {
@@ -170,6 +171,7 @@ interface Group {
 export class SearchBox {
   private readonly api = inject(ApiClient);
   private readonly router = inject(Router);
+  private readonly known = inject(KnownPlaces);
 
   /** What the box starts with, such as the words of the current search. */
   public readonly value = input('');
@@ -192,7 +194,8 @@ export class SearchBox {
   protected readonly groups = computed<Group[]>(() => {
     const typed = this.text().trim();
     if (!typed) return [];
-    const { read } = parseSearch(typed);
+    const places = this.known.places();
+    const { read } = parseSearch(typed, places);
     const groups: Group[] = [
       {
         label: null,
@@ -203,7 +206,7 @@ export class SearchBox {
             label: typed,
             chips: read.map((filter) => filter.label),
             commands: ['/search'],
-            queryParams: paramsForPhrase(typed),
+            queryParams: paramsForPhrase(typed, places),
           },
         ],
       },
@@ -287,6 +290,11 @@ export class SearchBox {
     this.field()?.nativeElement.focus();
   }
 
+  protected onFocus(): void {
+    this.focused.set(true);
+    this.known.load();
+  }
+
   protected indexOf(option: Option): number {
     return this.options().indexOf(option);
   }
@@ -297,7 +305,7 @@ export class SearchBox {
     this.activeIndex.set(-1);
     clearTimeout(this.pause);
     // suggest from the words left once filters like "tapes" are read out
-    const words = parseSearch(this.text()).filters.q;
+    const words = parseSearch(this.text(), this.known.places()).filters.q;
     if (!words) {
       this.suggestions.set(null);
       return;

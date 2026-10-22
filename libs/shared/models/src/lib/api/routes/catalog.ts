@@ -190,6 +190,12 @@ export const catalogSearchQuerySchema = pageQuerySchema.extend({
     .enum(SEARCH_KINDS.map((kind) => kind.id) as [SearchKindId])
     .optional(),
   designed: z.literal('1').optional(),
+  /** Where the artist is based: a two-letter country code, and a city in it. */
+  country: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .optional(),
+  city: z.string().max(80).optional(),
   sort: z.enum(SEARCH_SORTS.map((sort) => sort.id) as [SearchSort]).optional(),
 });
 
@@ -197,6 +203,17 @@ export type CatalogSearchQuery = z.infer<typeof catalogSearchQuerySchema>;
 
 const facetCountSchema = <T extends z.ZodType>(value: T) =>
   z.object({ value, count: z.number().int() });
+
+/**
+ * A place artists are based: a country, and a city in it when they gave one.
+ */
+export const placeCountSchema = z.object({
+  country: z.string(),
+  city: z.string().nullable(),
+  count: z.number().int(),
+});
+
+export type PlaceCount = z.infer<typeof placeCountSchema>;
 
 /**
  * A release a search found, with every format it can be bought in.
@@ -233,6 +250,8 @@ export const searchResultsSchema = z.object({
     years: z.array(facetCountSchema(z.number().int())),
     kinds: z.array(facetCountSchema(releaseKindSchema)),
     designed: z.number().int(),
+    /** Releases from each place artists are based, city by city. */
+    places: z.array(placeCountSchema),
   }),
 });
 
@@ -272,6 +291,9 @@ export const catalogContracts = {
       query: catalogSearchQuerySchema,
       response: searchResultsSchema,
     },
+  },
+  [ApiRoute.CatalogPlaces]: {
+    [HttpMethod.Get]: { response: z.array(placeCountSchema) },
   },
   [ApiRoute.CatalogSuggest]: {
     [HttpMethod.Get]: {

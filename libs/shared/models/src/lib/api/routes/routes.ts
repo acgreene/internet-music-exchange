@@ -134,6 +134,7 @@ export enum ApiRoute {
   /** Search artists and releases, `?q=`. */
   CatalogSearch = '/api/catalog/search',
   CatalogSuggest = '/api/catalog/suggest',
+  CatalogPlaces = '/api/catalog/places',
 
   /** An artist's published releases. */
   CatalogDiscography = '/api/catalog/artists/:handle/releases',

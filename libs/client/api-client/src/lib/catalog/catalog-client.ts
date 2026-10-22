@@ -4,6 +4,7 @@ import {
   type CatalogSearchQuery,
   type FeedItem,
   type LibraryItem,
+  type PlaceCount,
   type PageQuery,
   type ReleaseCard,
   type ReleaseCardWithArtist,
@@ -43,6 +44,13 @@ export class CatalogClient {
    */
   public search(query: CatalogSearchQuery): Promise<ApiResult<SearchResults>> {
     return this.transport.get(ApiRoute.CatalogSearch, { query });
+  }
+
+  /**
+   * Every place artists with music on sale are based.
+   */
+  public listPlaces(): Promise<ApiResult<PlaceCount[]>> {
+    return this.transport.get(ApiRoute.CatalogPlaces);
   }
 
   /**

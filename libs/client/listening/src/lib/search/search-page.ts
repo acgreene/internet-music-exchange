@@ -17,9 +17,11 @@ import {
 import { ApiClient, unwrap } from '@ime/api-client';
 import { currentValue } from '@ime/client-data';
 import {
+  countryName,
   FORMATS,
   genreName,
   type GenreId,
+  placeName,
   priceLabel,
   SEARCH_KINDS,
   SEARCH_SORTS,
@@ -48,6 +50,8 @@ import {
 const PAGE_SIZE = 24;
 /** Genres listed before "Show all genres". */
 const GENRES_SHOWN = 10;
+/** Countries listed before "Show all places". */
+const PLACES_SHOWN = 8;
 
 const OPTION =
   'flex items-center justify-between gap-3 rounded-control px-2 py-1 text-sm hover:bg-wash';
@@ -275,6 +279,67 @@ const OPTION =
 
               <section class="flex flex-col gap-1">
                 <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
+                  Based in
+                </h2>
+                <a
+                  [class]="option"
+                  [class.font-semibold]="!state().country"
+                  routerLink="/search"
+                  [queryParams]="with({ country: undefined, city: undefined })"
+                  >Anywhere</a
+                >
+                @if (state().country; as country) {
+                  <a
+                    [class]="option"
+                    [class.font-semibold]="!state().city"
+                    routerLink="/search"
+                    [queryParams]="with({ country, city: undefined })"
+                    >All of {{ countryName(country) }}
+                    <span class="font-mono text-xs text-ink-muted">{{
+                      countryTotal()
+                    }}</span></a
+                  >
+                  @for (city of cities(); track city.name) {
+                    <a
+                      [class]="option"
+                      class="pl-5"
+                      [class.font-semibold]="city.chosen"
+                      [attr.aria-current]="city.chosen || null"
+                      routerLink="/search"
+                      [queryParams]="with({ country, city: city.name })"
+                      >{{ city.name }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        city.count
+                      }}</span></a
+                    >
+                  }
+                } @else {
+                  @for (country of countries(); track country.code) {
+                    <a
+                      [class]="option"
+                      routerLink="/search"
+                      [queryParams]="
+                        with({ country: country.code, city: undefined })
+                      "
+                      >{{ country.name }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        country.count
+                      }}</span></a
+                    >
+                  }
+                  @if (moreCountries()) {
+                    <button
+                      class="link px-2 text-left text-sm"
+                      (click)="allCountries.set(!allCountries())"
+                    >
+                      {{ allCountries() ? 'Show fewer' : 'Show all places' }}
+                    </button>
+                  }
+                }
+              </section>
+
+              <section class="flex flex-col gap-1">
+                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
                   Extras
                 </h2>
                 <a
@@ -448,6 +513,7 @@ export class SearchPage {
   protected readonly option = OPTION;
   protected readonly priceName = priceLabel;
   protected readonly yearName = yearLabel;
+  protected readonly countryName = countryName;
 
   protected readonly state = computed(() => readSearchParams(this.params()));
   protected readonly sort = computed<SearchSort>(
@@ -477,6 +543,7 @@ export class SearchPage {
   protected readonly loadingMore = signal(false);
   protected readonly railOpen = signal(false);
   protected readonly allGenres = signal(false);
+  protected readonly allCountries = signal(false);
 
   protected readonly releases = computed(() => [
     ...(this.found()?.releases ?? []),
@@ -528,6 +595,12 @@ export class SearchPage {
         without: this.with({ designed: false }),
       });
     }
+    if (state.country) {
+      chips.push({
+        label: `Based in ${placeName(state.country, state.city)}`,
+        without: this.with({ country: undefined, city: undefined }),
+      });
+    }
     return chips;
   });
 
@@ -568,6 +641,41 @@ export class SearchPage {
   protected readonly moreGenres = computed(
     () => this.genreOptions().length > GENRES_SHOWN,
   );
+
+  /** Countries by how many releases come from them. */
+  private readonly countryOptions = computed(() => {
+    const totals = new Map<string, number>();
+    for (const place of this.facets()?.places ?? []) {
+      totals.set(place.country, (totals.get(place.country) ?? 0) + place.count);
+    }
+    return [...totals]
+      .map(([code, count]) => ({ code, name: countryName(code), count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  });
+  protected readonly countries = computed(() =>
+    this.allCountries()
+      ? this.countryOptions()
+      : this.countryOptions().slice(0, PLACES_SHOWN),
+  );
+  protected readonly moreCountries = computed(
+    () => this.countryOptions().length > PLACES_SHOWN,
+  );
+  protected readonly countryTotal = computed(
+    () =>
+      this.countryOptions().find((c) => c.code === this.state().country)
+        ?.count ?? 0,
+  );
+  /** The chosen country's cities, by how many releases come from them. */
+  protected readonly cities = computed(() => {
+    const { country, city } = this.state();
+    return (this.facets()?.places ?? [])
+      .filter((place) => place.country === country && place.city)
+      .map((place) => ({
+        name: place.city as string,
+        count: place.count,
+        chosen: place.city?.toLowerCase() === city?.toLowerCase(),
+      }));
+  });
 
   protected readonly kinds = computed(() =>
     SEARCH_KINDS.map((kind) => ({
