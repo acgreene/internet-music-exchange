@@ -10,6 +10,7 @@ export * from './merch';
 export * from './orders';
 export * from './community';
 export * from './crates';
+export * from './dig';
 export * from './designs';
 export * from './funding';
 export * from './moderation';

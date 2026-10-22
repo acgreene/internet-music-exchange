@@ -23,7 +23,12 @@ import {
   PublicCostsService,
 } from './funding';
 import { HealthService } from './health';
-import { CrateService, SearchService, ShelfService } from './discovery';
+import {
+  CrateService,
+  DigService,
+  SearchService,
+  ShelfService,
+} from './discovery';
 import { ProductService, StoreService } from './merch';
 import {
   ModerationJobsService,
@@ -68,6 +73,7 @@ export class ImeServices {
   public readonly shelves: ShelfService;
   public readonly search: SearchService;
   public readonly crates: CrateService;
+  public readonly dig: DigService;
   public readonly artistPages: ArtistPageService;
   public readonly products: ProductService;
   public readonly store: StoreService;
@@ -114,6 +120,7 @@ export class ImeServices {
     this.shelves = new ShelfService(db, storage);
     this.search = new SearchService(db, storage);
     this.crates = new CrateService(db, storage, access);
+    this.dig = new DigService(db, this.crates);
     this.artistPages = new ArtistPageService(db, storage);
     this.products = new ProductService(db, storage, access, gate, uploads);
     this.store = new StoreService(db, storage);

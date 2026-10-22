@@ -302,6 +302,63 @@ export class SearchRepository {
   }
 
   /**
+   * For each physical edition of some releases, its cheapest variant in
+   * stock, so an edition can go straight into a cart.
+   */
+  public async listEditionVariants(releaseIds: string[]): Promise<
+    {
+      releaseId: string;
+      productId: string;
+      productName: string;
+      type: PhysicalFormat;
+      currency: 'usd' | 'eur';
+      variantId: string;
+      variantLabel: string | null;
+      price: number;
+      stock: number;
+    }[]
+  > {
+    if (releaseIds.length === 0) return [];
+    const ids = sql.join(
+      releaseIds.map((id) => sql`${id}::uuid`),
+      sql`, `,
+    );
+    const rows = await this.db.execute<{
+      release_id: string;
+      product_id: string;
+      product_name: string;
+      type: PhysicalFormat;
+      currency: 'usd' | 'eur';
+      variant_id: string;
+      variant_label: string | null;
+      price: number;
+      stock: number;
+    }>(
+      sql`select distinct on (p.id)
+            p.release_id, p.id as product_id, p.name as product_name, p.type,
+            p.currency, v.id as variant_id,
+            nullif(concat_ws(' / ', v.option1_value, v.option2_value, v.option3_value), '') as variant_label,
+            v.price, v.stock
+          from ${products} p
+          join ${productVariants} v on v.product_id = p.id
+          where p.release_id in (${ids}) and p.status = 'published'
+            and p.type in ('vinyl', 'cassette', 'cd') and v.stock > 0
+          order by p.id, v.price`,
+    );
+    return rows.map((row) => ({
+      releaseId: row.release_id,
+      productId: row.product_id,
+      productName: row.product_name,
+      type: row.type,
+      currency: row.currency,
+      variantId: row.variant_id,
+      variantLabel: row.variant_label,
+      price: Number(row.price),
+      stock: Number(row.stock),
+    }));
+  }
+
+  /**
    * Merch that is not a record, by name or artist, cheapest variant in stock.
    */
   public async searchMerch(

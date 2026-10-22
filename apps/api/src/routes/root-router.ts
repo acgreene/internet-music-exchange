@@ -47,7 +47,7 @@ export class RootRouter extends AbstractRouter {
         services.search,
       ),
       new MerchRouter(guard, services.products, services.store),
-      new CratesRouter(guard, services.crates),
+      new CratesRouter(guard, services.crates, services.dig),
       new CommunityRouter(guard, services.follows, services.comments),
       new DesignsRouter(
         guard,

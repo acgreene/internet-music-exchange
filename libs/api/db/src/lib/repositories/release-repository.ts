@@ -253,6 +253,28 @@ export class ReleaseRepository {
   }
 
   /**
+   * The tracklists of several releases at once, each in running order.
+   */
+  public async listTracksFor(
+    releaseIds: string[],
+  ): Promise<(ReleaseTracklistItem & { releaseId: string })[]> {
+    if (releaseIds.length === 0) return [];
+    return this.db
+      .select({
+        releaseId: releaseTracks.releaseId,
+        trackId: tracks.id,
+        position: releaseTracks.position,
+        title: tracks.title,
+        durationMs: tracks.durationMs,
+        isPreview: releaseTracks.isPreview,
+      })
+      .from(releaseTracks)
+      .innerJoin(tracks, eq(tracks.id, releaseTracks.trackId))
+      .where(inArray(releaseTracks.releaseId, releaseIds))
+      .orderBy(asc(releaseTracks.position));
+  }
+
+  /**
    * The genres and tags of some releases.
    */
   public async listSounds(

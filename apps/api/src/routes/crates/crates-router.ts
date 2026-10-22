@@ -1,21 +1,43 @@
 import { ApiRoute, HttpMethod } from '@ime/models';
-import type { CrateService } from '@ime/services';
+import type { CrateService, DigService } from '@ime/services';
 import { AbstractRouter } from '../abstract-router';
 import type { RouteGuard } from '../route-guard';
 
 /**
- * Crates people make and the ones IME builds, and following crate makers.
+ * Crates people make and the ones IME builds, digging through them, and
+ * following crate makers.
  */
 export class CratesRouter extends AbstractRouter {
   constructor(
     guard: RouteGuard,
     private readonly crates: CrateService,
+    private readonly dig: DigService,
   ) {
     super(guard);
     this.register();
   }
 
   protected register(): void {
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.DigCrate,
+      'optional',
+      ({ params, query, userId }) =>
+        this.dig.digCrate(params.crateId, query.depth, userId),
+    );
+
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.DigSound,
+      'optional',
+      ({ query, userId }) =>
+        this.dig.digSound(
+          { genre: query.genre, tag: query.tag },
+          query.depth,
+          userId,
+        ),
+    );
+
     // the built crates come first, so their paths are not read as crate ids
     this.handle(HttpMethod.Get, ApiRoute.CrateBySound, 'public', ({ query }) =>
       this.crates.bySound(query.genre, query.tag),

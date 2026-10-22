@@ -213,6 +213,8 @@ Managers, designers, and owners are checked by the service, which answers 403.
 | GET | `/api/me/followed-crates` | U | `crates.listFromFollowed` |
 | GET | `/api/users/:username/crates` | P | `crates.listByUsername` |
 | PUT, DELETE | `/api/users/:userId/follow` | U | `crates.followMaker`, `crates.unfollowMaker` |
+| GET | `/api/dig/crates/:crateId?depth=` | O | `dig.digCrate` |
+| GET | `/api/dig/sound?genre=&tag=&depth=` | O | `dig.digSound` |
 | GET | `/api/gallery/designs` | P | `gallery.list` |
 | GET | `/api/gallery/designs/:designId` | P | `gallery.get` |
 | POST | `/api/gallery/designs/:designId/commission` | U | `gallery.requestCommission` |

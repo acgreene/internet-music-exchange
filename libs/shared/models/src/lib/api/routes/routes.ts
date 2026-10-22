@@ -271,6 +271,12 @@ export enum ApiRoute {
   /** Someone's public crates, by username. */
   UserCrates = '/api/users/:username/crates',
 
+  /** Digging a crate someone made, `?depth=`. */
+  DigCrate = '/api/dig/crates/:crateId',
+
+  /** Digging a crate by sound, `?genre=` or `?tag=`, and `?depth=`. */
+  DigSound = '/api/dig/sound',
+
   /** Following someone whose crates you like. */
   UserFollow = '/api/users/:userId/follow',
 

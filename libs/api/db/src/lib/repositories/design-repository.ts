@@ -777,6 +777,18 @@ export class DesignRepository {
   }
 
   /**
+   * Which of some releases render through a design.
+   */
+  public async filterDesigned(releaseIds: string[]): Promise<string[]> {
+    if (releaseIds.length === 0) return [];
+    const rows = await this.db
+      .select({ releaseId: releaseDesigns.releaseId })
+      .from(releaseDesigns)
+      .where(inArray(releaseDesigns.releaseId, releaseIds));
+    return rows.map((row) => row.releaseId);
+  }
+
+  /**
    * How many releases on sale render through each of some designs.
    *
    * @param designIds - The designs to count for.

@@ -75,6 +75,10 @@ Each is a property of `ImeServices`, named in brackets.
   who make them; and the crates IME builds by fixed rules: by genre or tag,
   from a few records someone loves, and a crate of the day from a
   listener's library. Use it for `/crates` and adding a release to a crate.
+- **`DigService`** (`dig`): dig mode: a crate's records, as deep as the
+  listener chose, each with its whole tracklist, the tracks they may hear,
+  whether it has a designed page, and its editions ready for a cart. Use it
+  for `/dig`.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release
   pages, browsing, the feed of followed artists, the library, and
   the URLs that stream, download, and open assets. Use it for anything a
