@@ -9,7 +9,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="mx-auto flex max-w-prose flex-col gap-4">
-      <h1 class="text-2xl font-semibold tracking-tight">{{ heading() }}</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
+        {{ heading() }}
+      </h1>
       <p class="text-ink-muted">
         This document will be published here before IME launches.
       </p>

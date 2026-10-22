@@ -31,19 +31,19 @@ const PAGE_SIZE = 50;
   ],
   template: `
     <div class="flex max-w-3xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Followers</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Followers</h1>
       @if (error(); as message) {
         <ime-alert tone="error">{{ message }}</ime-alert>
       }
       <ul
-        class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+        class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
       >
         @for (follower of followers(); track follower.userId) {
           <li class="flex items-center justify-between gap-4 p-4">
             <span class="flex flex-col">
               @if (follower.username) {
                 <a
-                  class="font-medium hover:underline"
+                  class="link font-medium"
                   [routerLink]="['/users', follower.username]"
                   >{{ follower.name || follower.username }}</a
                 >

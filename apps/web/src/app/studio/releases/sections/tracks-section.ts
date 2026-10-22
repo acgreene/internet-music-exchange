@@ -48,7 +48,7 @@ const MB = 1024 * 1024;
       </div>
 
       <ol
-        class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+        class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
       >
         @for (
           track of managed().tracks;

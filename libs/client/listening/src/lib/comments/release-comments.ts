@@ -87,7 +87,7 @@ const MAX_LENGTH = 2000;
         @case ('signed-out') {
           <p class="text-sm text-ink-muted">
             <a
-              class="underline"
+              class="link"
               routerLink="/sign-in"
               [queryParams]="{ returnUrl: router.url }"
               >Sign in</a
@@ -100,13 +100,13 @@ const MAX_LENGTH = 2000;
       @if (firstPage.error()) {
         <ime-alert tone="error">The comments could not be loaded.</ime-alert>
       }
-      <ul class="flex flex-col divide-y divide-line">
+      <ul class="flex flex-col divide-y divide-hairline">
         @for (comment of comments(); track comment.id) {
           <li class="flex flex-col gap-1 py-3">
             <div class="flex items-baseline gap-2 text-sm">
               @if (comment.username) {
                 <a
-                  class="font-medium hover:underline"
+                  class="link font-medium"
                   [routerLink]="['/users', comment.username]"
                   >{{ comment.name || comment.username }}</a
                 >

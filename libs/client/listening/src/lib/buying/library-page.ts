@@ -43,7 +43,7 @@ const SOURCE_LABELS: Record<LibraryItem['source'], string> = {
   ],
   template: `
     <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Library</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Library</h1>
       @if (firstPage.error()) {
         <ime-alert tone="error">Your library could not be loaded.</ime-alert>
       }
@@ -67,7 +67,7 @@ const SOURCE_LABELS: Record<LibraryItem['source'], string> = {
             <li class="col-span-full text-ink-muted">
               Nothing here yet. Music you buy or get for free lands here, ready
               to stream and download.
-              <a class="underline" routerLink="/">Find something.</a>
+              <a class="link" routerLink="/">Find something.</a>
             </li>
           }
         }

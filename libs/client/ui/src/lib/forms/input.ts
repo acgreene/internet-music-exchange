@@ -9,7 +9,7 @@ import { FieldComponent } from './field';
   selector: 'input[imeInput], textarea[imeInput], select[imeInput]',
   host: {
     class:
-      'w-full rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-ink focus:outline-none aria-invalid:border-danger',
+      'w-full rounded-control border border-line bg-canvas px-3 py-2 text-[15px] text-ink placeholder:text-ink-subtle focus-visible:outline-offset-0 aria-invalid:border-danger',
     '[id]': 'field?.controlId',
     '[attr.aria-describedby]': 'field?.hasMessage() ? field.messageId : null',
     '[attr.aria-invalid]': 'field?.error() ? true : null',

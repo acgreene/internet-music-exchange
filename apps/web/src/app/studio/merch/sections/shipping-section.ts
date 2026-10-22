@@ -39,7 +39,7 @@ const toCents = (value: string): number | null => {
     <section class="flex flex-col gap-4" aria-labelledby="shipping-heading">
       <h2 id="shipping-heading" class="text-lg font-semibold">Shipping</h2>
       <div
-        class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+        class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
       >
         @for (row of zones; track row.zone) {
           <div class="flex flex-wrap items-end gap-3 p-4">

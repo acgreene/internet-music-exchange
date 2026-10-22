@@ -47,7 +47,7 @@ import { currentValue } from '@ime/client-data';
       >
       @if (detail.hasValue() ? detail.value() : null; as detail) {
         <header class="flex flex-col gap-1">
-          <h1 class="text-2xl font-semibold tracking-tight">
+          <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
             @if (detail.artist; as artist) {
               <a
                 class="hover:underline"
@@ -68,7 +68,7 @@ import { currentValue } from '@ime/client-data';
           class="rounded-card border border-line bg-surface"
           aria-label="Items"
         >
-          <ul class="flex flex-col divide-y divide-line">
+          <ul class="flex flex-col divide-y divide-hairline">
             @for (item of detail.items; track item.id) {
               <li class="flex items-center justify-between gap-4 p-4">
                 <span class="flex flex-col">

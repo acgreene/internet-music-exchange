@@ -9,7 +9,7 @@ import { ButtonDirective } from '@ime/ui';
   imports: [ButtonDirective, RouterLink],
   template: `
     <div class="flex flex-col items-start gap-4">
-      <h1 class="text-2xl font-semibold tracking-tight">Nothing here</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Nothing here</h1>
       <p class="text-ink-muted">
         That page does not exist, or is no longer available.
       </p>

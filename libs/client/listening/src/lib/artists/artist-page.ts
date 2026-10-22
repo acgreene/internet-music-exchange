@@ -52,7 +52,7 @@ import { releaseKindLabel } from '../releases/release-labels';
             [alt]="profile.artist.name"
           />
           <div class="flex min-w-0 flex-1 flex-col gap-1">
-            <h1 class="text-3xl font-semibold tracking-tight">
+            <h1 class="text-5xl leading-[0.95] font-black tracking-[-0.05em]">
               {{ profile.artist.name }}
             </h1>
             <p class="text-sm text-ink-muted">
@@ -77,7 +77,7 @@ import { releaseKindLabel } from '../releases/release-labels';
                 @for (link of profile.links; track link.id) {
                   <li>
                     <a
-                      class="underline"
+                      class="link"
                       target="_blank"
                       rel="noopener"
                       [href]="link.url"
@@ -132,7 +132,7 @@ import { releaseKindLabel } from '../releases/release-labels';
       </div>
     } @else if (profile.error(); as error) {
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-semibold tracking-tight">
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
           {{ isNotFound(error) ? 'Artist not found' : 'Something went wrong' }}
         </h1>
         <p class="text-ink-muted">

@@ -36,7 +36,7 @@ import { AlertComponent, ButtonDirective, MoneyPipe } from '@ime/ui';
         Stream every track, or download the originals exactly as the artist
         uploaded them.
       </p>
-      <ul class="flex flex-col divide-y divide-line text-sm">
+      <ul class="flex flex-col divide-y divide-hairline text-sm">
         @for (track of page().tracks; track track.trackId) {
           <li class="flex items-center justify-between gap-3 py-1.5">
             <span class="truncate"

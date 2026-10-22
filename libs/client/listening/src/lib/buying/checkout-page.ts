@@ -20,7 +20,7 @@ import { AlertComponent, ButtonDirective, MoneyPipe } from '@ime/ui';
   imports: [AlertComponent, ButtonDirective, MoneyPipe, RouterLink],
   template: `
     <div class="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Checkout</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Checkout</h1>
 
       @if (checkout(); as checkout) {
         @if (checkout.claimedCount) {
@@ -42,7 +42,7 @@ import { AlertComponent, ButtonDirective, MoneyPipe } from '@ime/ui';
 
         @if (checkout.payments.length) {
           <ol
-            class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+            class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
           >
             @for (
               payment of checkout.payments;

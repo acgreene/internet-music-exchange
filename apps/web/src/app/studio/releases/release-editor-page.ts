@@ -50,7 +50,7 @@ import { currentValue } from '@ime/client-data';
           >
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-semibold tracking-tight">
+              <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
                 {{ managed.release.title }}
               </h1>
               <span

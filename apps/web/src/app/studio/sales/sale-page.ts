@@ -48,7 +48,7 @@ import { StudioService } from '../studio.service';
         <ime-alert tone="error">This sale could not be found.</ime-alert>
       } @else if (detail(); as detail) {
         <header class="flex flex-col gap-1">
-          <h1 class="text-2xl font-semibold tracking-tight">
+          <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
             {{ detail.buyerName || 'A buyer' }}
           </h1>
           <p class="text-sm text-ink-muted">
@@ -61,7 +61,7 @@ import { StudioService } from '../studio.service';
           class="rounded-card border border-line bg-surface"
           aria-label="Items"
         >
-          <ul class="flex flex-col divide-y divide-line">
+          <ul class="flex flex-col divide-y divide-hairline">
             @for (item of detail.items; track item.id) {
               <li class="flex items-center justify-between gap-4 p-4">
                 <span class="flex flex-col">

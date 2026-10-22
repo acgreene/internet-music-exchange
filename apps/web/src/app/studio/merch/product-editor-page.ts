@@ -53,7 +53,7 @@ import { VariantsSection } from './sections/variants-section';
           >
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-semibold tracking-tight">
+              <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
                 {{ managed.product.name }}
               </h1>
               <span

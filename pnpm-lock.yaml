@@ -62,6 +62,12 @@ importers:
       '@capacitor/ios':
         specifier: ^8.5.3
         version: 8.5.3(@capacitor/core@8.5.3)
+      '@fontsource-variable/geist-mono':
+        specifier: ~5.3.0
+        version: 5.3.0
+      '@fontsource-variable/inter-tight':
+        specifier: ~5.3.0
+        version: 5.3.0
       '@hono/node-server':
         specifier: ^2.1.5
         version: 2.1.5(hono@4.13.13)
@@ -1863,6 +1869,12 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource-variable/geist-mono@5.3.0':
+    resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
+
+  '@fontsource-variable/inter-tight@5.3.0':
+    resolution: {integrity: sha512-ZhZZ29sNZ15P1K+cUt13GeBRYON0akgmNiftshUeDLos7X7zGcRgPzt434879Xhq1QbwlW3M/apBMk7jWabwvA==}
 
   '@harperfast/extended-iterable@1.0.3':
     resolution: {integrity: sha512-sSAYhQca3rDWtQUHSAPeO7axFIUJOI6hn1gjRC5APVE1a90tuyT8f5WIgRsFhhWA7htNkju2veB9eWL6YHi/Lw==}
@@ -8512,6 +8524,10 @@ snapshots:
       levn: 0.4.1
 
   '@exodus/bytes@1.16.0': {}
+
+  '@fontsource-variable/geist-mono@5.3.0': {}
+
+  '@fontsource-variable/inter-tight@5.3.0': {}
 
   '@harperfast/extended-iterable@1.0.3':
     optional: true

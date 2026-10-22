@@ -56,7 +56,7 @@ import {
             aria-labelledby="artists-heading"
           >
             <h2 id="artists-heading" class="text-xl font-semibold">Artists</h2>
-            <ul class="flex flex-col divide-y divide-line">
+            <ul class="flex flex-col divide-y divide-hairline">
               @for (artist of results.artists; track artist.id) {
                 <li>
                   <a

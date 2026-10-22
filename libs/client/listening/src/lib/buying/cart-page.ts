@@ -56,7 +56,7 @@ const lineTotal = (entry: CartEntry) =>
   ],
   template: `
     <div class="mx-auto flex max-w-3xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Cart</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Cart</h1>
 
       @for (group of groups(); track group.artistId) {
         <section
@@ -64,7 +64,7 @@ const lineTotal = (entry: CartEntry) =>
         >
           <h2 class="flex items-baseline justify-between gap-4">
             <a
-              class="font-semibold hover:underline"
+              class="link font-semibold"
               [routerLink]="['/artists', group.artistHandle]"
               >{{ group.artistName }}</a
             >
@@ -72,7 +72,7 @@ const lineTotal = (entry: CartEntry) =>
               group.subtotal | money: group.currency
             }}</span>
           </h2>
-          <ul class="flex flex-col divide-y divide-line">
+          <ul class="flex flex-col divide-y divide-hairline">
             @for (item of group.items; track key(item)) {
               <li class="flex flex-wrap items-center gap-4 py-3">
                 @if (item.kind === 'release') {
@@ -170,7 +170,7 @@ const lineTotal = (entry: CartEntry) =>
       } @empty {
         <p class="text-ink-muted">
           Your cart is empty.
-          <a class="underline" routerLink="/">Find something to listen to.</a>
+          <a class="link" routerLink="/">Find something to listen to.</a>
         </p>
       }
 

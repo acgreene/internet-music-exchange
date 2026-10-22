@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
   selector: 'ime-cover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block aspect-square overflow-hidden rounded-control' },
+  host: { class: 'block aspect-square overflow-hidden' },
   template: `
     @if (src(); as src) {
       <img

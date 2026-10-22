@@ -30,13 +30,13 @@ const PAGE_SIZE = 50;
   ],
   template: `
     <div class="mx-auto flex max-w-3xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Following</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Following</h1>
       @if (firstPage.error()) {
         <ime-alert tone="error"
           >The artists you follow could not be loaded.</ime-alert
         >
       }
-      <ul class="flex flex-col divide-y divide-line">
+      <ul class="flex flex-col divide-y divide-hairline">
         @for (artist of artists(); track artist.artistId) {
           <li class="flex items-center justify-between gap-4 py-3">
             <a

@@ -37,7 +37,7 @@ type ProductImage = ManagedProductResponse['images'][number];
       </div>
       @if (managed().images.length) {
         <ul
-          class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+          class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
         >
           @for (
             image of managed().images;

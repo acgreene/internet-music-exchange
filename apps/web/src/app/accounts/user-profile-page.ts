@@ -22,7 +22,7 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
       <ime-alert tone="error">{{ profile.error()?.message }}</ime-alert>
     } @else if (profile.value(); as user) {
       <div class="flex flex-col gap-1">
-        <h1 class="text-2xl font-semibold tracking-tight">
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
           {{ user.name || user.username }}
         </h1>
         <p class="text-ink-muted">&#64;{{ user.username }}</p>

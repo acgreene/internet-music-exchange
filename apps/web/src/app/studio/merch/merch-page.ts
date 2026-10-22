@@ -40,7 +40,7 @@ import { PRODUCT_TYPES, typeLabel } from './merch-options';
   template: `
     <div class="flex max-w-4xl flex-col gap-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <h1 class="text-2xl font-semibold tracking-tight">Merch</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Merch</h1>
         <button
           imeButton
           [variant]="creating() ? 'secondary' : 'primary'"
@@ -56,7 +56,7 @@ import { PRODUCT_TYPES, typeLabel } from './merch-options';
           Merch is priced in your selling currency, which comes from your
           payment account.
           <a
-            class="underline"
+            class="link"
             [routerLink]="[
               '/studio/artists',
               studio.currentArtistId(),
@@ -111,12 +111,12 @@ import { PRODUCT_TYPES, typeLabel } from './merch-options';
         <ime-alert tone="error">The merch could not be loaded.</ime-alert>
       } @else if (list(); as list) {
         <ul
-          class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+          class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
         >
           @for (product of list; track product.id) {
             <li>
               <a
-                class="flex items-center justify-between gap-4 p-4 hover:bg-surface-muted"
+                class="flex items-center justify-between gap-4 p-4 hover:bg-wash"
                 [routerLink]="['/studio/products', product.id]"
               >
                 <span class="flex min-w-0 flex-col">

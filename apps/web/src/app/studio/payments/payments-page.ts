@@ -24,7 +24,7 @@ import { StudioService } from '../studio.service';
   template: `
     <div class="flex max-w-3xl flex-col gap-6">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Getting paid</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Getting paid</h1>
         <p class="text-sm text-ink-muted">
           Buyers pay you directly through your own Stripe account. IME takes no
           cut and never holds your money.
@@ -53,7 +53,7 @@ import { StudioService } from '../studio.service';
           </div>
         } @else {
           <dl
-            class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+            class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
           >
             <div class="flex items-center justify-between gap-4 p-4">
               <dt>

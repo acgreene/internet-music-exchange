@@ -21,7 +21,7 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
     @if (player.current(); as track) {
       @if (showQueue()) {
         <section
-          class="absolute right-2 bottom-full mb-2 max-h-96 w-80 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-card border border-line bg-surface p-2 shadow-lg"
+          class="absolute right-2 bottom-full mb-2 max-h-96 w-80 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-card border border-line bg-surface p-2 shadow-[4px_4px_0_var(--color-ink)]"
           aria-label="Queue"
         >
           <h2 class="px-2 py-1 text-sm font-semibold">Queue</h2>
@@ -33,13 +33,13 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
             ) {
               <li>
                 <button
-                  class="flex w-full items-center gap-3 rounded-control px-2 py-1.5 text-left text-sm hover:bg-surface-muted"
+                  class="flex w-full items-center gap-3 rounded-control px-2 py-1.5 text-left text-sm hover:bg-wash"
                   [class.font-semibold]="index === player.queueIndex()"
                   [attr.aria-current]="index === player.queueIndex() || null"
                   (click)="player.playAt(index)"
                 >
                   <span class="min-w-0 flex-1 truncate">{{ item.title }}</span>
-                  <span class="text-ink-subtle">{{
+                  <span class="font-mono text-xs text-ink-muted">{{
                     item.durationMs | duration
                   }}</span>
                 </button>
@@ -49,16 +49,16 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
         </section>
       }
 
-      <div class="flex items-center gap-3 px-3 py-2 md:gap-6">
+      <div class="flex items-center gap-3 px-3 py-3 md:gap-6 md:px-6 md:py-4">
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <ime-cover
-            class="w-12 shrink-0"
+            class="w-14 shrink-0 border border-line"
             [src]="track.coverUrl"
             [alt]="'Cover of ' + track.releaseTitle"
           />
           <div class="min-w-0">
             <a
-              class="block truncate text-sm font-medium hover:underline"
+              class="block truncate text-[15px] font-semibold hover:underline"
               [routerLink]="['/artists', track.artistHandle, track.releaseSlug]"
               >{{ track.title }}</a
             >
@@ -73,7 +73,7 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
         <div class="flex flex-col items-center gap-1 md:flex-[2]">
           <div class="flex items-center gap-2">
             <button
-              class="hidden rounded-full p-2 hover:bg-surface-muted md:block"
+              class="hidden rounded-full p-2 hover:bg-surface md:block"
               aria-label="Previous"
               (click)="player.previous()"
             >
@@ -86,7 +86,7 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
               </svg>
             </button>
             <button
-              class="rounded-full bg-accent p-2 text-accent-ink hover:opacity-90"
+              class="rounded-full bg-accent p-3 text-accent-ink transition-colors duration-100 hover:bg-ink"
               [attr.aria-label]="player.playing() ? 'Pause' : 'Play'"
               [attr.aria-busy]="player.loading() || null"
               (click)="player.toggle()"
@@ -104,7 +104,7 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
               </svg>
             </button>
             <button
-              class="rounded-full p-2 hover:bg-surface-muted disabled:opacity-40"
+              class="rounded-full p-2 hover:bg-surface disabled:opacity-40"
               aria-label="Next"
               [disabled]="!player.hasNext()"
               (click)="player.next()"
@@ -119,14 +119,14 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
             </button>
           </div>
           <div
-            class="hidden w-full items-center gap-2 text-xs text-ink-subtle md:flex"
+            class="hidden w-full items-center gap-3 font-mono text-xs text-ink-muted md:flex"
           >
             <span class="w-10 text-right tabular-nums">{{
               player.elapsedMs() | duration
             }}</span>
             <input
               type="range"
-              class="flex-1 accent-current"
+              class="h-1 flex-1 accent-accent"
               aria-label="Seek"
               min="0"
               [max]="player.durationMs()"
@@ -143,7 +143,7 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
         <div class="flex flex-1 items-center justify-end gap-2">
           <input
             type="range"
-            class="hidden w-24 accent-current md:block"
+            class="hidden w-24 accent-accent md:block"
             aria-label="Volume"
             min="0"
             max="1"
@@ -152,7 +152,7 @@ import { CoverComponent, DurationPipe } from '@ime/ui';
             (input)="setVolume($event)"
           />
           <button
-            class="rounded-full p-2 hover:bg-surface-muted"
+            class="rounded-full p-2 hover:bg-surface"
             aria-label="Queue"
             [attr.aria-expanded]="showQueue()"
             (click)="showQueue.set(!showQueue())"

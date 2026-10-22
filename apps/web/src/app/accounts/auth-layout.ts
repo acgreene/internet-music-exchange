@@ -8,7 +8,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mx-auto flex max-w-sm flex-col gap-6 py-8">
-      <h1 class="text-2xl font-semibold tracking-tight">{{ heading() }}</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
+        {{ heading() }}
+      </h1>
       <ng-content />
     </div>
   `,

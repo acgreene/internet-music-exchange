@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 const TONES = {
-  error: 'border-danger/40 bg-danger/10 text-danger',
-  success: 'border-success/40 bg-success/10 text-success',
-  info: 'border-line bg-surface-muted text-ink',
+  error: 'border-danger bg-danger/5 text-danger',
+  success: 'border-success bg-success/5 text-success',
+  info: 'border-line bg-wash text-ink',
 };
 
 /**

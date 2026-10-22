@@ -67,7 +67,9 @@ const toDollars = (cents: number | null | undefined) =>
   template: `
     <div class="flex max-w-3xl flex-col gap-8">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Hosting balance</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
+          Hosting balance
+        </h1>
         <p class="text-sm text-ink-muted">
           IME runs at cost. Each month you pay for what your artists and designs
           store and serve, plus an even share of the costs that keep the lights
@@ -310,7 +312,7 @@ const toDollars = (cents: number | null | undefined) =>
             Monthly statements
           </h2>
           <ul
-            class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+            class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
           >
             @for (statement of data.statements; track statement.id) {
               <li>
@@ -390,7 +392,7 @@ const toDollars = (cents: number | null | undefined) =>
               Recent activity
             </h2>
             <ul
-              class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface text-sm"
+              class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface text-sm"
             >
               @for (entry of data.recentEntries; track entry.id) {
                 <li class="flex items-center justify-between gap-4 p-3">

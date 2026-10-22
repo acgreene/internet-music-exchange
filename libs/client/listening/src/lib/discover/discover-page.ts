@@ -38,7 +38,7 @@ const FEED_SIZE = 8;
     <div class="mx-auto flex max-w-6xl flex-col gap-10">
       @if (session.status() === 'signed-out') {
         <section class="flex flex-col gap-3">
-          <h1 class="text-3xl font-semibold tracking-tight">
+          <h1 class="text-5xl leading-[0.95] font-black tracking-[-0.05em]">
             Music from the people who made it
           </h1>
           <p class="max-w-prose text-ink-muted">

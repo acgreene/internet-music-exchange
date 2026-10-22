@@ -22,7 +22,7 @@ import { currentValue } from '@ime/client-data';
       <ime-alert tone="error">Your artists could not be loaded.</ime-alert>
     } @else if (studio.artists.value()?.length === 0) {
       <div class="mx-auto flex max-w-xl flex-col gap-4 py-8">
-        <h1 class="text-2xl font-semibold tracking-tight">
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
           Welcome to the studio
         </h1>
         <p class="text-ink-muted">

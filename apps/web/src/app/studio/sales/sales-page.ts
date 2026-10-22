@@ -38,7 +38,7 @@ const PAGE_SIZE = 50;
   ],
   template: `
     <div class="flex max-w-4xl flex-col gap-8">
-      <h1 class="text-2xl font-semibold tracking-tight">Sales</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Sales</h1>
 
       @if (totals(); as totals) {
         @if (totals.length) {
@@ -76,12 +76,12 @@ const PAGE_SIZE = 50;
             Oldest first, so the longest wait goes out next.
           </p>
           <ul
-            class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+            class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
           >
             @for (sale of toShip(); track sale.artistOrderId) {
               <li>
                 <a
-                  class="flex items-center justify-between gap-4 p-4 hover:bg-surface-muted"
+                  class="flex items-center justify-between gap-4 p-4 hover:bg-wash"
                   [routerLink]="sale.artistOrderId"
                 >
                   <span class="flex flex-col">
@@ -109,12 +109,12 @@ const PAGE_SIZE = 50;
           <ime-alert tone="error">The sales could not be loaded.</ime-alert>
         }
         <ul
-          class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+          class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
         >
           @for (sale of sales(); track sale.artistOrderId) {
             <li>
               <a
-                class="flex items-center justify-between gap-4 p-4 hover:bg-surface-muted"
+                class="flex items-center justify-between gap-4 p-4 hover:bg-wash"
                 [routerLink]="sale.artistOrderId"
               >
                 <span class="flex min-w-0 flex-col">

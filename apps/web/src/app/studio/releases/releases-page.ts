@@ -39,7 +39,7 @@ import { RELEASE_KINDS, STATUS_LABELS } from './release-options';
   template: `
     <div class="flex max-w-4xl flex-col gap-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <h1 class="text-2xl font-semibold tracking-tight">Releases</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Releases</h1>
         <button
           imeButton
           [variant]="creating() ? 'secondary' : 'primary'"
@@ -90,12 +90,12 @@ import { RELEASE_KINDS, STATUS_LABELS } from './release-options';
 
       @if (releases.hasValue() ? releases.value() : null; as list) {
         <ul
-          class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+          class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
         >
           @for (release of list; track release.id) {
             <li>
               <a
-                class="flex items-center justify-between gap-4 p-4 hover:bg-surface-muted"
+                class="flex items-center justify-between gap-4 p-4 hover:bg-wash"
                 [routerLink]="['/studio/releases', release.id]"
               >
                 <span class="flex min-w-0 flex-col">

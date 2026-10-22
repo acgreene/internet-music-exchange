@@ -52,7 +52,7 @@ const ACCEPT: Record<Exclude<ReleaseAssetKind, 'cover'>, string> = {
 
       @if (extras().length) {
         <ul
-          class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+          class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
         >
           @for (asset of extras(); track asset.id) {
             <li class="flex flex-wrap items-center gap-3 p-4">

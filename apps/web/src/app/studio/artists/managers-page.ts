@@ -39,7 +39,7 @@ import { StudioService } from '../studio.service';
   template: `
     <div class="flex max-w-3xl flex-col gap-6">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Managers</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Managers</h1>
         <p class="text-sm text-ink-muted">
           Managers can do everything for the artist, including adding and
           removing other managers, and they share its hosting costs.
@@ -48,7 +48,7 @@ import { StudioService } from '../studio.service';
 
       @if (managers.hasValue() ? managers.value() : null; as list) {
         <ul
-          class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+          class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
         >
           @for (manager of list; track manager.userId) {
             <li class="flex items-center justify-between gap-4 p-4">

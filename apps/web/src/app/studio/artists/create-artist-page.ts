@@ -32,7 +32,9 @@ import { HandleField } from './handle-field';
   ],
   template: `
     <div class="mx-auto flex max-w-xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Create an artist</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
+        Create an artist
+      </h1>
       <form class="flex flex-col gap-4" novalidate (submit)="create($event)">
         <ime-field
           label="Name"

@@ -44,7 +44,7 @@ const MAX_QUANTITY = 10;
   template: `
     @if (page.error(); as error) {
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-semibold tracking-tight">
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
           {{ isNotFound(error) ? 'Not found' : 'Something went wrong' }}
         </h1>
         <p class="text-ink-muted">
@@ -83,13 +83,13 @@ const MAX_QUANTITY = 10;
         <div class="flex flex-col gap-5">
           <header class="flex flex-col gap-1">
             <p class="text-sm text-ink-muted">{{ typeLabel() }}</p>
-            <h1 class="text-3xl font-semibold tracking-tight">
+            <h1 class="text-5xl leading-[0.95] font-black tracking-[-0.05em]">
               {{ page.product.name }}
             </h1>
             <p>
               by
               <a
-                class="font-medium hover:underline"
+                class="link font-medium"
                 [routerLink]="['/artists', page.artist.handle]"
                 >{{ page.artist.name }}</a
               >
@@ -164,7 +164,7 @@ const MAX_QUANTITY = 10;
             <ime-alert>
               Includes the digital album:
               <a
-                class="underline"
+                class="link"
                 [routerLink]="['/artists', page.artist.handle, release.slug]"
                 >{{ release.title }}</a
               >, in your library as soon as you pay.
@@ -173,7 +173,7 @@ const MAX_QUANTITY = 10;
             <p class="text-sm">
               An edition of
               <a
-                class="underline"
+                class="link"
                 [routerLink]="['/artists', page.artist.handle, release.slug]"
                 >{{ release.title }}</a
               >.

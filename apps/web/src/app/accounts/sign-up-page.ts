@@ -94,11 +94,11 @@ const MIN_PASSWORD_LENGTH = 8;
               />
               <span>
                 I accept the
-                <a class="underline" routerLink="/terms" target="_blank"
+                <a class="link" routerLink="/terms" target="_blank"
                   >terms of service</a
                 >
                 and the
-                <a class="underline" routerLink="/privacy" target="_blank"
+                <a class="link" routerLink="/privacy" target="_blank"
                   >privacy policy</a
                 >.
               </span>

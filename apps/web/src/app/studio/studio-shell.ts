@@ -7,7 +7,7 @@ import {
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '@ime/client-data';
-import { ButtonDirective } from '@ime/ui';
+import { ButtonDirective, WordmarkComponent } from '@ime/ui';
 import { StudioService } from './studio.service';
 
 /**
@@ -25,14 +25,22 @@ import { StudioService } from './studio.service';
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
+    WordmarkComponent,
   ],
   template: `
     <div class="flex min-h-dvh flex-col">
       <header
-        class="flex h-14 items-center gap-4 border-b border-line bg-surface px-4"
+        class="flex h-16 items-center gap-4 border-b border-line bg-surface px-4 md:px-6"
       >
-        <a routerLink="/studio" class="text-lg font-semibold tracking-tight">
-          IME <span class="font-normal text-ink-muted">Studio</span>
+        <a
+          routerLink="/studio"
+          class="flex items-end gap-2"
+          aria-label="IME Studio"
+        >
+          <ime-wordmark [showName]="false" />
+          <span class="pb-0.5 text-lg font-extrabold tracking-[-0.03em]"
+            >studio</span
+          >
         </a>
         <div class="flex-1"></div>
         <a imeButton variant="ghost" size="sm" routerLink="/"
@@ -62,27 +70,29 @@ import { StudioService } from './studio.service';
             <div class="mt-3 flex flex-col gap-1">
               @for (item of sections(); track item.path) {
                 <a
-                  class="rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
-                  routerLinkActive="bg-surface-muted text-ink font-medium"
+                  class="rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-wash hover:text-ink"
+                  routerLinkActive="bg-wash text-ink font-semibold"
                   [routerLinkActiveOptions]="{ exact: item.exact }"
                   [routerLink]="item.path"
                   >{{ item.label }}</a
                 >
               }
               <a
-                class="rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
+                class="rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-wash hover:text-ink"
                 [routerLink]="['/artists', artist.handle]"
                 >View public page</a
               >
             </div>
           }
-          <div class="mt-3 border-t border-line pt-3">
-            <a
-              class="block rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
-              routerLinkActive="bg-surface-muted text-ink font-medium"
-              routerLink="/studio/billing"
-              >Hosting balance</a
-            >
+          <div class="mt-3 flex flex-col gap-1 border-t border-line pt-3">
+            @for (item of global; track item.path) {
+              <a
+                class="rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-wash hover:text-ink"
+                routerLinkActive="bg-wash text-ink font-semibold"
+                [routerLink]="item.path"
+                >{{ item.label }}</a
+              >
+            }
           </div>
         </nav>
         <main class="min-w-0 flex-[999_1_560px] px-4 py-6 md:px-8">
@@ -99,14 +109,14 @@ import { StudioService } from './studio.service';
         @for (artist of studio.artistList(); track artist.id) {
           <a
             cdkMenuItem
-            class="block rounded-control px-3 py-2 text-sm hover:bg-surface-muted"
+            class="block rounded-control px-3 py-2 text-sm hover:bg-wash"
             [routerLink]="['/studio/artists', artist.id]"
             >{{ artist.name }}</a
           >
         }
         <a
           cdkMenuItem
-          class="block rounded-control px-3 py-2 text-sm font-medium hover:bg-surface-muted"
+          class="block rounded-control px-3 py-2 text-sm font-medium hover:bg-wash"
           routerLink="/studio/artists/new"
         >
           New artist
@@ -118,6 +128,11 @@ import { StudioService } from './studio.service';
 export class StudioShell {
   protected readonly studio = inject(StudioService);
   protected readonly session = inject(SessionService);
+
+  /** Pages about the signed-in user rather than one artist. */
+  protected readonly global = [
+    { label: 'Hosting balance', path: '/studio/billing' },
+  ];
 
   protected readonly sections = computed(() => {
     const base = `/studio/artists/${this.studio.currentArtist()?.id}`;

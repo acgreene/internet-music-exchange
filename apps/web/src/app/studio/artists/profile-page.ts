@@ -46,7 +46,7 @@ interface LinkRow {
   template: `
     @if (studio.currentArtist(); as artist) {
       <div class="flex max-w-3xl flex-col gap-10">
-        <h1 class="text-2xl font-semibold tracking-tight">Profile</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Profile</h1>
 
         <section class="flex flex-col gap-4" aria-labelledby="about-heading">
           <h2 id="about-heading" class="text-lg font-semibold">About</h2>

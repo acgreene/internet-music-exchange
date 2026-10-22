@@ -24,11 +24,13 @@ import { StudioService } from '../studio.service';
   template: `
     <div class="flex max-w-3xl flex-col gap-6">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Hosting costs</h1>
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
+          Hosting costs
+        </h1>
         <p class="text-sm text-ink-muted">
           The artist's hosting costs come out of its managers'
-          <a class="underline" routerLink="/studio/billing">hosting balances</a
-          >, split however you agree. Taking on a share needs a card on file.
+          <a class="link" routerLink="/studio/billing">hosting balances</a>,
+          split however you agree. Taking on a share needs a card on file.
         </p>
       </div>
 
@@ -38,7 +40,7 @@ import { StudioService } from '../studio.service';
         <section class="flex flex-col gap-2" aria-labelledby="current-heading">
           <h2 id="current-heading" class="text-lg font-semibold">Now</h2>
           <ul
-            class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+            class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
           >
             @for (share of split.shares; track share.userId) {
               <li class="flex items-center justify-between gap-4 p-4">
@@ -64,7 +66,7 @@ import { StudioService } from '../studio.service';
               Proposed
             </h2>
             <ul
-              class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+              class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
             >
               @for (share of split.proposal; track share.userId) {
                 <li class="flex items-center justify-between gap-4 p-4">

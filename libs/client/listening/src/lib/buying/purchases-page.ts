@@ -37,17 +37,17 @@ const PAGE_SIZE = 25;
   ],
   template: `
     <div class="mx-auto flex max-w-3xl flex-col gap-6">
-      <h1 class="text-2xl font-semibold tracking-tight">Purchases</h1>
+      <h1 class="text-3xl font-extrabold tracking-[-0.04em]">Purchases</h1>
       @if (firstPage.error()) {
         <ime-alert tone="error">Your purchases could not be loaded.</ime-alert>
       }
       <ul
-        class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface"
+        class="flex flex-col divide-y divide-hairline rounded-card border border-line bg-surface"
       >
         @for (purchase of purchases(); track purchase.artistOrderId) {
           <li>
             <a
-              class="flex items-center justify-between gap-4 p-4 hover:bg-surface-muted"
+              class="flex items-center justify-between gap-4 p-4 hover:bg-wash"
               [routerLink]="['/purchases', purchase.artistOrderId]"
             >
               <span class="flex min-w-0 flex-col">

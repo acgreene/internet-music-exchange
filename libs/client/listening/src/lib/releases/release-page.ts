@@ -22,6 +22,7 @@ import {
   ButtonDirective,
   CoverComponent,
   DurationPipe,
+  EqualizerComponent,
   SpinnerComponent,
 } from '@ime/ui';
 import { BuyPanel } from '../buying/buy-panel';
@@ -45,6 +46,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
     CoverComponent,
     DatePipe,
     DurationPipe,
+    EqualizerComponent,
     ReleaseComments,
     RouterLink,
     SpinnerComponent,
@@ -52,9 +54,37 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
   template: `
     @if (page.hasValue() ? page.value() : null; as page) {
       <div
-        class="mx-auto grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1fr)_18rem]"
+        class="mx-auto grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1fr)_20rem] md:grid-rows-[auto_1fr]"
       >
-        <aside class="flex flex-col gap-4 md:order-2">
+        <header class="flex flex-col gap-2 md:col-start-1 md:row-start-1">
+          <p class="text-sm text-ink-muted">
+            {{ kindLabel() }}
+            @if (page.release.releasedAt; as releasedAt) {
+              · {{ releasedAt | date: 'longDate' : 'UTC' }}
+            }
+          </p>
+          <h1 class="text-5xl leading-[0.95] font-black tracking-[-0.05em]">
+            {{ page.release.title }}
+          </h1>
+          <p>
+            by
+            <a
+              class="link font-medium"
+              [routerLink]="['/artists', page.artist.handle]"
+              >{{ page.artist.name }}</a
+            >
+          </p>
+          @if (playable().length) {
+            <div class="mt-2">
+              <button imeButton (click)="play()">
+                {{ owned() ? 'Play' : 'Play preview' }}
+              </button>
+            </div>
+          }
+        </header>
+        <aside
+          class="flex flex-col gap-4 md:col-start-2 md:row-span-2 md:row-start-1"
+        >
           <ime-cover
             class="w-full"
             [src]="page.coverUrl"
@@ -81,41 +111,17 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
           }
         </aside>
 
-        <div class="flex min-w-0 flex-col gap-8 md:order-1">
-          <header class="flex flex-col gap-2">
-            <p class="text-sm text-ink-muted">
-              {{ kindLabel() }}
-              @if (page.release.releasedAt; as releasedAt) {
-                · {{ releasedAt | date: 'longDate' : 'UTC' }}
-              }
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-              {{ page.release.title }}
-            </h1>
-            <p>
-              by
-              <a
-                class="font-medium hover:underline"
-                [routerLink]="['/artists', page.artist.handle]"
-                >{{ page.artist.name }}</a
-              >
-            </p>
-            @if (playable().length) {
-              <div class="mt-2">
-                <button imeButton (click)="play()">
-                  {{ owned() ? 'Play' : 'Play preview' }}
-                </button>
-              </div>
-            }
-          </header>
-
+        <div class="flex min-w-0 flex-col gap-8 md:col-start-1 md:row-start-2">
           <section aria-labelledby="tracks-heading">
             <h2 id="tracks-heading" class="sr-only">Tracks</h2>
-            <ol class="flex flex-col">
+            <ol class="flex flex-col border-t border-line">
               @for (track of page.tracks; track track.trackId) {
                 <li>
                   <button
-                    class="grid w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 rounded-control px-2 py-2 text-left text-sm enabled:hover:bg-surface-muted disabled:text-ink-subtle"
+                    class="grid w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline px-2 py-2.5 text-left text-[15px] disabled:text-ink-subtle"
+                    [class]="
+                      isCurrent(track) ? 'bg-marker' : 'enabled:hover:bg-wash'
+                    "
                     [disabled]="!canPlay(track)"
                     [attr.aria-current]="isCurrent(track) || null"
                     [attr.aria-label]="
@@ -125,11 +131,11 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                     "
                     (click)="play(track)"
                   >
-                    <span class="text-right tabular-nums text-ink-subtle">
+                    <span class="text-right font-mono text-sm text-ink-muted">
                       @if (isCurrent(track)) {
-                        <span class="text-ink" aria-hidden="true">&#9654;</span>
+                        <ime-equalizer class="text-ink" [playing]="playing()" />
                       } @else {
-                        {{ track.position }}
+                        {{ track.position }}.
                       }
                     </span>
                     <span class="flex min-w-0 items-center gap-2">
@@ -140,12 +146,12 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                       >
                       @if (track.isPreview && !owned()) {
                         <span
-                          class="rounded-full border border-line px-2 text-xs text-ink-muted"
+                          class="rounded-full border border-line px-2 text-xs"
                           >Preview</span
                         >
                       }
                     </span>
-                    <span class="tabular-nums text-ink-subtle">{{
+                    <span class="font-mono text-sm text-ink-muted">{{
                       track.durationMs | duration
                     }}</span>
                   </button>
@@ -162,7 +168,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
               <h2 id="extras-heading" class="text-lg font-semibold">
                 Included
               </h2>
-              <ul class="flex flex-col divide-y divide-line">
+              <ul class="flex flex-col divide-y divide-hairline">
                 @for (asset of extras(); track asset.id) {
                   <li
                     class="flex items-center justify-between gap-4 py-2 text-sm"
@@ -204,7 +210,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
       </div>
     } @else if (page.error(); as error) {
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-semibold tracking-tight">
+        <h1 class="text-3xl font-extrabold tracking-[-0.04em]">
           {{ isNotFound(error) ? 'Release not found' : 'Something went wrong' }}
         </h1>
         <p class="text-ink-muted">
@@ -319,6 +325,8 @@ export class ReleasePage {
       (track.isPreview && (currentValue(this.page)?.onSale ?? false))
     );
   }
+
+  protected readonly playing = this.player.playing;
 
   protected isCurrent(track: TracklistItem): boolean {
     return this.player.current()?.trackId === track.trackId;

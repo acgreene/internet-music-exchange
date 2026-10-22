@@ -3,15 +3,15 @@ import { booleanAttribute, computed, Directive, input } from '@angular/core';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-accent-ink hover:opacity-90',
-  secondary: 'border border-line bg-surface text-ink hover:bg-surface-muted',
-  ghost: 'text-ink hover:bg-surface-muted',
-  danger: 'bg-danger text-white hover:opacity-90',
+  primary: 'bg-accent text-accent-ink hover:bg-ink',
+  secondary: 'border border-line bg-surface text-ink hover:bg-wash',
+  ghost: 'text-ink hover:bg-wash',
+  danger: 'bg-danger text-white hover:bg-ink',
 };
 
 const SIZES = {
   sm: 'h-8 px-3 text-sm',
-  md: 'h-10 px-4 text-sm',
+  md: 'h-10 px-4 text-[15px]',
 };
 
 /**
@@ -40,6 +40,6 @@ export class ButtonDirective {
 
   protected readonly classes = computed(
     () =>
-      `inline-flex items-center justify-center gap-2 rounded-control font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[this.variant()]} ${SIZES[this.size()]}`,
+      `inline-flex items-center justify-center gap-2 rounded-control font-semibold transition-colors duration-100 disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[this.variant()]} ${SIZES[this.size()]}`,
   );
 }
