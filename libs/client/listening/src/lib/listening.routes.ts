@@ -18,6 +18,39 @@ export const listeningRoutes: Route[] = [
       import('./search/search-page').then((m) => m.SearchPage),
   },
   {
+    path: 'crates',
+    title: 'Crates · IME',
+    loadComponent: () =>
+      import('./crates/crates-page').then((m) => m.CratesPage),
+  },
+  {
+    path: 'crates/sound',
+    title: 'A crate by sound · IME',
+    data: { kind: 'sound' },
+    loadComponent: () =>
+      import('./crates/built-crate-page').then((m) => m.BuiltCratePage),
+  },
+  {
+    path: 'crates/day',
+    title: 'Your crate of the day · IME',
+    data: { kind: 'day' },
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./crates/built-crate-page').then((m) => m.BuiltCratePage),
+  },
+  {
+    path: 'crates/build',
+    title: 'Build a crate · IME',
+    data: { kind: 'records' },
+    loadComponent: () =>
+      import('./crates/built-crate-page').then((m) => m.BuiltCratePage),
+  },
+  {
+    path: 'crates/:crateId',
+    title: 'Crate · IME',
+    loadComponent: () => import('./crates/crate-page').then((m) => m.CratePage),
+  },
+  {
     path: 'designs',
     title: 'Design gallery · IME',
     loadComponent: () =>

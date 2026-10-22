@@ -36,6 +36,7 @@ import {
 } from '@ime/ui';
 import { ArtistPageHost } from '@ime/client-artist-pages';
 import { BuyPanel } from '../buying/buy-panel';
+import { AddToCrate } from '../crates/add-to-crate';
 import { MerchGrid } from '../merch/merch-grid';
 import { ReleaseComments } from '../comments/release-comments';
 import { ReportButton } from '../reporting/report-button';
@@ -50,6 +51,7 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
   selector: 'ime-release-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AddToCrate,
     ArtistPageHost,
     AlertComponent,
     BuyPanel,
@@ -155,13 +157,16 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                 }
               </ul>
             }
-            @if (playable().length) {
-              <div class="mt-2">
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              @if (playable().length) {
                 <button imeButton (click)="play()">
                   {{ owned() ? 'Play' : 'Play preview' }}
                 </button>
-              </div>
-            }
+              }
+              @if (page.release.status === 'published') {
+                <ime-add-to-crate [releaseId]="page.release.id" />
+              }
+            </div>
           </header>
           <aside
             class="flex flex-col gap-4 md:col-start-2 md:row-span-2 md:row-start-1"

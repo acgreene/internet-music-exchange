@@ -47,6 +47,7 @@ export class AppShell {
 
   protected readonly navigation = computed(() => [
     { label: 'Discover', path: '/' },
+    { label: 'Crates', path: '/crates' },
     { label: 'Designs', path: '/designs' },
     ...(this.session.isSignedIn()
       ? [
@@ -56,11 +57,17 @@ export class AppShell {
       : []),
   ]);
 
-  /** Phones search from a tab, since the header has no room for the box. */
+  /**
+   * Phones search from a tab, since the header has no room for the box, and
+   * keep to four tabs so each stays easy to hit.
+   */
   protected readonly mobileNavigation = computed(() => [
     { label: 'Discover', path: '/' },
     { label: 'Search', path: '/search' },
-    ...this.navigation().slice(1),
+    { label: 'Crates', path: '/crates' },
+    ...(this.session.isSignedIn()
+      ? [{ label: 'Library', path: '/library' }]
+      : [{ label: 'Designs', path: '/designs' }]),
   ]);
 
   protected readonly initial = computed(() =>

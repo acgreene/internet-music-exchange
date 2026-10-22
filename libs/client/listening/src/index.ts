@@ -1,4 +1,5 @@
 export * from './lib/buying/purchase-labels';
+export * from './lib/crates/crate-card';
 export * from './lib/follow/follow-button';
 export * from './lib/listening.routes';
 export * from './lib/merch/merch-labels';

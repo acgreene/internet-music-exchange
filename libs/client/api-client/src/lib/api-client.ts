@@ -8,6 +8,7 @@ import { ArtistPagesClient } from './artist-pages';
 import { ArtistsClient } from './artists';
 import { CatalogClient } from './catalog';
 import { CommunityClient } from './community';
+import { CratesClient } from './crates';
 import { DesignsClient } from './designs';
 import { FundingClient } from './funding';
 import { MerchClient } from './merch';
@@ -59,6 +60,7 @@ export class ApiClient {
    * Following artists, and comments.
    */
   public readonly community = new CommunityClient(this.transport);
+  public readonly crates = new CratesClient(this.transport);
 
   /**
    * Page designs: the marketplace, designers' own designs, and release

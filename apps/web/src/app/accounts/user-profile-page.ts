@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { ApiClient } from '@ime/api-client';
 import { SessionService } from '@ime/client-data';
-import { ReportButton } from '@ime/client-listening';
+import { CrateCard, ReportButton } from '@ime/client-listening';
 import { AlertComponent, SpinnerComponent } from '@ime/ui';
 
 /**
@@ -16,7 +16,7 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
 @Component({
   selector: 'ime-user-profile-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AlertComponent, ReportButton, SpinnerComponent],
+  imports: [AlertComponent, CrateCard, ReportButton, SpinnerComponent],
   template: `
     @if (profile.isLoading()) {
       <ime-spinner />
@@ -38,6 +38,26 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
           </div>
         }
       </div>
+      @if (crates.value()?.length) {
+        <section
+          class="mt-10 flex flex-col gap-4"
+          aria-labelledby="crates-heading"
+        >
+          <h2
+            id="crates-heading"
+            class="text-2xl font-extrabold tracking-[-0.035em]"
+          >
+            Crates
+          </h2>
+          <ul
+            class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-6"
+          >
+            @for (crate of crates.value(); track crate.id) {
+              <li><ime-crate-card [crate]="crate" [byLine]="false" /></li>
+            }
+          </ul>
+        </section>
+      }
     }
   `,
 })
@@ -46,6 +66,15 @@ export class UserProfilePage {
   protected readonly session = inject(SessionService);
 
   public readonly username = input.required<string>();
+
+  /** Their public crates. */
+  protected readonly crates = resource({
+    params: () => this.username(),
+    loader: async ({ params }) => {
+      const result = await this.api.crates.listByUsername(params);
+      return result.ok ? result.data : [];
+    },
+  });
 
   protected readonly profile = resource({
     params: () => this.username(),
