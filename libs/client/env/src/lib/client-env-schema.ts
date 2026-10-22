@@ -13,11 +13,21 @@ const apiBaseUrl = z.union([z.literal(''), z.url()]);
  * imports this module and bakes exactly these variables into generated-env.ts,
  * so adding a key here is all it takes to have it picked up.
  */
+/**
+ * Stripe's publishable key, for saving cards in the browser. Empty leaves card
+ * entry off, as in a setup without Stripe.
+ */
+const stripePublishableKey = z.union([
+  z.literal(''),
+  z.string().startsWith('pk_'),
+]);
+
 export const clientEnvSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_PUBLISHABLE_KEY: z.string().startsWith('sb_publishable_'),
   DEVELOPMENT_API_BASE_URL: apiBaseUrl,
   PRODUCTION_API_BASE_URL: apiBaseUrl,
+  STRIPE_PUBLISHABLE_KEY: stripePublishableKey,
 });
 
 /**

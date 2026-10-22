@@ -76,6 +76,14 @@ import { StudioService } from './studio.service';
               >
             </div>
           }
+          <div class="mt-3 border-t border-line pt-3">
+            <a
+              class="block rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
+              routerLinkActive="bg-surface-muted text-ink font-medium"
+              routerLink="/studio/billing"
+              >Hosting balance</a
+            >
+          </div>
         </nav>
         <main class="min-w-0 flex-[999_1_560px] px-4 py-6 md:px-8">
           <router-outlet />
@@ -112,9 +120,12 @@ export class StudioShell {
   protected readonly session = inject(SessionService);
 
   protected readonly sections = computed(() => {
-    const base = `/studio/artists/${this.studio.currentArtistId()}`;
+    const base = `/studio/artists/${this.studio.currentArtist()?.id}`;
     return [
       { label: 'Releases', path: base, exact: true },
+      { label: 'Sales', path: `${base}/sales`, exact: false },
+      { label: 'Getting paid', path: `${base}/payments`, exact: false },
+      { label: 'Hosting costs', path: `${base}/costs`, exact: false },
       { label: 'Profile', path: `${base}/profile`, exact: false },
       { label: 'Managers', path: `${base}/managers`, exact: false },
       { label: 'Followers', path: `${base}/followers`, exact: false },

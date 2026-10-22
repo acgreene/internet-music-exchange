@@ -47,12 +47,42 @@ export const studioRoutes: Route[] = [
               import('./artists/managers-page').then((m) => m.ManagersPage),
           },
           {
+            path: 'sales',
+            title: 'Sales · Studio · IME',
+            loadComponent: () =>
+              import('./sales/sales-page').then((m) => m.SalesPage),
+          },
+          {
+            path: 'sales/:artistOrderId',
+            title: 'Sale · Studio · IME',
+            loadComponent: () =>
+              import('./sales/sale-page').then((m) => m.SalePage),
+          },
+          {
+            path: 'payments',
+            title: 'Getting paid · Studio · IME',
+            loadComponent: () =>
+              import('./payments/payments-page').then((m) => m.PaymentsPage),
+          },
+          {
+            path: 'costs',
+            title: 'Hosting costs · Studio · IME',
+            loadComponent: () =>
+              import('./billing/cost-split-page').then((m) => m.CostSplitPage),
+          },
+          {
             path: 'followers',
             title: 'Followers · Studio · IME',
             loadComponent: () =>
               import('./artists/followers-page').then((m) => m.FollowersPage),
           },
         ],
+      },
+      {
+        path: 'billing',
+        title: 'Hosting balance · Studio · IME',
+        loadComponent: () =>
+          import('./billing/billing-page').then((m) => m.BillingPage),
       },
       {
         path: 'releases/:releaseId',

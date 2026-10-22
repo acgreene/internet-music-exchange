@@ -19,10 +19,13 @@ export class StudioService {
 
   public readonly currentArtistId = signal<string | null>(null);
 
-  public readonly currentArtist = computed(
-    () =>
-      currentValue(this.artists)?.find(
-        (artist) => artist.id === this.currentArtistId(),
-      ) ?? null,
-  );
+  /** The artist in the address, or the first one on pages with none. */
+  public readonly currentArtist = computed(() => {
+    const artists = this.artistList();
+    return (
+      artists.find((artist) => artist.id === this.currentArtistId()) ??
+      artists[0] ??
+      null
+    );
+  });
 }
