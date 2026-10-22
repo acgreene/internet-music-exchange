@@ -8,9 +8,15 @@ import {
   linkedSignal,
   resource,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import { SessionService, currentValue } from '@ime/client-data';
-import { ApiError, HttpStatus, type ReleaseKind } from '@ime/models';
+import {
+  ApiError,
+  HttpStatus,
+  placeLabel,
+  type ReleaseKind,
+} from '@ime/models';
 import {
   CoverComponent,
   ReleaseCardComponent,
@@ -35,6 +41,7 @@ import { releaseKindLabel } from '../releases/release-labels';
     FollowButton,
     ReportButton,
     ReleaseCardComponent,
+    RouterLink,
     SpinnerComponent,
   ],
   template: `
@@ -58,7 +65,20 @@ import { releaseKindLabel } from '../releases/release-labels';
               {{ profile.artist.name }}
             </h1>
             <p class="text-sm text-ink-muted">
-              &#64;{{ profile.artist.handle }} · {{ followerCount() }}
+              &#64;{{ profile.artist.handle }} ·
+              @if (profile.artist.country; as country) {
+                <a
+                  class="hover:underline"
+                  routerLink="/search"
+                  [queryParams]="{
+                    country,
+                    city: profile.artist.city ?? undefined,
+                  }"
+                  >{{ place(profile.artist.city, country) }}</a
+                >
+                ·
+              }
+              {{ followerCount() }}
               {{ followerCount() === 1 ? 'follower' : 'followers' }}
             </p>
           </div>
@@ -163,6 +183,8 @@ export class ArtistPage {
   private readonly meta = inject(PageMetaService);
 
   public readonly handle = input.required<string>();
+
+  protected readonly place = placeLabel;
 
   protected readonly profile = resource({
     id: 'artist-profile',

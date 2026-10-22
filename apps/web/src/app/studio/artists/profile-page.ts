@@ -10,7 +10,7 @@ import {
 import { form, FormField, required, submit } from '@angular/forms/signals';
 import { ApiClient, unwrap } from '@ime/api-client';
 import { uploadFile, currentValue } from '@ime/client-data';
-import type { ArtistImageKind } from '@ime/models';
+import { type ArtistImageKind, COUNTRIES } from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
@@ -75,6 +75,26 @@ interface LinkRow {
                 [formField]="aboutForm.bio"
               ></textarea>
             </ime-field>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <ime-field
+                label="Country"
+                hint="Where the artist is based. Listeners can search by it."
+              >
+                <select imeInput [formField]="aboutForm.country">
+                  <option value="">Not saying</option>
+                  @for (country of countries; track country.code) {
+                    <option [value]="country.code">{{ country.name }}</option>
+                  }
+                </select>
+              </ime-field>
+              <ime-field label="City" hint="Optional.">
+                <input
+                  imeInput
+                  autocomplete="address-level2"
+                  [formField]="aboutForm.city"
+                />
+              </ime-field>
+            </div>
             @if (aboutSaved()) {
               <ime-alert tone="success">Saved.</ime-alert>
             }
@@ -270,8 +290,14 @@ export class ProfilePage {
 
   private readonly about = linkedSignal(() => {
     const artist = this.studio.currentArtist();
-    return { name: artist?.name ?? '', bio: artist?.bio ?? '' };
+    return {
+      name: artist?.name ?? '',
+      bio: artist?.bio ?? '',
+      city: artist?.city ?? '',
+      country: artist?.country ?? '',
+    };
   });
+  protected readonly countries = COUNTRIES;
   protected readonly aboutForm = form(this.about, (path) => {
     required(path.name, { message: 'The artist needs a name.' });
   });
@@ -305,11 +331,13 @@ export class ProfilePage {
     this.aboutSaved.set(false);
     this.aboutError.set(null);
     await submit(this.aboutForm, async () => {
-      const { name, bio } = this.about();
+      const { name, bio, city, country } = this.about();
       const result = await this.api.artists.update(this.artistId(), {
         name: name.trim(),
         handle: this.handle().trim(),
         bio: bio.trim() || null,
+        city: city.trim() || null,
+        country: country || null,
       });
       if (result.ok) {
         this.aboutSaved.set(true);
