@@ -151,4 +151,48 @@ export enum ApiRoute {
 
   /** New releases from the artists the signed-in user follows. */
   MyFeed = '/api/me/feed',
+
+  // Merch
+
+  /** POST starts a draft product; GET lists every product of the artist. */
+  ArtistProducts = '/api/artists/:artistId/products',
+
+  /** A product with everything its managers edit. */
+  Product = '/api/products/:productId',
+
+  /** Put a product in the store. */
+  ProductPublish = '/api/products/:productId/publish',
+
+  /** Pull a product from sale. */
+  ProductArchive = '/api/products/:productId/archive',
+
+  /** Add a buyable variant. */
+  ProductVariants = '/api/products/:productId/variants',
+
+  /** PATCH changes a variant; DELETE removes one that never sold. */
+  Variant = '/api/variants/:variantId',
+
+  /** Set how many units of a variant are on hand. */
+  VariantStock = '/api/variants/:variantId/stock',
+
+  /** Somewhere to upload a product photo. */
+  ProductImageUploads = '/api/products/:productId/images/uploads',
+
+  /** Record an uploaded product photo. */
+  ProductImages = '/api/products/:productId/images',
+
+  /** PATCH changes a photo; DELETE removes it. */
+  ProductImage = '/api/product-images/:imageId',
+
+  /** PUT sets what a product costs to ship to a zone; DELETE stops shipping there. */
+  ProductShippingRate = '/api/products/:productId/shipping-rates/:destination',
+
+  /** An artist's store. */
+  CatalogStore = '/api/catalog/artists/:handle/store',
+
+  /** A release's physical editions. */
+  CatalogEditions = '/api/catalog/releases/:releaseId/editions',
+
+  /** A product page. */
+  CatalogProduct = '/api/catalog/products/:productId',
 }

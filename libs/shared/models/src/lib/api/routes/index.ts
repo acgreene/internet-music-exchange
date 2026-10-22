@@ -6,3 +6,4 @@ export * from './accounts';
 export * from './artists';
 export * from './releases';
 export * from './catalog';
+export * from './merch';

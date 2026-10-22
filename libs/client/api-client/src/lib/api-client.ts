@@ -7,6 +7,7 @@ import { SupabaseSingleton } from './auth';
 import { ArtistPagesClient } from './artist-pages';
 import { ArtistsClient } from './artists';
 import { CatalogClient } from './catalog';
+import { MerchClient } from './merch';
 import { ReleasesClient } from './releases';
 
 /**
@@ -35,6 +36,11 @@ export class ApiClient {
    * What listeners browse, read, and play.
    */
   public readonly catalog = new CatalogClient(this.transport);
+
+  /**
+   * Merch: stores and product pages, and what managers build.
+   */
+  public readonly merch = new MerchClient(this.transport);
 
   /**
    * Releases, for their artist's managers.
