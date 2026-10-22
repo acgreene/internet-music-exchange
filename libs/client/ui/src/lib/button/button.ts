@@ -1,4 +1,4 @@
-import { computed, Directive, input } from '@angular/core';
+import { booleanAttribute, computed, Directive, input } from '@angular/core';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -24,7 +24,7 @@ const SIZES = {
   host: {
     '[class]': 'classes()',
     '[attr.aria-busy]': 'busy() || null',
-    '[attr.disabled]': 'busy() || null',
+    '[attr.disabled]': 'busy() || disabled() || null',
   },
 })
 export class ButtonDirective {
@@ -32,6 +32,11 @@ export class ButtonDirective {
   public readonly size = input<keyof typeof SIZES>('md');
   /** Working on it: disabled, and announced as busy. */
   public readonly busy = input(false);
+  /**
+   * Taken here rather than left to the element, since the busy state also
+   * sets the disabled attribute and would otherwise clear it.
+   */
+  public readonly disabled = input(false, { transform: booleanAttribute });
 
   protected readonly classes = computed(
     () =>
