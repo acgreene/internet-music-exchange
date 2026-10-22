@@ -13,6 +13,7 @@ import {
   ApiErrorKind,
   ApiRoute,
   type SessionResponse,
+  type SignUpResponse,
   type UserUpdate,
 } from '@ime/models';
 import type { ApiResult } from '../api-result';
@@ -33,16 +34,18 @@ export class UsersClient {
   }
 
   /**
-   * Create an account through the API and adopt the returned session.
+   * Create an account through the API, accepting the terms. When the email
+   * address must be confirmed first there is no session yet; otherwise the
+   * returned session is adopted.
    */
   public async signUp(
     email: string,
     password: string,
-  ): Promise<ApiResult<SessionResponse>> {
+  ): Promise<ApiResult<SignUpResponse>> {
     const result = await this.transport.post(ApiRoute.SignUp, {
-      body: { email, password },
+      body: { email, password, acceptedTerms: true },
     });
-    if (result.ok) {
+    if (result.ok && 'access_token' in result.data) {
       await this.adoptSession(result.data);
     }
     return result;
@@ -96,6 +99,43 @@ export class UsersClient {
       await this.supabase.auth.signOut({ scope: 'local' });
     }
     return result;
+  }
+
+  /**
+   * Be told whenever the session changes: signing in or out, here or in
+   * another tab, a refreshed token, or a password-reset link being opened.
+   *
+   * @returns A function that stops listening.
+   */
+  public onSessionChange(
+    listener: (change: {
+      signedIn: boolean;
+      passwordRecovery: boolean;
+    }) => void,
+  ): () => void {
+    const { data } = this.supabase.auth.onAuthStateChange((event, session) =>
+      listener({
+        signedIn: session !== null,
+        passwordRecovery: event === 'PASSWORD_RECOVERY',
+      }),
+    );
+    return () => data.subscription.unsubscribe();
+  }
+
+  /**
+   * Email a link to reset the password. The link signs the user in at
+   * `redirectTo`, where they choose a new one with `update`.
+   */
+  public async requestPasswordReset(
+    email: string,
+    redirectTo: string,
+  ): Promise<ApiResult<AckResponse>> {
+    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+    return error
+      ? { ok: false, error: this.toApiError(error) }
+      : { ok: true, data: { success: true } };
   }
 
   /**

@@ -15,9 +15,19 @@ export class SupabaseSingleton {
   public readonly supabase: SupabaseClient;
 
   private constructor() {
+    // sessions live only in the browser; a server render is always signed
+    // out, and must never keep one user's session for the next request
+    const inBrowser = typeof window !== 'undefined';
     this.supabase = createClient(
       clientEnv.SUPABASE_URL,
       clientEnv.SUPABASE_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: inBrowser,
+          autoRefreshToken: inBrowser,
+          detectSessionInUrl: inBrowser,
+        },
+      },
     );
   }
 

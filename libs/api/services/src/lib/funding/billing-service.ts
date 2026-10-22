@@ -405,15 +405,35 @@ export class BillingService {
       );
     }
 
-    let remaining = await this.db.funding.getBalance(userId);
-    if (remaining <= 0) {
+    if ((await this.db.funding.getBalance(userId)) <= 0) {
       throw new ApiError(
         ApiErrorKind.Http,
         HttpStatus.Conflict,
         'There is no unused balance to refund.',
       );
     }
+    return this.refundBalance(userId);
+  }
 
+  /**
+   * Refund whatever is left in a seller's balance as their account closes.
+   * Their designs and shares go with the account, so nothing on sale holds
+   * the balance back.
+   *
+   * @returns How much was refunded, in cents.
+   */
+  public async refundOnAccountClose(userId: string): Promise<number> {
+    if (!(await this.db.funding.getBilling(userId))) return 0;
+    if ((await this.db.funding.getBalance(userId)) <= 0) return 0;
+    return this.refundBalance(userId);
+  }
+
+  /**
+   * Refund the balance to the seller's card, out of their most recent top-ups
+   * first and never the extra they gave with them.
+   */
+  private async refundBalance(userId: string): Promise<number> {
+    let remaining = await this.db.funding.getBalance(userId);
     const topUps = (
       await this.db.funding.listBalanceEntries(userId, 1000)
     ).filter((entry) => entry.kind === 'top_up' && entry.stripePaymentIntentId);

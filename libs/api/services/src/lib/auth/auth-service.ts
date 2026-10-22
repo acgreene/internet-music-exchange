@@ -7,6 +7,7 @@ import {
 } from '@supabase/supabase-js';
 import { DatabaseRepository } from '@ime/db';
 import { env } from '@ime/env';
+import { BillingService } from '../funding/billing-service';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 
 /**
@@ -16,6 +17,12 @@ const RATE_LIMITED_CODES = new Set([
   'over_request_rate_limit',
   'over_email_send_rate_limit',
 ]);
+
+/**
+ * The version of the terms of service and privacy policy a new user accepts,
+ * recorded with their account. Change it when either document changes.
+ */
+export const TERMS_VERSION = '2026-10-22';
 
 /**
  * Options that keep server-side supabase-js clients stateless.
@@ -30,6 +37,9 @@ const STATELESS_AUTH_OPTIONS = {
 export class AuthService {
   constructor(
     private readonly db: DatabaseRepository = new DatabaseRepository(),
+    private readonly billing: BillingService = new BillingService(db),
+    /** Where confirmation emails send people back to. */
+    private readonly webAppUrl: string = env.WEB_APP_URL,
     /**
      * Client bound to the publishable key for user-scoped operations.
      */
@@ -49,15 +59,27 @@ export class AuthService {
   ) {}
 
   /**
-   * Create an account.
+   * Create an account, recording which terms the user accepted. When
+   * Supabase requires email confirmation, there is no session until the user
+   * follows the link it emails them.
+   *
+   * @returns The new session, or null when the email must be confirmed first.
+   * @throws ApiError 429 when rate limited.
    */
   public async signUp(
     email: string,
     password: string,
-  ): Promise<SupabaseSession> {
+  ): Promise<SupabaseSession | null> {
     const { data, error } = await this.publicClient.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${this.webAppUrl}/sign-in?confirmed=1`,
+        data: {
+          termsVersion: TERMS_VERSION,
+          termsAcceptedAt: new Date().toISOString(),
+        },
+      },
     });
     if (error) {
       if (this.isRateLimited(error)) {
@@ -71,13 +93,6 @@ export class AuthService {
         ApiErrorKind.Http,
         error.status ?? HttpStatus.InternalServerError,
         error.message,
-      );
-    }
-    if (!data.session) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.InternalServerError,
-        'Sign-up did not return a session; is email confirmation enabled?',
       );
     }
     return data.session;
@@ -100,6 +115,13 @@ export class AuthService {
           ApiErrorKind.Http,
           HttpStatus.TooManyRequests,
           'Too many login attempts. Please try again later.',
+        );
+      }
+      if (error.code === 'email_not_confirmed') {
+        throw new ApiError(
+          ApiErrorKind.Http,
+          HttpStatus.Forbidden,
+          'Confirm your email address first, with the link we sent when you signed up.',
         );
       }
       throw new ApiError(
@@ -154,13 +176,13 @@ export class AuthService {
       );
     }
 
+    // the account's prepaid hosting balance goes back to its card first
+    await this.billing.refundOnAccountClose(userId);
+
+    // a failure here is the platform's, so it is logged rather than shown
     const { error } = await this.adminClient.auth.admin.deleteUser(userId);
     if (error) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        error.status ?? HttpStatus.InternalServerError,
-        error.message,
-      );
+      throw new Error(`Could not delete user ${userId}: ${error.message}`);
     }
   }
 

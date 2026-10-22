@@ -13,14 +13,17 @@ export class AuthRouter extends AbstractRouter {
   }
 
   protected register(): void {
-    // the session goes back whole, every field supabase-js gave it
+    // a session goes back whole, every field supabase-js gave it
     this.handle(
       HttpMethod.Post,
       ApiRoute.SignUp,
       'public',
-      async ({ body }) => ({
-        ...(await this.auth.signUp(body.email, body.password)),
-      }),
+      async ({ body }) => {
+        const session = await this.auth.signUp(body.email, body.password);
+        return session
+          ? { ...session }
+          : { confirmationRequired: true as const };
+      },
     );
 
     this.handle(

@@ -61,7 +61,11 @@ describe('ApiTransport', () => {
     const fetchSpy = stubFetch(() => jsonResponse(SESSION_BODY));
 
     await makeTransport().post(ApiRoute.SignUp, {
-      body: { email: 'artist@example.com', password: 'password123' },
+      body: {
+        email: 'artist@example.com',
+        password: 'password123',
+        acceptedTerms: true,
+      },
     });
 
     const [path, init] = fetchSpy.mock.calls[0];
@@ -69,7 +73,7 @@ describe('ApiTransport', () => {
     expect(init?.method).toBe('POST');
     expect(init?.headers).toEqual({ 'Content-Type': 'application/json' });
     expect(init?.body).toBe(
-      '{"email":"artist@example.com","password":"password123"}',
+      '{"email":"artist@example.com","password":"password123","acceptedTerms":true}',
     );
   });
 

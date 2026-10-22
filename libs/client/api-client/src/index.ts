@@ -3,3 +3,5 @@
  * in this library are internal. Client side apps should only access the api client.
  */
 export * from './lib/api-client';
+
+export type { ApiResult } from './lib/api-result';

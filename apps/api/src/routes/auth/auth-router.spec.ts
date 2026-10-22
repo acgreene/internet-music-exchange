@@ -44,6 +44,7 @@ describe('auth routes', () => {
       body: JSON.stringify({
         email: 'artist@example.com',
         password: 'password123',
+        acceptedTerms: true,
       }),
     });
 

@@ -101,7 +101,6 @@ export class ImeServices {
     const releaseFiles = new ReleaseFilesService(db, storage);
     const webAppUrl = env.WEB_APP_URL;
 
-    this.auth = new AuthService(db);
     this.users = new UserService(db);
     this.artists = new ArtistService(db, storage, access, uploads);
     this.releases = new ReleaseService(db, storage, access, gate, uploads);
@@ -136,6 +135,7 @@ export class ImeServices {
       uploads,
     );
     this.billing = new BillingService(db, stripe, funding);
+    this.auth = new AuthService(db, this.billing, webAppUrl);
     this.costShares = new CostShareService(db, access);
     this.donations = new DonationService(db, stripe, webAppUrl);
     this.publicCosts = new PublicCostsService(db);

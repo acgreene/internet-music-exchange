@@ -2,7 +2,7 @@ import type { RouteContracts } from '../contract';
 import { ackSchema } from '../general';
 import { HttpMethod } from '../http-method';
 import { ApiRoute } from './routes';
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Request body for creating an account.
@@ -10,6 +10,8 @@ import { z } from 'zod';
 export const signUpRequestSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
+  /** The terms of service and privacy policy must be accepted. */
+  acceptedTerms: z.literal(true),
 });
 
 /**
@@ -42,6 +44,17 @@ export const sessionSchema = z.looseObject({
 
 export type SessionResponse = z.infer<typeof sessionSchema>;
 
+/**
+ * What sign-up returns: a session, or word that the email address must be
+ * confirmed before the user can sign in.
+ */
+export const signUpResponseSchema = z.union([
+  sessionSchema,
+  z.object({ confirmationRequired: z.literal(true) }),
+]);
+
+export type SignUpResponse = z.infer<typeof signUpResponseSchema>;
+
 export const authContracts = {
   [ApiRoute.Users]: {
     [HttpMethod.Delete]: { response: ackSchema },
@@ -49,7 +62,7 @@ export const authContracts = {
   [ApiRoute.SignUp]: {
     [HttpMethod.Post]: {
       request: signUpRequestSchema,
-      response: sessionSchema,
+      response: signUpResponseSchema,
     },
   },
   [ApiRoute.SignIn]: {
