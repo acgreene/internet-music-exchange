@@ -105,6 +105,13 @@ export const RELEASE_ASSET_RULES: Record<ReleaseAssetKind, UploadRules> = {
   ),
 };
 
+export const ARTIST_IMAGE_RULES = rules(
+  'profile image',
+  IMAGE_TYPES,
+  5 * MB,
+  IMAGE_LABEL,
+);
+
 export const PRODUCT_IMAGE_RULES = rules(
   'product photo',
   IMAGE_TYPES,

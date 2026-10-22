@@ -103,7 +103,7 @@ export class ImeServices {
 
     this.auth = new AuthService(db);
     this.users = new UserService(db);
-    this.artists = new ArtistService(db, storage, access);
+    this.artists = new ArtistService(db, storage, access, uploads);
     this.releases = new ReleaseService(db, storage, access, gate, uploads);
     this.catalog = new CatalogService(db, storage);
     this.artistPages = new ArtistPageService(db, storage);

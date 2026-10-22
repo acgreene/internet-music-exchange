@@ -14,7 +14,6 @@ export type {
   ArtistProfile,
   ArtistService,
   CreateArtistInput,
-  ImageUpload,
   LinkInput,
   UpdateArtistInput,
 } from './lib/artists/artist-service';

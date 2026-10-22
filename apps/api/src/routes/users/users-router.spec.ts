@@ -1,5 +1,5 @@
 import { ApiError, ApiErrorKind, ApiRoute } from '@ime/models';
-import type { AuthService, UserService } from '@ime/services';
+import type { ArtistService, AuthService, UserService } from '@ime/services';
 import { RouteGuard } from '../route-guard';
 import { UsersRouter } from './users-router';
 
@@ -12,6 +12,8 @@ const authService = mockAuthService as unknown as AuthService;
 const usersRoutes = new UsersRouter(
   new RouteGuard(authService, {} as UserService),
   authService,
+  {} as UserService,
+  {} as ArtistService,
 ).router;
 
 const SUPABASE_USER = {

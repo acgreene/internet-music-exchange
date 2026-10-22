@@ -79,6 +79,20 @@ export abstract class AbstractRouter {
   protected abstract register(): void;
 
   /**
+   * Read a path param that must be one of a fixed set of values, such as an
+   * image kind. Anything else names nothing, so it is a 404.
+   */
+  protected enumParam<T extends string>(
+    values: readonly T[],
+    value: string,
+  ): T {
+    if (!(values as readonly string[]).includes(value)) {
+      throw new ApiError(ApiErrorKind.Http, HttpStatus.NotFound, 'Not found.');
+    }
+    return value as T;
+  }
+
+  /**
    * Serve one route and method by its contract in `@ime/models`. The caller
    * is checked against `access`, path ids, the query string, and the body are
    * validated before the handler runs, and what the handler returns is parsed

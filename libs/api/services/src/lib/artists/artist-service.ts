@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import {
   type Artist,
   type ArtistImageKind,
@@ -15,14 +14,17 @@ import {
   isValidHandle,
   toHandle,
 } from '../naming/naming-utils';
-import { CloudStorageService } from '../storage';
-import { FILE_EXTENSIONS, IMAGE_TYPES } from '../storage/media-types';
+import {
+  CloudStorageService,
+  UploadService,
+  type UploadTarget,
+} from '../storage';
+import { ARTIST_IMAGE_RULES } from '../storage/media-types';
 
 const NAME_MAX_LENGTH = 100;
 const BIO_MAX_LENGTH = 2000;
 const LINK_LIMIT = 10;
 const LINK_LABEL_MAX_LENGTH = 50;
-const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const IMAGE_URL_EXPIRY_SECONDS = 3600;
 
 export interface CreateArtistInput {
@@ -41,11 +43,6 @@ export interface UpdateArtistInput {
 export interface LinkInput {
   label: string;
   url: string;
-}
-
-export interface ImageUpload {
-  body: Uint8Array;
-  contentType: string;
 }
 
 /**
@@ -68,6 +65,7 @@ export class ArtistService {
     private readonly db: DatabaseRepository = new DatabaseRepository(),
     private readonly storage: CloudStorageService = new CloudStorageService(),
     private readonly access: AccessService = new AccessService(db),
+    private readonly uploads: UploadService = new UploadService(storage),
   ) {}
 
   /**
@@ -226,45 +224,53 @@ export class ArtistService {
   }
 
   /**
-   * Upload an artist's avatar or header, replacing the old one.
+   * Get somewhere to upload an artist's avatar or header.
    *
-   * @returns A URL to the new image.
-   * @throws ApiError 400 for an unsupported or oversized file, 403 when the
-   * user does not manage the artist.
+   * @throws ApiError 400 for a file type images cannot be, 403 when the user
+   * does not manage the artist.
    */
-  public async setImage(
+  public async createImageUpload(
     userId: string,
     artistId: string,
     kind: ArtistImageKind,
-    upload: ImageUpload,
+    contentType: string,
+  ): Promise<UploadTarget> {
+    await this.access.requireManager(userId, artistId);
+    return this.uploads.createTarget(
+      this.imagePrefix(artistId),
+      kind,
+      contentType,
+      ARTIST_IMAGE_RULES,
+    );
+  }
+
+  /**
+   * Record an uploaded avatar or header, replacing the old one.
+   *
+   * @returns A URL to the new image.
+   * @throws ApiError 400 when nothing valid was uploaded to that key, 403
+   * when the user does not manage the artist.
+   */
+  public async confirmImageUpload(
+    userId: string,
+    artistId: string,
+    kind: ArtistImageKind,
+    objectKey: string,
   ): Promise<string> {
     await this.access.requireManager(userId, artistId);
-
-    if (!IMAGE_TYPES.includes(upload.contentType)) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        'Images must be JPEG, PNG, or WebP.',
-      );
-    }
-    if (upload.body.byteLength > IMAGE_MAX_BYTES) {
-      throw new ApiError(
-        ApiErrorKind.Http,
-        HttpStatus.BadRequest,
-        'Images must be 5 MB or smaller.',
-      );
-    }
-
-    const objectKey = `artists/${artistId}/${kind}-${randomUUID()}.${FILE_EXTENSIONS[upload.contentType]}`;
-    await this.storage.uploadObject(objectKey, upload.body, upload.contentType);
+    const stored = await this.uploads.confirm(
+      objectKey,
+      this.imagePrefix(artistId),
+      ARTIST_IMAGE_RULES,
+    );
 
     const replaced = await this.db.artists.setImage({
       artistId,
       kind,
       bucket: this.storage.bucket,
       objectKey,
-      mimeType: upload.contentType,
-      byteSize: upload.body.byteLength,
+      mimeType: stored.contentType,
+      byteSize: stored.byteSize,
     });
     if (replaced) await this.storage.deleteObject(replaced.objectKey);
 
@@ -441,5 +447,9 @@ export class ArtistService {
       HANDLE_MAX_LENGTH,
       (candidate) => this.db.artists.isHandleAvailable(candidate),
     );
+  }
+
+  private imagePrefix(artistId: string): string {
+    return `artists/${artistId}/images/`;
   }
 }

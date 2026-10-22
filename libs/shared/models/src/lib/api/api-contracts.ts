@@ -2,7 +2,9 @@ import type { z } from 'zod';
 import type { ApiContract, RouteContracts } from './contract';
 import type { HttpMethod } from './http-method';
 import {
+  accountContracts,
   type ApiRoute,
+  artistContracts,
   artistPageContracts,
   authContracts,
   healthContracts,
@@ -23,6 +25,8 @@ export const API_CONTRACTS = {
   ...healthContracts,
   ...authContracts,
   ...artistPageContracts,
+  ...accountContracts,
+  ...artistContracts,
 } as const satisfies Record<ApiRoute, RouteContracts>;
 
 /**

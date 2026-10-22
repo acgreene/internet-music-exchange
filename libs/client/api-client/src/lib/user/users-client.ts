@@ -5,6 +5,10 @@ import type {
 } from '@supabase/supabase-js';
 import {
   type AckResponse,
+  type AvailabilityResponse,
+  type OwnUser,
+  type PublicUser,
+  type UpdateProfileRequest,
   ApiError,
   ApiErrorKind,
   ApiRoute,
@@ -92,6 +96,40 @@ export class UsersClient {
       await this.supabase.auth.signOut({ scope: 'local' });
     }
     return result;
+  }
+
+  /**
+   * The signed-in user's own profile, including whether they are an admin.
+   */
+  public getMe(): Promise<ApiResult<OwnUser>> {
+    return this.transport.get(ApiRoute.Me);
+  }
+
+  /**
+   * Change the signed-in user's username or display name.
+   */
+  public updateProfile(
+    changes: UpdateProfileRequest,
+  ): Promise<ApiResult<PublicUser>> {
+    return this.transport.patch(ApiRoute.Me, { body: changes });
+  }
+
+  /**
+   * Anyone's public profile, by username.
+   */
+  public getProfile(username: string): Promise<ApiResult<PublicUser>> {
+    return this.transport.get(ApiRoute.UserProfile, { params: { username } });
+  }
+
+  /**
+   * Whether a username is free for the signed-in user to take.
+   */
+  public isUsernameAvailable(
+    username: string,
+  ): Promise<ApiResult<AvailabilityResponse>> {
+    return this.transport.get(ApiRoute.UsernameAvailability, {
+      params: { username },
+    });
   }
 
   /**

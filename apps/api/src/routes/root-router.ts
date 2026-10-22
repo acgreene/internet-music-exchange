@@ -3,6 +3,7 @@ import type { ImeServices } from '@ime/services';
 import { Logger } from '@ime/utils';
 import { AbstractRouter } from './abstract-router';
 import { ArtistPagesRouter } from './artist-pages';
+import { ArtistsRouter } from './artists';
 import { AuthRouter } from './auth';
 import { HealthRouter } from './health';
 import { RouteGuard } from './route-guard';
@@ -26,7 +27,8 @@ export class RootRouter extends AbstractRouter {
     const routers: AbstractRouter[] = [
       new HealthRouter(guard, services.health),
       new AuthRouter(guard, services.auth),
-      new UsersRouter(guard, services.auth),
+      new UsersRouter(guard, services.auth, services.users, services.artists),
+      new ArtistsRouter(guard, services.artists),
       new ArtistPagesRouter(guard, services.artistPages),
     ];
     for (const router of routers) this.routes.route('/', router.router);
