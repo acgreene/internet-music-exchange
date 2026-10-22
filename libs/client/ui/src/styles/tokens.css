@@ -7,6 +7,9 @@
  * Import after Tailwind and the fonts:
  * @import 'tailwindcss'; @import '.../tokens.css';
  */
+/* Short screens, such as a phone in a browser with its toolbars showing. */
+@custom-variant short (@media (max-height: 700px));
+
 @theme {
   --font-sans: 'Inter Tight Variable', ui-sans-serif, system-ui, sans-serif;
   /* prices, times, file sizes */

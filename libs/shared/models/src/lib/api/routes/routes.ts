@@ -128,6 +128,9 @@ export enum ApiRoute {
   /** The newest releases. */
   CatalogReleases = '/api/catalog/releases',
 
+  /** The home page's shelves and how much of each format is on offer. */
+  CatalogHome = '/api/catalog/home',
+
   /** Search artists and releases, `?q=`. */
   CatalogSearch = '/api/catalog/search',
 

@@ -1,5 +1,6 @@
 import {
   ApiRoute,
+  type CatalogHome,
   type FeedItem,
   type LibraryItem,
   type PageQuery,
@@ -26,6 +27,13 @@ export class CatalogClient {
     page?: PageQuery,
   ): Promise<ApiResult<ReleaseCardWithArtist[]>> {
     return this.transport.get(ApiRoute.CatalogReleases, { query: page });
+  }
+
+  /**
+   * Today's home page shelves, with the listener's own when signed in.
+   */
+  public getHome(): Promise<ApiResult<CatalogHome>> {
+    return this.transport.get(ApiRoute.CatalogHome);
   }
 
   public search(query: string): Promise<ApiResult<SearchResults>> {

@@ -56,6 +56,10 @@ Each is a property of `ImeServices`, named in brackets.
 - **`ReleaseService`** (`releases`): a manager's side of releases: drafts,
   tracks, audio and artwork uploads, pricing, publishing, archiving, and
   gifting. Use it for every screen where an artist builds or edits a release.
+- **`ShelfService`** (`shelves`): the home page's shelves, rows picked by
+  recipes over the catalog and the listener's library, rotated daily, plus a
+  few designed releases and how much of each format is on offer. Use it for
+  the home page.
 - **`CatalogService`** (`catalog`): a listener's side of releases: release
   pages, browsing and search, the feed of followed artists, the library, and
   the URLs that stream, download, and open assets. Use it for anything a
@@ -196,7 +200,7 @@ are internal.
 ## Conventions
 
 - **Errors.** A service throws `new ApiError(ApiErrorKind.Http, HttpStatus.X,
-  message)` with a message written for the end user; the route layer relays
+message)` with a message written for the end user; the route layer relays
   the status and message. Statuses come from `HttpStatus` in `@ime/models`,
   never as numbers.
 - **Permissions first.** A method that acts for someone takes their `userId`

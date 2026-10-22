@@ -9,5 +9,6 @@ export * from './payment-repository';
 export * from './product-repository';
 export * from './release-asset-repository';
 export * from './release-repository';
+export * from './shelf-repository';
 export * from './social-repository';
 export * from './user-repository';

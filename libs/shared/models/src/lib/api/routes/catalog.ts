@@ -3,7 +3,9 @@ import type { RouteContracts } from '../contract';
 import { pageQuerySchema, signedUrlSchema, timestampSchema } from '../general';
 import { HttpMethod } from '../http-method';
 import { artistSchema } from './artists';
+import { productTypeSchema } from './merch';
 import {
+  currencySchema,
   pricingSchema,
   releaseAssetKindSchema,
   releaseKindSchema,
@@ -117,7 +119,66 @@ export const feedItemSchema = z.object({
 
 export type FeedItem = z.infer<typeof feedItemSchema>;
 
+/**
+ * One thing on a shelf: a release with its price, or a product priced from
+ * its cheapest variant in stock.
+ */
+export const shelfItemSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('release'),
+    release: releaseCardWithArtistSchema,
+    pricing: pricingSchema.nullable(),
+  }),
+  z.object({
+    kind: z.literal('product'),
+    id: z.guid(),
+    name: z.string(),
+    productType: productTypeSchema,
+    artistName: z.string(),
+    artistHandle: z.string(),
+    imageUrl: z.string().nullable(),
+    currency: currencySchema,
+    price: z.number().int(),
+  }),
+]);
+
+export type ShelfItem = z.infer<typeof shelfItemSchema>;
+
+/**
+ * A row of records on the home page, with why it is there.
+ */
+export const shelfSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  /** Why the shelf exists, as the listener reads it. */
+  reason: z.string(),
+  items: z.array(shelfItemSchema),
+});
+
+export type Shelf = z.infer<typeof shelfSchema>;
+
+/**
+ * The home page: today's shelves, a few designed releases, and how much of
+ * each format is on offer.
+ */
+export const catalogHomeSchema = z.object({
+  shelves: z.array(shelfSchema),
+  /** A few releases with designed pages, to show what they are. */
+  designed: z.array(shelfItemSchema),
+  formats: z.object({
+    releases: z.number().int(),
+    products: z.array(
+      z.object({ type: productTypeSchema, count: z.number().int() }),
+    ),
+  }),
+});
+
+export type CatalogHome = z.infer<typeof catalogHomeSchema>;
+
 export const catalogContracts = {
+  [ApiRoute.CatalogHome]: {
+    [HttpMethod.Get]: { response: catalogHomeSchema },
+  },
   [ApiRoute.CatalogReleases]: {
     [HttpMethod.Get]: {
       query: pageQuerySchema,

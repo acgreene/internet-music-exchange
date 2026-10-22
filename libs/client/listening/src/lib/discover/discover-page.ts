@@ -13,16 +13,18 @@ import type { ReleaseCardWithArtist } from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
+  CoverComponent,
   ReleaseCardComponent,
   SpinnerComponent,
 } from '@ime/ui';
+import { GatefoldHero } from '../home/gatefold-hero';
+import { ShelfRow } from '../home/shelf-row';
 
 const PAGE_SIZE = 24;
-const FEED_SIZE = 8;
 
 /**
- * Where listening starts: new music from followed artists, then everything
- * newly released.
+ * The home page: the gatefold that says what IME is, today's shelves,
+ * designed releases, and everything new.
  */
 @Component({
   selector: 'ime-discover-page',
@@ -30,61 +32,103 @@ const FEED_SIZE = 8;
   imports: [
     AlertComponent,
     ButtonDirective,
+    CoverComponent,
+    GatefoldHero,
     ReleaseCardComponent,
     RouterLink,
+    ShelfRow,
     SpinnerComponent,
   ],
   template: `
-    <div class="mx-auto flex max-w-6xl flex-col gap-10">
-      @if (session.status() === 'signed-out') {
-        <section class="flex flex-col gap-3">
-          <h1 class="text-5xl leading-[0.95] font-black tracking-[-0.05em]">
-            Music from the people who made it
-          </h1>
-          <p class="max-w-prose text-ink-muted">
-            Independent music, sold straight from the artists. Buy it once and
-            it is yours to stream and download.
-          </p>
-          <div class="flex gap-2">
-            <a imeButton routerLink="/sign-up">Create an account</a>
-            <a imeButton variant="secondary" routerLink="/search">Search</a>
-          </div>
-        </section>
-      }
+    <ime-gatefold-hero class="-mx-4 -mt-8 md:-mx-8" />
 
-      @if (session.isSignedIn()) {
-        <section class="flex flex-col gap-4" aria-labelledby="feed-heading">
-          <h2 id="feed-heading" class="text-xl font-semibold">
-            New from artists you follow
-          </h2>
-          @if (feed.hasValue() ? feed.value() : null; as items) {
-            @if (items.length) {
-              <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                @for (item of items; track item.releaseId) {
-                  <li>
-                    <ime-release-card
-                      [title]="item.title"
-                      [link]="['/artists', item.artistHandle, item.slug]"
-                      [coverUrl]="item.coverUrl"
-                      [subtitle]="item.artistName"
-                      [subtitleLink]="['/artists', item.artistHandle]"
-                    />
-                  </li>
-                }
-              </ul>
-            } @else {
-              <p class="text-sm text-ink-muted">
-                Follow artists to see their new releases here.
-              </p>
-            }
-          } @else if (feed.isLoading()) {
-            <ime-spinner />
+    <div class="mx-auto flex max-w-6xl flex-col gap-12 pt-10">
+      <div id="shelves" class="flex scroll-mt-24 flex-col gap-10">
+        @if (home.hasValue() ? home.value() : null; as page) {
+          @for (shelf of page.shelves; track shelf.id) {
+            <ime-shelf-row [shelf]="shelf" />
           }
+        } @else if (home.error()) {
+          <ime-alert tone="error"
+            >Today's shelves could not be loaded.</ime-alert
+          >
+        } @else {
+          <ime-spinner />
+        }
+      </div>
+
+      @if (designed().length) {
+        <section
+          class="grid items-center gap-8 border-y border-line py-10 md:grid-cols-2"
+          aria-labelledby="designed-heading"
+        >
+          <div class="flex flex-col gap-3">
+            <span
+              class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+              >Designed releases</span
+            >
+            <h2
+              id="designed-heading"
+              class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-5xl"
+            >
+              IME reimagines the record.
+            </h2>
+            <p class="max-w-prose leading-relaxed">
+              On IME, artists team up with designers and creative developers to
+              build a companion experience for their record: an immersive
+              gallery, a page that changes with every song, even a small game.
+              It's the cover, the inner sleeve, and the liner notes, reborn as
+              software you explore while you listen.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <a
+                imeButton
+                [routerLink]="[
+                  '/artists',
+                  designed()[0].release.artistHandle,
+                  designed()[0].release.slug,
+                ]"
+                >Hear a designed release</a
+              >
+              <a class="link font-semibold" routerLink="/studio/marketplace"
+                >Find a design for your music</a
+              >
+            </div>
+          </div>
+          <ul class="grid grid-cols-3 gap-3">
+            @for (item of designed(); track item.release.id; let i = $index) {
+              <li [class.mt-10]="i === 1">
+                <a
+                  class="group flex flex-col gap-1.5"
+                  [routerLink]="[
+                    '/artists',
+                    item.release.artistHandle,
+                    item.release.slug,
+                  ]"
+                >
+                  <ime-cover
+                    class="w-full border border-line"
+                    [src]="item.release.coverUrl"
+                    [alt]="'Cover of ' + item.release.title"
+                  />
+                  <span
+                    class="truncate text-sm font-semibold group-hover:underline"
+                    >{{ item.release.title }}</span
+                  >
+                </a>
+              </li>
+            }
+          </ul>
         </section>
       }
 
       <section class="flex flex-col gap-4" aria-labelledby="recent-heading">
-        <h2 id="recent-heading" class="text-xl font-semibold">New releases</h2>
+        <h2
+          id="recent-heading"
+          class="text-2xl font-extrabold tracking-[-0.035em]"
+        >
+          Everything new
+        </h2>
         @if (recent.error()) {
           <ime-alert tone="error">New releases could not be loaded.</ime-alert>
         }
@@ -127,18 +171,24 @@ const FEED_SIZE = 8;
 })
 export class DiscoverPage {
   private readonly api = inject(ApiClient);
-  protected readonly session = inject(SessionService);
+  private readonly session = inject(SessionService);
+
+  /** The shelves change with who is signed in, so they reload with them. */
+  protected readonly home = resource({
+    id: 'catalog-home',
+    params: () => this.session.user()?.id ?? 'anonymous',
+    loader: async () => unwrap(await this.api.catalog.getHome()),
+  });
+  protected readonly designed = computed(() =>
+    (currentValue(this.home)?.designed ?? []).flatMap((item) =>
+      item.kind === 'release' ? [item] : [],
+    ),
+  );
 
   protected readonly recent = resource({
     id: 'catalog-recent',
     loader: async () =>
       unwrap(await this.api.catalog.listRecent({ limit: PAGE_SIZE })),
-  });
-
-  protected readonly feed = resource({
-    params: () => this.session.user()?.id,
-    loader: async () =>
-      unwrap(await this.api.catalog.getFeed({ limit: FEED_SIZE })),
   });
 
   private readonly more = signal<ReleaseCardWithArtist[]>([]);

@@ -1,5 +1,5 @@
 import { ApiRoute, HttpMethod } from '@ime/models';
-import type { CatalogService } from '@ime/services';
+import type { CatalogService, ShelfService } from '@ime/services';
 import { AbstractRouter } from '../abstract-router';
 import type { RouteGuard } from '../route-guard';
 
@@ -11,6 +11,7 @@ export class CatalogRouter extends AbstractRouter {
   constructor(
     guard: RouteGuard,
     private readonly catalog: CatalogService,
+    private readonly shelves: ShelfService,
   ) {
     super(guard);
     this.register();
@@ -22,6 +23,13 @@ export class CatalogRouter extends AbstractRouter {
       ApiRoute.CatalogReleases,
       'public',
       ({ query }) => this.catalog.listRecent(query.limit, query.offset),
+    );
+
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.CatalogHome,
+      'optional',
+      ({ userId }) => this.shelves.getHome(userId),
     );
 
     this.handle(HttpMethod.Get, ApiRoute.CatalogSearch, 'public', ({ query }) =>
