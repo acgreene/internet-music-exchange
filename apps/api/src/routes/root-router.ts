@@ -7,6 +7,7 @@ import { ArtistsRouter } from './artists';
 import { AuthRouter } from './auth';
 import { CatalogRouter } from './catalog';
 import { CommunityRouter } from './community';
+import { DesignsRouter } from './designs';
 import { HealthRouter } from './health';
 import { MerchRouter } from './merch';
 import { OrdersRouter } from './orders';
@@ -38,6 +39,12 @@ export class RootRouter extends AbstractRouter {
       new CatalogRouter(guard, services.catalog),
       new MerchRouter(guard, services.products, services.store),
       new CommunityRouter(guard, services.follows, services.comments),
+      new DesignsRouter(
+        guard,
+        services.designs,
+        services.designMarketplace,
+        services.releaseDesigns,
+      ),
       new OrdersRouter(
         guard,
         services.checkout,

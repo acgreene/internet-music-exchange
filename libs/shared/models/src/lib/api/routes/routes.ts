@@ -256,4 +256,69 @@ export enum ApiRoute {
 
   /** PATCH edits your own comment; DELETE removes it, or any on your artist. */
   Comment = '/api/comments/:commentId',
+
+  // Creative pages
+
+  /** Start a draft design. */
+  Designs = '/api/designs',
+
+  /** The designs the signed-in user made. */
+  MyDesigns = '/api/me/designs',
+
+  /** The signed-in designer's paid sales. */
+  MyDesignSales = '/api/me/design-sales',
+
+  /** One of the signed-in user's designs, with its versions and usage. */
+  Design = '/api/designs/:designId',
+
+  /** Price a design like a release. */
+  DesignPricing = '/api/designs/:designId/pricing',
+
+  /** Somewhere to upload a new version's HTML file. */
+  DesignVersionUploads = '/api/designs/:designId/versions/uploads',
+
+  /** Record an uploaded version with its slots. */
+  DesignVersions = '/api/designs/:designId/versions',
+
+  /** Make a design available. */
+  DesignPublish = '/api/designs/:designId/publish',
+
+  /** Withdraw a design from the marketplace. */
+  DesignArchive = '/api/designs/:designId/archive',
+
+  /** Grant an artist a license, by handle. */
+  DesignGrants = '/api/designs/:designId/grants',
+
+  /** Public designs, newest first. */
+  MarketplaceDesigns = '/api/marketplace/designs',
+
+  /** Search public designs by name, `?q=`. */
+  MarketplaceSearch = '/api/marketplace/search',
+
+  /** A public design's marketplace page. */
+  MarketplaceDesign = '/api/marketplace/designs/:designId',
+
+  /** The designs an artist holds licenses for. */
+  ArtistDesigns = '/api/artists/:artistId/designs',
+
+  /** Get a design for an artist: claimed at once, or a payment to make. */
+  ArtistDesignAcquire = '/api/artists/:artistId/designs/:designId/acquire',
+
+  /** GET reads a release's design; PUT applies one; DELETE goes back to the default layout. */
+  ReleaseDesign = '/api/releases/:releaseId/design',
+
+  /** Move a release to its design's newest version. */
+  ReleaseDesignUpdate = '/api/releases/:releaseId/design/update',
+
+  /** Set every slot value of a release's design. */
+  ReleaseDesignCustomization = '/api/releases/:releaseId/design/customization',
+
+  /** Somewhere to upload an image for a design slot. */
+  ReleaseDesignImageUploads = '/api/releases/:releaseId/design/images/uploads',
+
+  /** Record an uploaded slot image. */
+  ReleaseDesignImages = '/api/releases/:releaseId/design/images',
+
+  /** Delete a slot image. */
+  DesignImage = '/api/design-images/:imageId',
 }

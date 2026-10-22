@@ -8,6 +8,7 @@ import { ArtistPagesClient } from './artist-pages';
 import { ArtistsClient } from './artists';
 import { CatalogClient } from './catalog';
 import { CommunityClient } from './community';
+import { DesignsClient } from './designs';
 import { MerchClient } from './merch';
 import { OrdersClient } from './orders';
 import { ReleasesClient } from './releases';
@@ -48,6 +49,12 @@ export class ApiClient {
    * Following artists, and comments.
    */
   public readonly community = new CommunityClient(this.transport);
+
+  /**
+   * Page designs: the marketplace, designers' own designs, and release
+   * designs.
+   */
+  public readonly designs = new DesignsClient(this.transport);
 
   /**
    * Checkout, purchases, and sales.
