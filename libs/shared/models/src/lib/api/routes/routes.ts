@@ -230,4 +230,30 @@ export enum ApiRoute {
 
   /** Refund a sale in full. */
   SaleRefund = '/api/sales/:artistOrderId/refund',
+
+  // Community
+
+  /** PUT follows an artist; DELETE unfollows. */
+  ArtistFollow = '/api/artists/:artistId/follow',
+
+  /** The artists the signed-in user follows. */
+  MyFollowing = '/api/me/following',
+
+  /** Which of some artists the signed-in user follows. */
+  MyFollowingFilter = '/api/me/following/filter',
+
+  /** Who follows an artist, for its managers. */
+  ArtistFollowers = '/api/artists/:artistId/followers',
+
+  /** Remove one of an artist's followers. */
+  ArtistFollower = '/api/artists/:artistId/followers/:userId',
+
+  /** A release's comments. */
+  CatalogComments = '/api/catalog/releases/:releaseId/comments',
+
+  /** Comment on a release. */
+  ReleaseComments = '/api/releases/:releaseId/comments',
+
+  /** PATCH edits your own comment; DELETE removes it, or any on your artist. */
+  Comment = '/api/comments/:commentId',
 }

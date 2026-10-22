@@ -8,3 +8,4 @@ export * from './releases';
 export * from './catalog';
 export * from './merch';
 export * from './orders';
+export * from './community';
