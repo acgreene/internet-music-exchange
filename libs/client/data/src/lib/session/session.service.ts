@@ -61,7 +61,10 @@ export class SessionService {
       this.currentStatus.set('signed-in');
       return;
     }
-    if (isDevMode() && result.error.status !== 401) {
+    if (result.error.status === 401) {
+      // the session ended elsewhere, as when the account was deleted
+      await this.api.user.signOut();
+    } else if (isDevMode()) {
       console.warn('could not read the signed-in user', result.error);
     }
     this.currentUser.set(null);

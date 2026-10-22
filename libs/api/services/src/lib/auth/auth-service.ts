@@ -149,10 +149,24 @@ export class AuthService {
 
   /**
    * Fetch the user behind the given access token, validating it in the process.
+   *
+   * @throws ApiError 401 when the token is expired, revoked, or its user is
+   * gone.
    */
   public async getUser(accessToken: string): Promise<SupabaseUser> {
     const { data, error } = await this.publicClient.auth.getUser(accessToken);
     if (error) {
+      const status = error.status ?? HttpStatus.InternalServerError;
+      if (
+        status < HttpStatus.InternalServerError &&
+        !this.isRateLimited(error)
+      ) {
+        throw new ApiError(
+          ApiErrorKind.Http,
+          HttpStatus.Unauthorized,
+          'Your session has ended. Sign in again.',
+        );
+      }
       throw new ApiError(
         ApiErrorKind.Http,
         error.status ?? HttpStatus.InternalServerError,

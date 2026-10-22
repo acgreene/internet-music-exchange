@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { jsonResponse } from '@ime/testing';
 import { ApiClient } from './api-client';
 import { ApiErrorKind } from '@ime/models';
@@ -15,7 +16,7 @@ describe('ApiService', () => {
       }),
     );
 
-    const result = await new ApiClient().health();
+    const result = await TestBed.inject(ApiClient).health();
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -26,7 +27,7 @@ describe('ApiService', () => {
   it('returns an http error for a non-2xx response', async () => {
     vi.stubGlobal('fetch', () => jsonResponse({ error: 'boom' }, 500));
 
-    const result = await new ApiClient().health();
+    const result = await TestBed.inject(ApiClient).health();
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -39,7 +40,7 @@ describe('ApiService', () => {
   it('returns an invalid-response error when the body does not match the contract', async () => {
     vi.stubGlobal('fetch', () => jsonResponse({ status: 'down' }));
 
-    const result = await new ApiClient().health();
+    const result = await TestBed.inject(ApiClient).health();
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -50,7 +51,7 @@ describe('ApiService', () => {
   it('returns a network error when fetch rejects', async () => {
     vi.stubGlobal('fetch', () => Promise.reject(new TypeError('fetch failed')));
 
-    const result = await new ApiClient().health();
+    const result = await TestBed.inject(ApiClient).health();
 
     expect(result.ok).toBe(false);
     if (!result.ok) {

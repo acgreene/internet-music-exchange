@@ -1,5 +1,5 @@
 import type { Email } from './email-service';
-import { formatMoney } from '../money';
+import { formatMoney } from '@ime/utils';
 
 /**
  * A line on a receipt or sale notice.

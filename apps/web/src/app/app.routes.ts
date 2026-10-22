@@ -1,5 +1,6 @@
 import { Route } from '@angular/router';
 import { signedInGuard, signedOutGuard } from '@ime/client-data';
+import { listeningRoutes } from '@ime/client-listening';
 import { AppShell } from './shell/app-shell';
 
 export const appRoutes: Route[] = [
@@ -7,12 +8,7 @@ export const appRoutes: Route[] = [
     path: '',
     component: AppShell,
     children: [
-      {
-        path: '',
-        title: 'IME',
-        loadComponent: () =>
-          import('./pages/home-page').then((m) => m.HomePage),
-      },
+      ...listeningRoutes,
       {
         path: 'sign-in',
         title: 'Sign in · IME',

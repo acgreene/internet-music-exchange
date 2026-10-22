@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable, REQUEST } from '@angular/core';
 import { ApiRoute, type HealthResponse } from '@ime/models';
 import type { ApiResult } from './api-result';
 import { ApiTransport } from './api-transport';
@@ -15,6 +15,10 @@ import { AdminClient, ReportsClient } from './moderation';
 import { OrdersClient } from './orders';
 import { ReleasesClient } from './releases';
 
+function requestOrigin(request: Request | null): string {
+  return request ? new URL(request.url).origin : '';
+}
+
 /**
  * SDK for the IME API.
  */
@@ -25,7 +29,11 @@ export class ApiClient {
    * Shared HTTP core used by this facade and every domain group.
    * @private
    */
-  private readonly transport = new ApiTransport(this.supabase);
+  private readonly transport = new ApiTransport(
+    this.supabase,
+    // a server render calls a same-origin API at the page request's origin
+    requestOrigin(inject(REQUEST, { optional: true })),
+  );
 
   /**
    * Account and session operations.

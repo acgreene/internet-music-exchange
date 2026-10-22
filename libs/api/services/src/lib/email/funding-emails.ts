@@ -1,5 +1,5 @@
 import type { Email } from './email-service';
-import { formatMoney } from '../money';
+import { formatMoney } from '@ime/utils';
 
 /** Funding is always in US dollars. */
 const dollars = (cents: number) => formatMoney(cents, 'usd');

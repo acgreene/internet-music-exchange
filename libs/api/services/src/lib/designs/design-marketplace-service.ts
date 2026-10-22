@@ -10,7 +10,7 @@ import {
 import { env } from '@ime/env';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
-import { formatMoney } from '../money';
+import { formatMoney } from '@ime/utils';
 import { SellingGateService } from '../selling';
 
 /** Marks a Checkout Session as a design purchase, for the webhook. */

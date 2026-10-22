@@ -50,7 +50,14 @@ export class RouteGuard {
       );
     }
 
-    const user = await this.auth.getUser(token);
+    // an ended session on a route anyone may call is just an anonymous caller
+    const user = await this.auth.getUser(token).catch((error: unknown) => {
+      const ended =
+        error instanceof ApiError && error.status === HttpStatus.Unauthorized;
+      if (ended && access === 'optional') return null;
+      throw error;
+    });
+    if (!user) return ANONYMOUS;
     if (access === 'admin' && !(await this.users.isAdmin(user.id))) {
       throw new ApiError(
         ApiErrorKind.Http,

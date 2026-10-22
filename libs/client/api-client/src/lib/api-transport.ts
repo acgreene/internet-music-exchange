@@ -76,11 +76,21 @@ export class ApiTransport {
    * The base URL of the API.
    * @private
    */
-  private readonly baseUrl = isDevMode()
-    ? clientEnv.DEVELOPMENT_API_BASE_URL
-    : clientEnv.PRODUCTION_API_BASE_URL;
+  private readonly baseUrl: string;
 
-  constructor(private readonly supabase: SupabaseClient) {}
+  /**
+   * @param sameOrigin - The origin a same-origin API is reached at when there
+   * is no page to be relative to, as in a server render. Empty in a browser.
+   */
+  constructor(
+    private readonly supabase: SupabaseClient,
+    sameOrigin = '',
+  ) {
+    const configured = isDevMode()
+      ? clientEnv.DEVELOPMENT_API_BASE_URL
+      : clientEnv.PRODUCTION_API_BASE_URL;
+    this.baseUrl = configured || sameOrigin;
+  }
 
   /**
    * Fetch a GET route and validate its body against the route's contract.

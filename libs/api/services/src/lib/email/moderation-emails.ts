@@ -1,5 +1,5 @@
 import type { ReportReason } from '@ime/db';
-import { formatMoney } from '../money';
+import { formatMoney } from '@ime/utils';
 import type { Email } from './email-service';
 
 const REASONS: Record<ReportReason, string> = {

@@ -3,6 +3,19 @@
     class="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-line bg-surface px-4"
   >
     <a routerLink="/" class="text-lg font-semibold tracking-tight">IME</a>
+    <form
+      class="hidden max-w-sm flex-1 md:block"
+      role="search"
+      (submit)="search($event, query.value)"
+    >
+      <input
+        #query
+        imeInput
+        type="search"
+        aria-label="Search artists and releases"
+        placeholder="Search artists and releases"
+      />
+    </form>
     <div class="flex-1"></div>
 
     @switch (session.status()) { @case ('signed-in') {
@@ -25,7 +38,7 @@
       class="hidden w-52 shrink-0 flex-col gap-1 border-r border-line p-3 md:flex"
       aria-label="Main"
     >
-      @for (item of navigation; track item.path) {
+      @for (item of navigation(); track item.path) {
       <a
         class="rounded-control px-3 py-2 text-sm text-ink-muted hover:bg-surface-muted hover:text-ink"
         routerLinkActive="bg-surface-muted text-ink font-medium"
@@ -42,24 +55,25 @@
     </main>
   </div>
 
-  <!-- the player bar lives here once listening is built -->
-  <footer class="border-t border-line bg-surface"></footer>
+  <div class="sticky bottom-0 z-10">
+    <ime-player-bar class="border-t border-line bg-surface empty:hidden" />
 
-  <nav
-    class="sticky bottom-0 flex border-t border-line bg-surface md:hidden"
-    aria-label="Main"
-  >
-    @for (item of navigation; track item.path) {
-    <a
-      class="flex-1 py-3 text-center text-xs text-ink-muted"
-      routerLinkActive="text-ink font-medium"
-      [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-      [routerLink]="item.path"
+    <nav
+      class="flex border-t border-line bg-surface md:hidden"
+      aria-label="Main"
     >
-      {{ item.label }}
-    </a>
-    }
-  </nav>
+      @for (item of navigation(); track item.path) {
+      <a
+        class="flex-1 py-3 text-center text-xs text-ink-muted"
+        routerLinkActive="text-ink font-medium"
+        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+        [routerLink]="item.path"
+      >
+        {{ item.label }}
+      </a>
+      }
+    </nav>
+  </div>
 </div>
 
 <ng-template #accountMenu>

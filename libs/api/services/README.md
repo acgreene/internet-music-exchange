@@ -214,7 +214,7 @@ are internal.
 - **Email.** An email about something that already happened is sent after it,
   and a failure to send is logged rather than undoing it.
 - **Money.** Amounts are integer minor units (cents), shown to people with
-  `formatMoney`. Funding is always USD.
+  `formatMoney` from `@ime/utils`. Funding is always USD.
 - **Database errors.** Check them against `PostgresErrorCode` from `@ime/db`
   with plain `if` statements.
 

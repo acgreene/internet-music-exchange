@@ -13,7 +13,7 @@ import { env } from '@ime/env';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { Logger } from '@ime/utils';
 import { EmailService, orderEmails } from '../email';
-import { formatMoney } from '../money';
+import { formatMoney } from '@ime/utils';
 import { SellingGateService } from '../selling';
 import { toEmailLines } from './order-lines';
 

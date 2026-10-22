@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PageMetaService } from '@ime/client-listening';
 import { ButtonDirective } from '@ime/ui';
 
 @Component({
@@ -16,4 +17,8 @@ import { ButtonDirective } from '@ime/ui';
     </div>
   `,
 })
-export class NotFoundPage {}
+export class NotFoundPage {
+  constructor() {
+    inject(PageMetaService).notFound();
+  }
+}
