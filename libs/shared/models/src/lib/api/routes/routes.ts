@@ -253,6 +253,12 @@ export enum ApiRoute {
   /** A crate's page; changing or deleting it. */
   Crate = '/api/crates/:crateId',
 
+  /** PUT saves someone's crate, DELETE unsaves it. */
+  CrateSave = '/api/crates/:crateId/save',
+
+  /** More crates by a crate's maker, and others holding its records. */
+  CrateRelated = '/api/crates/:crateId/related',
+
   /** Adding a release to a crate; putting its releases in a new order. */
   CrateReleases = '/api/crates/:crateId/releases',
 

@@ -20,6 +20,8 @@ export const crateCardSchema = z.object({
   visibility: crateVisibilitySchema,
   makerUsername: z.string().nullable(),
   itemCount: z.number().int(),
+  /** How many people saved it. */
+  saves: z.number().int(),
   coverUrls: z.array(z.string()),
   updatedAt: timestampSchema,
 });
@@ -65,9 +67,21 @@ export const cratePageSchema = z.object({
   /** The viewer made it and may change it. */
   isMine: z.boolean(),
   followingMaker: z.boolean(),
+  /** The viewer saved it. */
+  saved: z.boolean(),
+  /** Genre ids a third or more of its records carry, most common first. */
+  genres: z.array(z.string()),
 });
 
 export type CratePage = z.infer<typeof cratePageSchema>;
+
+/** Where a crate leads: more by its maker, and others with its records. */
+export const relatedCratesSchema = z.object({
+  byMaker: z.array(crateCardSchema),
+  withRecords: z.array(crateCardSchema),
+});
+
+export type RelatedCrates = z.infer<typeof relatedCratesSchema>;
 
 /**
  * One of the viewer's own crates, and whether it holds a given release.
@@ -140,6 +154,10 @@ export const crateContracts = {
         q: z.string().optional(),
         /** Only crates holding this release. */
         releaseId: z.guid().optional(),
+        /** Only crates in this genre, the most saved first. */
+        genre: z.string().optional(),
+        /** The most saved first, up to the hundred most saved. */
+        sort: z.enum(['recent', 'saved']).optional(),
       }),
       response: z.array(crateCardSchema),
     },
@@ -161,6 +179,13 @@ export const crateContracts = {
       response: crateCardSchema,
     },
     [HttpMethod.Delete]: { response: ackSchema },
+  },
+  [ApiRoute.CrateSave]: {
+    [HttpMethod.Put]: { response: ackSchema },
+    [HttpMethod.Delete]: { response: ackSchema },
+  },
+  [ApiRoute.CrateRelated]: {
+    [HttpMethod.Get]: { response: relatedCratesSchema },
   },
   [ApiRoute.CrateReleases]: {
     [HttpMethod.Post]: {

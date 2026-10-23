@@ -17,6 +17,7 @@ import {
   isGenreId,
   type MyCrate,
   normalizeTag,
+  type RelatedCrates,
 } from '@ime/models';
 import { AccessService } from '../access/access-service';
 import { CloudStorageService } from '../storage';
@@ -35,6 +36,12 @@ const BUILT_SIZE = 24;
 const DAILY_SEEDS = 3;
 /** A built crate holds at most this many records by one artist. */
 const PER_ARTIST = 2;
+/** How far the most saved crates go. */
+const MOST_SAVED = 100;
+/** How many crates a crate's page leads to in each list. */
+const RELATED = 6;
+/** The most genres a crate is said to be. */
+const CRATE_GENRES = 3;
 
 export interface CrateInput {
   name?: string;
@@ -44,9 +51,10 @@ export interface CrateInput {
 
 /**
  * Crates: lists of releases people put together, like boxes of records at a
- * store, and following the people who make them. Also the crates IME builds
- * by fixed rules: by sound, from records someone loves, and from their
- * library for the day. Never by AI.
+ * store, saving other people's, and following the people who make them. A
+ * crate's genres are read from its records. Also the crates IME builds by
+ * fixed rules: by sound, from records someone loves, and from their library
+ * for the day. Never by AI.
  */
 export class CrateService {
   private readonly cards: CatalogCards;
@@ -208,15 +216,18 @@ export class CrateService {
       throw this.error(HttpStatus.NotFound, 'Crate not found.');
     }
 
-    const [rows, artists, designs, followers, following] = await Promise.all([
-      this.db.crates.listItems(crateId),
-      this.db.artists.listManagedArtists(owner.id),
-      this.db.designs.listByDesigner(owner.id),
-      this.db.crates.countUserFollowers(owner.id),
-      viewerId && !mine
-        ? this.db.crates.isFollowingUser(viewerId, owner.id)
-        : false,
-    ]);
+    const [rows, artists, designs, followers, following, saved, genres] =
+      await Promise.all([
+        this.db.crates.listItems(crateId),
+        this.db.artists.listManagedArtists(owner.id),
+        this.db.designs.listByDesigner(owner.id),
+        this.db.crates.countUserFollowers(owner.id),
+        viewerId && !mine
+          ? this.db.crates.isFollowingUser(viewerId, owner.id)
+          : false,
+        viewerId && !mine ? this.db.crates.isSaved(viewerId, crateId) : false,
+        this.genresOf([crate]),
+      ]);
     return {
       crate: await this.card(crate),
       maker: {
@@ -234,6 +245,83 @@ export class CrateService {
       ),
       isMine: mine,
       followingMaker: following,
+      saved,
+      genres: genres.get(crate.id) ?? [],
+    };
+  }
+
+  /**
+   * Save someone's public crate. Saving it again changes nothing.
+   *
+   * @throws ApiError 400 for one's own crate, 403 for someone suspended,
+   * 404 for no such public crate.
+   */
+  public async save(userId: string, crateId: string): Promise<void> {
+    await this.access.requireActiveUser(userId);
+    const crate = await this.requirePublic(crateId);
+    if (crate.ownerUserId === userId) {
+      throw this.error(HttpStatus.BadRequest, 'This crate is already yours.');
+    }
+    await this.db.crates.save(userId, crateId);
+  }
+
+  public async unsave(userId: string, crateId: string): Promise<void> {
+    if (UUID.test(crateId)) await this.db.crates.unsave(userId, crateId);
+  }
+
+  /** Public crates, the most saved first, as far as the hundredth. */
+  public async listMostSaved(limit = 24, offset = 0): Promise<CrateCard[]> {
+    const end = Math.min(offset + limit, MOST_SAVED);
+    if (end <= offset) return [];
+    return this.cardsFor(
+      await this.db.crates.listMostSaved(end - offset, offset),
+    );
+  }
+
+  /**
+   * Public crates in a genre, the most saved first.
+   *
+   * @throws ApiError 400 for a genre not on IME's list.
+   */
+  public async listInGenre(
+    genre: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<CrateCard[]> {
+    if (!isGenreId(genre)) {
+      throw this.error(HttpStatus.BadRequest, 'Pick a genre from the list.');
+    }
+    return this.cardsFor(
+      await this.db.crates.listPublicInGenre(genre, limit, offset),
+    );
+  }
+
+  /**
+   * Where a crate leads: more public crates by its maker, and public crates
+   * holding its records.
+   *
+   * @throws ApiError 404 for no such public crate.
+   */
+  public async related(crateId: string): Promise<RelatedCrates> {
+    const crate = await this.requirePublic(crateId);
+    const [byMaker, items] = await Promise.all([
+      this.db.crates.listByOwner(crate.ownerUserId, 'public'),
+      this.db.crates.listItems(crateId),
+    ]);
+    const withRecords = await this.db.crates.listPublicHoldingAny(
+      items.filter((item) => item.available).map((item) => item.id),
+      crateId,
+      RELATED,
+    );
+    return {
+      byMaker: await this.cardsFor(
+        byMaker
+          .filter((other) => other.id !== crateId && other.itemCount > 0)
+          .slice(0, RELATED),
+      ),
+      withRecords: await this.cardsFor(
+        withRecords.filter((other) => other.ownerUserId !== crate.ownerUserId),
+      ),
     };
   }
 
@@ -458,6 +546,44 @@ export class CrateService {
     });
   }
 
+  /** A public crate from a maker in good standing. */
+  private async requirePublic(crateId: string): Promise<CrateSummary> {
+    const crate = UUID.test(crateId)
+      ? await this.db.crates.getById(crateId)
+      : null;
+    const owner = crate && (await this.db.users.getById(crate.ownerUserId));
+    if (
+      !crate ||
+      crate.visibility !== 'public' ||
+      !owner ||
+      owner.suspendedAt
+    ) {
+      throw this.error(HttpStatus.NotFound, 'Crate not found.');
+    }
+    return crate;
+  }
+
+  /** Each crate's genres: those a third or more of its records carry. */
+  private async genresOf(
+    crates: CrateSummary[],
+  ): Promise<Map<string, string[]>> {
+    const counts = await this.db.crates.countGenres(crates.map((c) => c.id));
+    const sizes = new Map(crates.map((crate) => [crate.id, crate.itemCount]));
+    const genres = new Map<string, string[]>();
+    for (const { crateId, genre, count } of [...counts].sort(
+      (a, b) => b.count - a.count,
+    )) {
+      const list = genres.get(crateId) ?? [];
+      if (
+        count * 3 >= (sizes.get(crateId) ?? 0) &&
+        list.length < CRATE_GENRES
+      ) {
+        genres.set(crateId, [...list, genre]);
+      }
+    }
+    return genres;
+  }
+
   private async card(crate: CrateSummary): Promise<CrateCard> {
     return (await this.cardsFor([crate]))[0];
   }
@@ -477,6 +603,7 @@ export class CrateService {
       visibility: crate.visibility,
       makerUsername: crate.ownerUsername,
       itemCount: crate.itemCount,
+      saves: crate.saves,
       coverUrls: firsts
         .filter((row) => row.crateId === crate.id)
         .flatMap((row) => covers.get(row.releaseId) ?? []),

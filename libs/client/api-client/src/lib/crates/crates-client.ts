@@ -8,6 +8,7 @@ import {
   type DigSession,
   type MyCrate,
   type PageQuery,
+  type RelatedCrates,
   type UpdateCrateRequest,
 } from '@ime/models';
 import type { ApiResult } from '../api-result';
@@ -21,7 +22,12 @@ export class CratesClient {
 
   /** Public crates, the most recently changed first, or by name with `q`. */
   public listPublic(
-    page?: PageQuery & { q?: string; releaseId?: string },
+    page?: PageQuery & {
+      q?: string;
+      releaseId?: string;
+      genre?: string;
+      sort?: 'recent' | 'saved';
+    },
   ): Promise<ApiResult<CrateCard[]>> {
     return this.transport.get(ApiRoute.Crates, { query: page });
   }
@@ -152,5 +158,18 @@ export class CratesClient {
 
   public unfollowMaker(userId: string): Promise<ApiResult<AckResponse>> {
     return this.transport.delete(ApiRoute.UserFollow, { params: { userId } });
+  }
+
+  public save(crateId: string): Promise<ApiResult<AckResponse>> {
+    return this.transport.put(ApiRoute.CrateSave, { params: { crateId } });
+  }
+
+  public unsave(crateId: string): Promise<ApiResult<AckResponse>> {
+    return this.transport.delete(ApiRoute.CrateSave, { params: { crateId } });
+  }
+
+  /** More crates by a crate's maker, and others holding its records. */
+  public related(crateId: string): Promise<ApiResult<RelatedCrates>> {
+    return this.transport.get(ApiRoute.CrateRelated, { params: { crateId } });
   }
 }

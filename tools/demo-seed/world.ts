@@ -141,6 +141,7 @@ export function buildWorld(options: WorldOptions) {
     crates: [] as Row<typeof schema.crates>[],
     crateReleases: [] as Row<typeof schema.crateReleases>[],
     userFollowers: [] as Row<typeof schema.userFollowers>[],
+    crateSaves: [] as Row<typeof schema.crateSaves>[],
     moderationActions: [] as Row<typeof schema.moderationActions>[],
     copyrightContests: [] as Row<typeof schema.copyrightContests>[],
   };
@@ -1805,6 +1806,35 @@ export function buildWorld(options: WorldOptions) {
     }
   }
 
+  // people save other people's public crates, a few crates far more than
+  // the rest; their own source, so the rest of the world stays as it was
+  const saving = new Random(6206);
+  for (const crate of rows.crates) {
+    if (crate.visibility !== 'public') continue;
+    const count = Math.floor(80 * saving.next() ** 3);
+    for (const saver of saving.sample(listeners, count)) {
+      if (saver.id === crate.ownerUserId) continue;
+      rows.crateSaves.push({
+        userId: saver.id,
+        crateId: crate.id as string,
+        createdAt: later(crate.createdAt as Date, 200, saving, now),
+      });
+    }
+  }
+  if (owner) {
+    const others = rows.crates.filter(
+      (crate) =>
+        crate.visibility === 'public' && crate.ownerUserId !== owner.id,
+    );
+    for (const crate of saving.sample(others, 4)) {
+      rows.crateSaves.push({
+        userId: owner.id,
+        crateId: crate.id as string,
+        createdAt: new Date(now.getTime() - 10 * DAY),
+      });
+    }
+  }
+
   const suspendedUserIds = [suspendedUser.id];
   // every other designer takes requests for custom designs
   const commissionUserIds = designers
@@ -1831,6 +1861,7 @@ export function buildWorld(options: WorldOptions) {
       designs: rows.designs.length,
       follows: rows.artistFollowers.length,
       comments: rows.releaseComments.length,
+      crateSaves: rows.crateSaves.length,
       orders: rows.orders.length,
       entitlements: rows.entitlements.length,
       statements: statementCount,

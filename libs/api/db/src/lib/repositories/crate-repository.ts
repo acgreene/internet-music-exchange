@@ -18,6 +18,7 @@ import {
   entitlements,
   crateReleases,
   crates,
+  crateSaves,
   type CrateVisibility,
   releasePricing,
   releases,
@@ -30,6 +31,8 @@ import type { ShelfRelease } from './shelf-repository';
 export interface CrateSummary extends Crate {
   ownerUsername: string | null;
   itemCount: number;
+  /** How many people saved it. */
+  saves: number;
 }
 
 /** A release in a crate, with the maker's line about it. */
@@ -53,9 +56,21 @@ const itemCount =
     Number,
   );
 
+const saves =
+  sql<number>`(select count(*) from ${crateSaves} where ${crateSaves.crateId} = ${crates.id})`.mapWith(
+    Number,
+  );
+
 /**
- * Queries for crates, the records in them, and following the people who make
- * them.
+ * A crate is in a genre when at least a third of its records carry it, so
+ * one odd record does not put it there.
+ */
+const inGenre = (genre: string) =>
+  sql`(select count(*) from ${crateReleases} inner join ${releases} on ${releases.id} = ${crateReleases.releaseId} where ${crateReleases.crateId} = ${crates.id} and ${genre} = any(${releases.genres})) * 3 >= ${itemCount}`;
+
+/**
+ * Queries for crates, the records in them, saving them, and following the
+ * people who make them.
  */
 export class CrateRepository {
   constructor(private readonly db: Db) {}
@@ -132,6 +147,101 @@ export class CrateRepository {
     )
       .orderBy(desc(crates.updatedAt))
       .limit(limit);
+  }
+
+  /** Public crates with records, the most saved first. */
+  public async listMostSaved(
+    limit = DEFAULT_LIST_LIMIT,
+    offset = 0,
+  ): Promise<CrateSummary[]> {
+    return this.summaries(this.publicWithRecords())
+      .orderBy(desc(saves), desc(crates.updatedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /** Public crates in a genre, the most saved first. */
+  public async listPublicInGenre(
+    genre: string,
+    limit = DEFAULT_LIST_LIMIT,
+    offset = 0,
+  ): Promise<CrateSummary[]> {
+    return this.summaries(and(this.publicWithRecords(), inGenre(genre)))
+      .orderBy(desc(saves), desc(crates.updatedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Public crates holding any of some releases, other than one crate, the
+   * most saved first.
+   */
+  public async listPublicHoldingAny(
+    releaseIds: string[],
+    exceptCrateId: string,
+    limit = DEFAULT_LIST_LIMIT,
+  ): Promise<CrateSummary[]> {
+    if (releaseIds.length === 0) return [];
+    return this.summaries(
+      and(
+        this.publicWithRecords(),
+        sql`${crates.id} <> ${exceptCrateId}`,
+        inArray(
+          crates.id,
+          this.db
+            .select({ id: crateReleases.crateId })
+            .from(crateReleases)
+            .where(inArray(crateReleases.releaseId, releaseIds)),
+        ),
+      ),
+    )
+      .orderBy(desc(saves), desc(crates.updatedAt))
+      .limit(limit);
+  }
+
+  /** How many of each crate's records carry each genre, among some crates. */
+  public async countGenres(
+    crateIds: string[],
+  ): Promise<{ crateId: string; genre: string; count: number }[]> {
+    if (crateIds.length === 0) return [];
+    const genre = sql<string>`unnest(${releases.genres})`;
+    return this.db
+      .select({
+        crateId: crateReleases.crateId,
+        genre,
+        count: count(),
+      })
+      .from(crateReleases)
+      .innerJoin(releases, eq(releases.id, crateReleases.releaseId))
+      .where(inArray(crateReleases.crateId, crateIds))
+      .groupBy(crateReleases.crateId, genre);
+  }
+
+  /** Save someone's crate. Saving it again changes nothing. */
+  public async save(userId: string, crateId: string): Promise<void> {
+    await this.db
+      .insert(crateSaves)
+      .values({ userId, crateId })
+      .onConflictDoNothing();
+  }
+
+  public async unsave(userId: string, crateId: string): Promise<void> {
+    await this.db
+      .delete(crateSaves)
+      .where(
+        and(eq(crateSaves.userId, userId), eq(crateSaves.crateId, crateId)),
+      );
+  }
+
+  public async isSaved(userId: string, crateId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ crateId: crateSaves.crateId })
+      .from(crateSaves)
+      .where(
+        and(eq(crateSaves.userId, userId), eq(crateSaves.crateId, crateId)),
+      )
+      .limit(1);
+    return !!row;
   }
 
   /** Public crates by the people a listener follows, newest first. */
@@ -444,6 +554,7 @@ export class CrateRepository {
         updatedAt: crates.updatedAt,
         ownerUsername: users.username,
         itemCount,
+        saves,
       })
       .from(crates)
       .innerJoin(users, eq(users.id, crates.ownerUserId))

@@ -80,8 +80,10 @@ Each is a property of `ImeServices`, named in brackets.
   chart. Charts end where the week began, and each finished week's charts
   are kept. Use it for `/charts`.
 - **`CrateService`** (`crates`): crates, lists of releases people put
-  together with a line about each, public or private; following the people
-  who make them; and the crates IME builds by fixed rules: by genre or tag,
+  together with a line about each, public or private; saving other people's
+  crates, the hundred most saved, crates in a genre (read from their
+  records), and where a crate leads (more by its maker, others with its
+  records); following the people who make them; and the crates IME builds by fixed rules: by genre or tag,
   from a few records someone loves, and a crate of the day from a
   listener's library; and the public crates holding a release. Use it for
   `/crates`, adding a release to a crate, and a release page's crates.

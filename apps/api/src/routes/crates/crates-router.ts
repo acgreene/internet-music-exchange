@@ -59,7 +59,11 @@ export class CratesRouter extends AbstractRouter {
         ? this.crates.listHolding(query.releaseId, query.limit)
         : query.q?.trim()
           ? this.crates.search(query.q.trim(), query.limit ?? 6)
-          : this.crates.listPublic(query.limit, query.offset),
+          : query.genre
+            ? this.crates.listInGenre(query.genre, query.limit, query.offset)
+            : query.sort === 'saved'
+              ? this.crates.listMostSaved(query.limit, query.offset)
+              : this.crates.listPublic(query.limit, query.offset),
     );
 
     this.handle(HttpMethod.Post, ApiRoute.Crates, 'user', ({ userId, body }) =>
@@ -79,6 +83,24 @@ export class CratesRouter extends AbstractRouter {
 
     this.handle(HttpMethod.Get, ApiRoute.UserCrates, 'public', ({ params }) =>
       this.crates.listByUsername(params.username),
+    );
+
+    this.handle(
+      HttpMethod.Put,
+      ApiRoute.CrateSave,
+      'user',
+      ({ userId, params }) => this.crates.save(userId, params.crateId),
+    );
+
+    this.handle(
+      HttpMethod.Delete,
+      ApiRoute.CrateSave,
+      'user',
+      ({ userId, params }) => this.crates.unsave(userId, params.crateId),
+    );
+
+    this.handle(HttpMethod.Get, ApiRoute.CrateRelated, 'public', ({ params }) =>
+      this.crates.related(params.crateId),
     );
 
     this.handle(

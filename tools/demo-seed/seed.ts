@@ -205,6 +205,7 @@ async function insertWorld(
       [schema.crates, rows.crates],
       [schema.crateReleases, rows.crateReleases],
       [schema.userFollowers, rows.userFollowers],
+      [schema.crateSaves, rows.crateSaves],
     ];
     for (const [table, tableRows] of order)
       await insertAll(tx, table, tableRows);
