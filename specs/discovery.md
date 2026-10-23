@@ -20,7 +20,7 @@ The home page is a short pitch for why IME exists, then straight to music.
 
 The top of the home page is a gatefold sleeve, opened: a front cover between an inside left and an inside right panel.
 
-- **Front**: the platform's statement, "Music is not a growth market.", a sentence on what IME is (run by its community, for the people who make music, with no cut, no shareholders, no AI, and no algorithm deciding who gets heard), and two ways in: **Start listening** for listeners and **Sell your music** for artists.
+- **Front**: the platform's statement, "A music platform for the culture.", a line on what IME is ("Built by the community for the people who make music. No platform cut, no shareholders, and no AI."), and two ways in: **Start listening** for listeners and **Sell your music** for artists.
 - **Inside left, the money**: a receipt for a $10.00 album. It shows what the buyer pays, crosses out what IME never takes (shareholders, executive bonuses, ad networks, AI training data, a platform cut), and shows the card processor's fee and what the artist keeps. It compares the artist's share with Bandcamp's published average, and says that IME isn't built to profit: sellers split IME's monthly hosting bill, linked to the public costs page.
 - **Inside right, liner notes**: the platform's commitments as a numbered list: human-made (pledged), no platform cut, music as art (designer-built release pages), own what you buy, open source and open books. It ends with a credits line naming who builds IME.
 

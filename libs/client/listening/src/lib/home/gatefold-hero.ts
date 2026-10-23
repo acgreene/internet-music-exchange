@@ -151,12 +151,12 @@ const PANEL =
           <h1
             class="my-auto text-[clamp(2.25rem,11vw,3.25rem)] leading-[0.88] font-black tracking-[-0.06em] short:text-[2.25rem] lg:my-0 lg:text-[3.25rem] xl:text-[calc(var(--u)*3.75)]"
           >
-            Music is not a growth market.
+            A music platform for the culture.
           </h1>
           <div class="flex flex-col gap-4 short:gap-2.5">
             <p class="leading-snug short:text-sm xl:text-lg">
-              Run by its community, for the people who make music: no cut, no
-              shareholders, no AI, and no algorithm deciding who gets heard.
+              Built by the community for the people who make music. No platform
+              cut, no shareholders, and no AI.
             </p>
             <div class="flex flex-wrap items-center gap-2.5 short:gap-2">
               <a
