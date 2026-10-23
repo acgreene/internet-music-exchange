@@ -13,12 +13,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import { SessionService, currentValue } from '@ime/client-data';
-import {
-  ApiError,
-  type DiscographyItem,
-  HttpStatus,
-  placeLabel,
-} from '@ime/models';
+import { ApiError, HttpStatus, placeLabel } from '@ime/models';
 import {
   CoverComponent,
   ReleaseCardComponent,
@@ -29,10 +24,7 @@ import { MerchGrid } from '../merch/merch-grid';
 import { type MenuAction, MoreMenu } from '../more-menu';
 import { PageMetaService } from '../page-meta';
 import { openReport } from '../reporting/report-button';
-import {
-  releaseKindLabel,
-  releasePriceLabel,
-} from '../releases/release-labels';
+import { discographySubtitle, newestFirst } from '../releases/release-labels';
 
 /**
  * An artist's public profile, `/artists/<handle>`: who they are beside
@@ -181,7 +173,7 @@ import {
                           release.slug,
                         ]"
                         [coverUrl]="release.coverUrl"
-                        [subtitle]="subtitleFor(release)"
+                        [subtitle]="subtitle(release)"
                       />
                     </li>
                   } @empty {
@@ -243,6 +235,7 @@ export class ArtistPage {
   public readonly handle = input.required<string>();
 
   protected readonly place = placeLabel;
+  protected readonly subtitle = discographySubtitle;
 
   protected readonly profile = resource({
     id: 'artist-profile',
@@ -270,9 +263,7 @@ export class ArtistPage {
 
   /** Every release, newest first. */
   protected readonly releases = computed(() =>
-    [...(currentValue(this.discography) ?? [])].sort((a, b) =>
-      (this.releaseDate(b) ?? '').localeCompare(this.releaseDate(a) ?? ''),
-    ),
+    newestFirst(currentValue(this.discography) ?? []),
   );
   protected readonly artistActions = computed<MenuAction[]>(() => [
     { label: 'Report', run: () => this.report() },
@@ -315,25 +306,6 @@ export class ArtistPage {
   protected onFollowingChange(following: boolean): void {
     this.followed.set(following);
     this.followerCount.update((count) => count + (following ? 1 : -1));
-  }
-
-  /** When it came out, or went up on IME when the artist gave no date. */
-  protected releaseDate(release: DiscographyItem): string | null {
-    return (
-      release.releasedAt ??
-      release.publishedAt?.toISOString().slice(0, 10) ??
-      null
-    );
-  }
-
-  protected subtitleFor(release: DiscographyItem): string {
-    return [
-      releaseKindLabel(release.kind),
-      this.releaseDate(release)?.slice(0, 4),
-      releasePriceLabel(release.pricing),
-    ]
-      .filter(Boolean)
-      .join(' · ');
   }
 
   private async report(): Promise<void> {

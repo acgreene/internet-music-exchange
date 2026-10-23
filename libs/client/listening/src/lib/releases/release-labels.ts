@@ -1,4 +1,5 @@
 import type {
+  DiscographyItem,
   PricingResponse,
   ReleaseAssetKind,
   ReleaseKind,
@@ -35,6 +36,31 @@ export function releaseKindLabel(kind: ReleaseKind): string {
 
 export function assetKindLabel(kind: ReleaseAssetKind): string {
   return ASSET_LABELS[kind];
+}
+
+/** When a release came out, or went up on IME when the artist gave no date. */
+function releaseDate(release: DiscographyItem): string {
+  return (
+    release.releasedAt ?? release.publishedAt?.toISOString().slice(0, 10) ?? ''
+  );
+}
+
+/** An artist's releases, newest first. */
+export function newestFirst(releases: DiscographyItem[]): DiscographyItem[] {
+  return [...releases].sort((a, b) =>
+    releaseDate(b).localeCompare(releaseDate(a)),
+  );
+}
+
+/** A discography card's line under the title: kind, year, and price. */
+export function discographySubtitle(release: DiscographyItem): string {
+  return [
+    releaseKindLabel(release.kind),
+    releaseDate(release).slice(0, 4),
+    releasePriceLabel(release.pricing),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 /** What a release costs, as a card or result shows it. */

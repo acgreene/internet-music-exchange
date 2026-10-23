@@ -39,6 +39,11 @@ Alongside digital music, artists sell physical goods such as vinyl, CDs, cassett
 - Each rate specifies a cost for the first unit and a cost for each additional unit of that product.
 - At checkout, shipping is summed across the cart's products and charged to the buyer (see [Buying & Checkout](./buying.md)).
 
+### The product page
+
+- A product page shows its photos, the variant the buyer picks with its price and stock, shipping, and the artist with their photo, where they are based, a follow button, and their links. Reporting it is offered quietly, in a menu.
+- Below, it leads on to the artist's other merch and their releases, newest first, so it never ends in a dead end.
+
 ## Mobile app
 
 - A listener can browse an artist's store and open a product to see its variants, photos, and price.
