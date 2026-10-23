@@ -1,11 +1,15 @@
 :root {
-  --accent: #7c5cff;
+  --accent: var(--primary);
   --ink: #ecebf2;
   --dim: #8d8a9c;
-  --bg: #060609;
+  --bg: var(--secondary);
 }
 body {
-  background: radial-gradient(90% 60% at 70% 20%, #15131f 0%, var(--bg) 70%)
+  background: radial-gradient(
+      90% 60% at 70% 20%,
+      color-mix(in srgb, var(--bg), var(--accent) 14%) 0%,
+      var(--bg) 70%
+    )
     fixed;
   color: var(--ink);
   font:

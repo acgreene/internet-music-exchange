@@ -1,9 +1,6 @@
 function render(r, c) {
-  const a = color(c.color1, '#00e5ff');
-  const b = color(c.color2, '#6a00ff');
   const ring = `${r.title} // ${r.artist.name} // ${kind(r)}${year(r) ? ' ' + year(r) : ''} // `;
   return `
-    <style>:root{--a:${a};--b:${b}}</style>
     <canvas class="field" aria-hidden="true"></canvas>
     <header class="hero">
       <div class="platter">
@@ -126,8 +123,8 @@ function mount(r, c, ime) {
     gl.enableVertexAttribArray(at);
     gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0);
     const u = (name) => gl.getUniformLocation(program, name);
-    gl.uniform3fv(u('uA'), hex(color(c.color1, '#00e5ff')));
-    gl.uniform3fv(u('uB'), hex(color(c.color2, '#6a00ff')));
+    gl.uniform3fv(u('uA'), hex(color(c.primary, '#00e5ff')));
+    gl.uniform3fv(u('uB'), hex(color(c.secondary, '#6a00ff')));
     const resize = () => {
       const scale = Math.min(devicePixelRatio, 1.5);
       canvas.width = innerWidth * scale;

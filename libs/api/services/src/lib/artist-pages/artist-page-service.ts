@@ -114,27 +114,23 @@ export class ArtistPageService {
           assets: await Promise.all(
             assets
               .filter((asset) => asset.kind !== 'cover')
-              .map(
-                async (asset): Promise<ArtistPageAsset> => ({
-                  kind: asset.kind as ArtistPageAsset['kind'],
-                  title: asset.title,
-                  description: asset.description,
-                  url: await this.signedUrl(asset.objectKey),
-                  mimeType: asset.mimeType,
-                }),
-              ),
+              .map(async (asset): Promise<ArtistPageAsset> => ({
+                kind: asset.kind as ArtistPageAsset['kind'],
+                title: asset.title,
+                description: asset.description,
+                url: await this.signedUrl(asset.objectKey),
+                mimeType: asset.mimeType,
+              })),
           ),
           editions: products
             .filter((product) => EDITION_FORMATS.has(product.type))
-            .map(
-              (product): ArtistPageEdition => ({
-                format: product.type as ArtistPageEdition['format'],
-                name: product.name,
-                price: product.minPrice,
-                currency: product.currency,
-                inStock: product.totalStock > 0,
-              }),
-            ),
+            .map((product): ArtistPageEdition => ({
+              format: product.type as ArtistPageEdition['format'],
+              name: product.name,
+              price: product.minPrice,
+              currency: product.currency,
+              inStock: product.totalStock > 0,
+            })),
           price: pricing
             ? {
                 mode: pricing.mode,
@@ -150,9 +146,9 @@ export class ArtistPageService {
   }
 
   /**
-   * The artist's slot values as the design reads them: text as written, and
-   * each image slot's uploaded image as a signed URL. Values for slots the
-   * version does not have are left out.
+   * The artist's slot values as the design reads them: text and colors as
+   * written, and each image slot's uploaded image as a signed URL. Values for
+   * slots the version does not have are left out.
    */
   private async customization(
     design: ReleaseDesignDetails,
@@ -161,7 +157,7 @@ export class ArtistPageService {
     for (const slot of design.slots) {
       const value = design.customization[slot.name];
       if (value === undefined) continue;
-      if (slot.kind === 'text') {
+      if (slot.kind === 'text' || slot.kind === 'color') {
         values[slot.name] = value;
         continue;
       }

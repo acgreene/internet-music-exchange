@@ -886,8 +886,17 @@ export function buildWorld(options: WorldOptions) {
       );
       if (!release || !dressing.chance(0.75)) continue;
       const customization: Record<string, string> = {};
+      // most artists bring their own colors; the rest keep the design's
+      const palette = dressing.chance(0.6)
+        ? dressing.pick(design.template.palettes)
+        : null;
       for (const slot of design.template.slots) {
-        if (slot.kind === 'text') {
+        if (slot.kind === 'color') {
+          if (palette) {
+            customization[slot.name] =
+              slot.name === 'primary' ? palette[0] : palette[1];
+          }
+        } else if (slot.kind === 'text') {
           customization[slot.name] = dressing.pick(
             SLOT_TEXT[slot.name] ?? [''],
           );

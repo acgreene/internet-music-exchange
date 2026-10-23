@@ -1,5 +1,4 @@
 function render(r, c) {
-  const accent = color(c.accent, '#ff5a1f');
   const back = asset(r, 'back_cover');
   // the inside sleeve leads with the artist's line, or the notes' first sentence
   const notes = r.description || '';
@@ -7,7 +6,6 @@ function render(r, c) {
   const quote = c.quote || (split > 0 ? notes.slice(0, split + 1) : notes);
   const rest = c.quote || split < 0 ? notes : notes.slice(split + 2);
   return `
-    <style>:root{--accent:${accent}}</style>
     <section class="stage">
       <div class="scene">
         <div class="titles">

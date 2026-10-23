@@ -37,7 +37,6 @@ const CENTERS = {
 };
 
 function render(r, c) {
-  const indigo = color(c.indigo, '#6366f1');
   const statement =
     c.statement || (r.description || '').split('. ')[0] || r.title;
   // each word takes a different weight, so the line reads like a poster
@@ -59,7 +58,6 @@ function render(r, c) {
     .join(' ');
   const photos = [{ url: r.coverUrl, title: r.title }, ...pictures(r)];
   return `
-    <style>:root{--indigo:${indigo}}</style>
     <canvas class="globe" aria-hidden="true"></canvas>
     <nav class="top">
       <span>${esc(r.artist.name)}</span>
@@ -148,7 +146,7 @@ function mount(r, c, ime) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
   camera.position.z = 4.2;
-  const tint = new THREE.Color(color(c.indigo, '#6366f1'));
+  const tint = new THREE.Color(color(c.primary, '#6366f1'));
 
   const globe = new THREE.Group();
   scene.add(globe);

@@ -31,6 +31,7 @@ import { DESIGN_BUNDLE_RULES } from '../storage/media-types';
 const NAME_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
 const SLOT_LABEL_MAX_LENGTH = 60;
+const isHexColor = (value: string) => /^#[0-9a-f]{6}$/i.test(value);
 const MAX_SLOTS = 30;
 /** Slot names are keys in a release's customization, so keep them plain. */
 const SLOT_NAME_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
@@ -409,14 +410,16 @@ export class DesignService {
       if (
         !SLOT_NAME_PATTERN.test(slot.name) ||
         names.has(slot.name) ||
-        (slot.kind !== 'text' && slot.kind !== 'image') ||
+        !['text', 'image', 'color'].includes(slot.kind) ||
+        (slot.default !== undefined &&
+          (slot.kind !== 'color' || !isHexColor(slot.default))) ||
         !label ||
         label.length > SLOT_LABEL_MAX_LENGTH
       ) {
         throw new ApiError(
           ApiErrorKind.Http,
           HttpStatus.BadRequest,
-          `Each slot needs a unique name of lowercase letters, digits, and underscores, a kind of text or image, and a label up to ${SLOT_LABEL_MAX_LENGTH} characters.`,
+          `Each slot needs a unique name of lowercase letters, digits, and underscores, a kind of text, image, or color, and a label up to ${SLOT_LABEL_MAX_LENGTH} characters.`,
         );
       }
       names.add(slot.name);
@@ -425,6 +428,7 @@ export class DesignService {
       name: slot.name,
       kind: slot.kind,
       label: slot.label.trim(),
+      ...(slot.default ? { default: slot.default.toLowerCase() } : {}),
     }));
   }
 

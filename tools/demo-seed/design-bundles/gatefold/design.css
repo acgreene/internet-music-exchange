@@ -1,11 +1,16 @@
 :root {
   --ink: #0f0d0b;
   --paper: #efe6d6;
-  --accent: #ff5a1f;
+  --accent: var(--primary);
+  --bg: var(--secondary);
   --s: min(40vmin, 440px);
 }
 body {
-  background: radial-gradient(120% 80% at 50% 0%, #2a211b 0%, var(--ink) 60%);
+  background: radial-gradient(
+    120% 80% at 50% 0%,
+    color-mix(in srgb, var(--bg), #fff 12%) 0%,
+    var(--bg) 60%
+  );
   color: var(--paper);
   font:
     16px/1.5 'Iowan Old Style',

@@ -26,9 +26,11 @@ export const designSurfaceSchema = z.enum(['release']);
  */
 export const designSlotSchema = z.object({
   name: z.string(),
-  kind: z.enum(['text', 'image']),
+  kind: z.enum(['text', 'image', 'color']),
   /** What the slot is called in the artist's editor. */
   label: z.string(),
+  /** For a color slot, the color the design uses until the artist picks one. */
+  default: z.string().optional(),
 });
 
 export type DesignSlot = z.infer<typeof designSlotSchema>;

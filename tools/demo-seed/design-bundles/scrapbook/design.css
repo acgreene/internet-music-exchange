@@ -1,7 +1,7 @@
 :root {
-  --kraft: #c39a6b;
+  --kraft: var(--secondary);
   --ink: #1f1a17;
-  --pen: #1b3a8c;
+  --pen: var(--primary);
   --red: #c2302a;
   --hand:
     'Bradley Hand', 'Segoe Print', 'Marker Felt', 'Chalkboard SE', cursive;
@@ -11,7 +11,11 @@ body {
   background-color: var(--kraft);
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.16 0 0 0 0 0.08 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(120% 80% at 50% 0%, #d4ad7f, #a87d50);
+    radial-gradient(
+      120% 80% at 50% 0%,
+      color-mix(in srgb, var(--kraft), #fff 15%),
+      color-mix(in srgb, var(--kraft), #000 15%)
+    );
   color: var(--ink);
   font: 16px/1.4 var(--type);
   overflow-x: hidden;

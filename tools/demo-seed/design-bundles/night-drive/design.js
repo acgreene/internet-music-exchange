@@ -3,7 +3,6 @@ const station = (i, count) =>
   (88.1 + (i * 19.8) / Math.max(count - 1, 1)).toFixed(1);
 
 function render(r, c) {
-  const neon = color(c.neon, '#ff2bd6');
   const photos = pictures(r, ['photo']);
   const backdrop =
     c.backdrop ||
@@ -13,7 +12,6 @@ function render(r, c) {
   const strip = [{ url: r.coverUrl, title: r.title }, ...pictures(r)];
   const count = r.tracks.length;
   return `
-    <style>:root{--neon:${neon}}</style>
     <div class="grain" aria-hidden="true"></div>
     <header class="hero">
       <div class="layer sky" style="background-image:url('${esc(backdrop)}')"></div>
@@ -110,7 +108,7 @@ function mount(r, c, ime) {
     }),
   );
 
-  road(color(c.neon, '#ff2bd6'), () =>
+  road(color(c.primary, '#ff2bd6'), () =>
     document.documentElement.classList.contains('on-air'),
   );
 

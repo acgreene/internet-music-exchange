@@ -1,10 +1,8 @@
 function render(r, c) {
-  const accent = color(c.accent, '#7c5cff');
   const statement = c.statement || (r.description || '').split('. ')[0];
   const photos = pictures(r, ['photo']);
   const sung = r.tracks.filter((t) => t.lyrics);
   return `
-    <style>:root{--accent:${accent}}</style>
     <canvas class="gl" aria-hidden="true"></canvas>
     <header class="hero">
       <div class="top">
@@ -156,7 +154,7 @@ function mount(r, c, ime) {
   const uniforms = {
     uTime: { value: 0 },
     uAmp: { value: 0.22 },
-    uColor: { value: new THREE.Color(color(c.accent, '#7c5cff')) },
+    uColor: { value: new THREE.Color(color(c.primary, '#7c5cff')) },
   };
   const material = new THREE.ShaderMaterial({
     uniforms,

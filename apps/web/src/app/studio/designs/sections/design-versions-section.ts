@@ -102,7 +102,9 @@ import { AlertComponent, ButtonDirective, InputDirective } from '@ime/ui';
               <select
                 imeInput
                 aria-label="Kind"
-                (change)="setSlot(i, { kind: kind($event) })"
+                (change)="
+                  setSlot(i, { kind: kind($event), default: undefined })
+                "
               >
                 <option value="text" [selected]="slot.kind === 'text'">
                   Text
@@ -110,7 +112,19 @@ import { AlertComponent, ButtonDirective, InputDirective } from '@ime/ui';
                 <option value="image" [selected]="slot.kind === 'image'">
                   Image
                 </option>
+                <option value="color" [selected]="slot.kind === 'color'">
+                  Color
+                </option>
               </select>
+              @if (slot.kind === 'color') {
+                <input
+                  class="h-10 w-12 cursor-pointer rounded-control border border-line bg-canvas"
+                  type="color"
+                  aria-label="Starting color"
+                  [value]="slot.default ?? '#000000'"
+                  (input)="setSlot(i, { default: text($event) })"
+                />
+              }
               <button
                 imeButton
                 variant="ghost"

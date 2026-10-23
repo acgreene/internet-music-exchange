@@ -1,5 +1,4 @@
 function render(r, c) {
-  const acid = color(c.acid, '#d4ff00');
   const manifesto = (
     c.manifesto || `${r.title} // ${r.artist.name} // ${kind(r)} ${year(r)}`
   ).toUpperCase();
@@ -17,7 +16,6 @@ function render(r, c) {
   const tick = (text) =>
     `<div class="tick" aria-hidden="true"><div>${`<span>${esc(text)}</span>`.repeat(8)}</div></div>`;
   return `
-    <style>:root{--acid:${acid}}</style>
     ${tick(manifesto)}
     <h1 class="mega"><span>${esc(r.title)}</span></h1>
 

@@ -41,6 +41,7 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { ArtistPageHost } from '@ime/client-artist-pages';
+import { ReleaseViewToggle } from './release-view-toggle';
 import { ReleaseSupporters } from '../comments/release-supporters';
 import { AddToCrate } from '../crates/add-to-crate';
 import { CrateCard } from '../crates/crate-card';
@@ -83,6 +84,7 @@ const CRATES_SHOWN = 6;
     ReleaseCardComponent,
     ReleaseFormats,
     ReleaseSupporters,
+    ReleaseViewToggle,
     RouterLink,
     SpinnerComponent,
   ],
@@ -102,12 +104,7 @@ const CRATES_SHOWN = 6;
             <span class="font-semibold">{{ page.release.title }}</span>
             <span class="text-ink-muted"> by {{ page.artist.name }}</span>
           </span>
-          <a
-            class="link hidden shrink-0 text-sm sm:inline"
-            [routerLink]="[]"
-            [queryParams]="{ view: 'plain' }"
-            >Details</a
-          >
+          <ime-release-view-toggle class="shrink-0" current="designed" />
           @if (page.release.status === 'published') {
             <ime-add-to-crate
               class="hidden shrink-0 sm:block"
@@ -178,7 +175,7 @@ const CRATES_SHOWN = 6;
                 class="link text-sm"
                 [routerLink]="[]"
                 [queryParams]="{ view: 'plain' }"
-                >Credits, supporters, and more</a
+                >Credits, supporters, and more on the standard page</a
               >
             </aside>
           </div>
@@ -186,12 +183,25 @@ const CRATES_SHOWN = 6;
       } @else {
         <article class="mx-auto flex max-w-6xl flex-col gap-16">
           @if (bundleUrl()) {
-            <p
-              class="-mb-8 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card border border-line bg-surface px-4 py-3 text-sm"
+            <div
+              class="-mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-card border border-line bg-surface p-4"
             >
-              {{ page.release.title }} has its own designed page.
-              <a class="link font-semibold" [routerLink]="[]">Open it</a>
-            </p>
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <span class="font-bold">
+                  {{ page.release.title }} has its own designed page
+                </span>
+                <span class="text-sm text-ink-muted"
+                  >A page built around this record, with its artwork, notes, and
+                  music.</span
+                >
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <ime-release-view-toggle current="standard" />
+                <a imeButton [routerLink]="[]" [queryParams]="{ view: null }"
+                  >Open the designed page</a
+                >
+              </div>
+            </div>
           }
           <div
             class="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-12"
@@ -646,7 +656,7 @@ export class ReleasePage {
   });
   protected readonly designedActions = computed<MenuAction[]>(() => [
     {
-      label: 'Details',
+      label: 'Standard page',
       run: () =>
         void this.router.navigate([], { queryParams: { view: 'plain' } }),
     },
@@ -788,6 +798,8 @@ export class ReleasePage {
     effect(() => {
       if (this.isNotFound(this.page.error())) this.meta.notFound();
       const page = currentValue(this.page);
+      // switching views is a navigation, which puts the route's title back
+      this.view();
       if (!page) return;
       this.meta.set({
         title: `${page.release.title} by ${page.artist.name}`,

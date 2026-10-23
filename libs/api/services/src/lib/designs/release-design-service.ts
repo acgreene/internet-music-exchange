@@ -160,7 +160,9 @@ export class ReleaseDesignService {
       const valid =
         slot?.kind === 'text'
           ? value.length <= TEXT_SLOT_MAX_LENGTH
-          : slot?.kind === 'image' && imageIds.has(value);
+          : slot?.kind === 'color'
+            ? /^#[0-9a-f]{6}$/i.test(value)
+            : slot?.kind === 'image' && imageIds.has(value);
       if (!valid) {
         throw new ApiError(
           ApiErrorKind.Http,
@@ -168,7 +170,9 @@ export class ReleaseDesignService {
           slot
             ? slot.kind === 'text'
               ? `${slot.label} is up to ${TEXT_SLOT_MAX_LENGTH} characters.`
-              : `${slot.label} must be an image uploaded for this release.`
+              : slot.kind === 'color'
+                ? `${slot.label} must be a color like #1a2b3c.`
+                : `${slot.label} must be an image uploaded for this release.`
             : `This design has no slot called ${name}.`,
         );
       }

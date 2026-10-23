@@ -89,6 +89,16 @@ import {
                     (input)="setValue(slot, $event)"
                   ></textarea>
                 </label>
+              } @else if (slot.kind === 'color') {
+                <label class="flex items-center gap-3 text-sm font-medium">
+                  <input
+                    class="h-10 w-12 cursor-pointer rounded-control border border-line bg-canvas"
+                    type="color"
+                    [value]="values()[slot.name] ?? slot.default ?? '#000000'"
+                    (input)="setValue(slot, $event)"
+                  />
+                  {{ slot.label }}
+                </label>
               } @else {
                 <div class="flex flex-col gap-1.5 text-sm">
                   <span class="font-medium">{{ slot.label }}</span>

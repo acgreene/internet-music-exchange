@@ -1,7 +1,7 @@
 :root {
-  --paper: #efece4;
+  --paper: var(--secondary);
   --ink: #0b0b0b;
-  --hot: #ff3b1f;
+  --hot: var(--primary);
   --loud:
     Impact, Haettenschweiler, 'Arial Narrow Bold', 'Helvetica Neue', sans-serif;
 }

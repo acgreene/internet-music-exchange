@@ -1,6 +1,6 @@
 :root {
-  --red: #e10600;
-  --paper: #f3f2ee;
+  --red: var(--primary);
+  --paper: var(--secondary);
   --ink: #111;
   --gut: clamp(16px, 2.4vw, 36px);
   --swiss: 'Helvetica Neue', Helvetica, Arial, sans-serif;

@@ -1,6 +1,6 @@
 :root {
-  --acid: #d4ff00;
-  --slab: #e4e3de;
+  --acid: var(--primary);
+  --slab: var(--secondary);
   --ink: #0a0a0a;
   --line: 3px solid var(--ink);
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;

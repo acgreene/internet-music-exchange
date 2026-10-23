@@ -20,9 +20,11 @@ import { designs } from './designs';
 export interface DesignSlot {
   /** The key the artist's value is stored under in a release's customization. */
   name: string;
-  kind: 'text' | 'image';
+  kind: 'text' | 'image' | 'color';
   /** What the slot is called in the artist's editor. */
   label: string;
+  /** For a color slot, the color the design uses until the artist picks one. */
+  default?: string;
 }
 
 /**

@@ -5,6 +5,8 @@
  *
  * A design defines `render(r, c)`, returning the page's markup, and may
  * define `mount(r, c, ime)` to start its motion once the markup is in.
+ * The artist's primary and secondary colors arrive as `--primary` and
+ * `--secondary` on the root element, and in `c` like any other slot.
  */
 const ime = (() => {
   const send = (message) => parent.postMessage(message, '*');
@@ -133,8 +135,21 @@ window.addEventListener('message', (event) => {
     return;
   }
   if (data?.type !== 'artist-page:init') return;
-  const { release, customization } = data.payload;
-  document.body.innerHTML = render(release, customization || {});
+  const { release } = data.payload;
+  // the bundle's own starting values fill any slot the artist left empty
+  const customization = {
+    ...(typeof SLOT_DEFAULTS === 'object' ? SLOT_DEFAULTS : {}),
+    ...data.payload.customization,
+  };
+  for (const name of ['primary', 'secondary']) {
+    if (color(customization[name], '')) {
+      document.documentElement.style.setProperty(
+        `--${name}`,
+        customization[name],
+      );
+    }
+  }
+  document.body.innerHTML = render(release, customization);
   document.querySelectorAll('[data-play]').forEach((el) =>
     el.addEventListener('click', (e) => {
       e.preventDefault();
@@ -147,7 +162,7 @@ window.addEventListener('message', (event) => {
       ime.buy();
     }),
   );
-  if (typeof mount === 'function') mount(release, customization || {}, ime);
+  if (typeof mount === 'function') mount(release, customization, ime);
   // for hosts that size the frame to the page rather than fill a box
   const report = () =>
     ime._send({

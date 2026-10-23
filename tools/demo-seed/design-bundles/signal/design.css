@@ -1,6 +1,6 @@
 :root {
-  --a: #00e5ff;
-  --b: #6a00ff;
+  --a: var(--primary);
+  --b: var(--secondary);
   --ink: #e9f3f7;
   --dim: #7f8c94;
   --bg: #000;

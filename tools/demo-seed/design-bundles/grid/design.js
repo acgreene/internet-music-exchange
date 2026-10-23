@@ -1,8 +1,6 @@
 function render(r, c) {
-  const red = color(c.red, '#e10600');
   const count = r.tracks.length;
   return `
-    <style>:root{--red:${red}}</style>
     <nav class="index" aria-label="Tracks">
       ${r.tracks.map((t) => `<a href="#t${t.position}" data-to="t${t.position}">${pad(t.position)}</a>`).join('')}
     </nav>

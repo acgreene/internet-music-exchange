@@ -1,6 +1,6 @@
 :root {
-  --neon: #ff2bd6;
-  --cyan: #2de2ff;
+  --neon: var(--primary);
+  --cyan: var(--secondary);
   --night: #07051a;
   --ink: #f4ecff;
   --lcd: #b6ff5c;

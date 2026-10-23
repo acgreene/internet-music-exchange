@@ -5,6 +5,7 @@ import {
   inject,
   resource,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   ActivatedRoute,
@@ -73,9 +74,9 @@ const TYPING_PAUSE_MS = 250;
           </p>
         </div>
         <div class="flex flex-wrap gap-3">
-          <a imeButton routerLink="/designs" fragment="designers"
-            >Find a designer</a
-          >
+          <button imeButton type="button" (click)="toDesigners()">
+            Find a designer
+          </button>
           <a imeButton variant="secondary" routerLink="/studio/designs"
             >Build a design</a
           >
@@ -277,6 +278,7 @@ const TYPING_PAUSE_MS = 250;
 export class GalleryPage {
   private readonly api = inject(ApiClient);
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
   private readonly params = toSignal(inject(ActivatedRoute).queryParams, {
     initialValue: {} as Params,
   });
@@ -316,11 +318,12 @@ export class GalleryPage {
   /** Designers matching the words, or those taking requests. */
   private readonly designersResource = resource({
     id: 'gallery-designers',
-    params: () => this.query().q,
+    // an object, since a resource with undefined params never loads
+    params: () => ({ q: this.query().q }),
     loader: async ({ params }) =>
       unwrap(
         await this.api.designs.listDesigners(
-          params ? { q: params } : { requests: '1' },
+          params.q ? { q: params.q } : { requests: '1' },
         ),
       ),
   });
@@ -352,6 +355,13 @@ export class GalleryPage {
         replaceUrl: true,
       });
     }, TYPING_PAUSE_MS);
+  }
+
+  protected toDesigners(): void {
+    // scrollIntoView keeps the section's margin clear of the sticky header
+    this.document
+      .getElementById('designers')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   protected price(item: GalleryDesign): string {
