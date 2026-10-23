@@ -46,9 +46,10 @@ const PICTURES = new Set(['back_cover', 'photo']);
         @if (design(); as design) {
           @if (design.bundleUrl) {
             <div
-              class="max-h-[60vh] overflow-y-auto rounded-card bg-canvas [scrollbar-width:thin]"
+              class="h-[min(70vh,44rem)] overflow-hidden rounded-card bg-canvas"
             >
               <ime-artist-page-host
+                fill
                 [bundleUrl]="design.bundleUrl"
                 [payload]="design.payload"
                 (playRequested)="playPosition.emit($event)"

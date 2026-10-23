@@ -15,7 +15,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { CartService, SessionService } from '@ime/client-data';
+import { CartService, ImmersiveMode, SessionService } from '@ime/client-data';
 import { PlayerBar, SearchBox } from '@ime/client-listening';
 import { ButtonDirective, WordmarkComponent } from '@ime/ui';
 import { filter } from 'rxjs';
@@ -50,6 +50,7 @@ import { filter } from 'rxjs';
 export class AppShell {
   protected readonly session = inject(SessionService);
   protected readonly cart = inject(CartService);
+  protected readonly immersive = inject(ImmersiveMode);
   private readonly router = inject(Router);
 
   private readonly searchBox = viewChild(SearchBox);

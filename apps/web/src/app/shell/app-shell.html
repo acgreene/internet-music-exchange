@@ -1,4 +1,11 @@
-<div class="flex min-h-dvh flex-col">
+<div
+  [class]="
+    immersive.on()
+      ? 'flex h-dvh flex-col overflow-hidden'
+      : 'flex min-h-dvh flex-col'
+  "
+>
+  @if (!immersive.on()) {
   <header class="sticky top-0 z-30 border-b border-line bg-surface">
     <div class="flex h-16 items-center gap-2 px-4 sm:gap-3 md:gap-6 md:px-6">
       <a routerLink="/" class="shrink-0" aria-label="IME, home">
@@ -111,11 +118,18 @@
     Choose a username to finish your account.
     <a class="link font-medium" routerLink="/account">Choose one</a>
   </p>
-  } }
-  <main class="w-full flex-1 px-4 py-8 md:px-8">
+  } } }
+  <main
+    [class]="
+      immersive.on()
+        ? 'flex min-h-0 flex-1 flex-col'
+        : 'w-full flex-1 px-4 py-8 md:px-8'
+    "
+  >
     <router-outlet />
   </main>
 
+  @if (!immersive.on()) {
   <footer
     class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line px-4 py-6 text-sm md:px-8"
   >
@@ -136,6 +150,7 @@
     <a class="link" routerLink="/terms">Terms</a>
     <a class="link" routerLink="/privacy">Privacy</a>
   </footer>
+  }
 
   <div class="sticky bottom-0 z-20">
     <ime-player-bar class="border-t border-line bg-wash empty:hidden" />

@@ -9,9 +9,9 @@ import type { GalleryDesign } from '@ime/models';
 import { placeholderRelease } from './placeholder-release';
 
 /**
- * A design shrunk to a card: its page rendered with a stand-in album at
- * three times the card's width, then scaled down, so the card shows the
- * design itself rather than a picture of it.
+ * A design shrunk to a card: its page rendered with a stand-in album in a
+ * frame three times the card's size, then scaled down, so the card shows the
+ * first screen of the design itself rather than a picture of it.
  */
 @Component({
   selector: 'ime-design-thumbnail',
@@ -24,9 +24,10 @@ import { placeholderRelease } from './placeholder-release';
   },
   template: `
     <div
-      class="pointer-events-none absolute top-0 left-0 w-[300%] origin-top-left scale-[0.3333]"
+      class="pointer-events-none absolute top-0 left-0 h-[300%] w-[300%] origin-top-left scale-[0.3333]"
     >
       <ime-artist-page-host
+        fill
         [bundleUrl]="design().bundleUrl"
         [payload]="payload()"
       />

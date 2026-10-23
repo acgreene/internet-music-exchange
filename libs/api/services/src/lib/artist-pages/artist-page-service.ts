@@ -2,10 +2,14 @@ import { DatabaseRepository, type ReleaseDesignDetails } from '@ime/db';
 import {
   ApiError,
   ApiErrorKind,
-  HttpStatus,
+  type ArtistPageAsset,
   type ArtistPageCustomization,
+  type ArtistPageEdition,
   type ArtistPagePrice,
   type ArtistPageRenderResponse,
+  genreName,
+  HttpStatus,
+  isGenreId,
 } from '@ime/models';
 import { CloudStorageService } from '../storage';
 
@@ -20,11 +24,14 @@ const UNPRICED: ArtistPagePrice = {
   suggestedPrice: null,
 };
 
+/** The physical formats a design can show as editions of the record. */
+const EDITION_FORMATS = new Set(['vinyl', 'cassette', 'cd']);
+
 /**
- * Assembles what a client needs to render a release page: the release data,
- * and when the artist applied a design, a short-lived URL to its bundle and
- * their slot values. A release without a design renders in the default
- * layout.
+ * Assembles what a client needs to render a release page: the whole record
+ * (its words, artwork, extras, editions, and artist), and when the artist
+ * applied a design, a short-lived URL to its bundle and their slot values. A
+ * release without a design renders in the default layout.
  *
  * A design is third-party code, so it receives only what is mapped here:
  * never database rows, and every file through a signed URL.
@@ -59,12 +66,20 @@ export class ArtistPageService {
       );
     }
 
-    const [trackRows, pricing, cover, design] = await Promise.all([
-      this.db.releases.listTracks(releaseId),
-      this.db.releases.getPricing(releaseId),
-      this.db.releaseAssets.getCover(releaseId),
-      this.db.designs.getReleaseDesign(releaseId),
-    ]);
+    const [trackRows, pricing, cover, design, assets, images, products] =
+      await Promise.all([
+        this.db.releases.listTracks(releaseId),
+        this.db.releases.getPricing(releaseId),
+        this.db.releaseAssets.getCover(releaseId),
+        this.db.designs.getReleaseDesign(releaseId),
+        this.db.releaseAssets.listPublicAssets(releaseId),
+        this.db.artists.listImages(artist.id),
+        this.db.products.listPublishedByRelease(releaseId),
+      ]);
+    const imageUrl = async (kind: 'avatar' | 'header') => {
+      const image = images.find((candidate) => candidate.kind === kind);
+      return image ? this.signedUrl(image.objectKey) : null;
+    };
 
     return {
       bundleUrl: design ? await this.signedUrl(design.objectKey) : null,
@@ -73,12 +88,53 @@ export class ArtistPageService {
           id: release.id,
           title: release.title,
           artistName: release.artistName,
+          artist: {
+            name: artist.name,
+            handle: artist.handle,
+            city: artist.city,
+            country: artist.country,
+            avatarUrl: await imageUrl('avatar'),
+            headerUrl: await imageUrl('header'),
+          },
+          kind: release.kind,
+          releasedAt: release.releasedAt,
+          description: release.description,
+          credits: release.credits,
+          genres: release.genres.filter(isGenreId).map(genreName),
+          tags: release.tags,
           coverUrl: cover ? await this.signedUrl(cover.objectKey) : null,
           tracks: trackRows.map((track) => ({
             position: track.position,
             title: track.title,
             durationMs: track.durationMs,
+            lyrics: track.lyrics,
+            preview: track.isPreview,
           })),
+          sideStarts: release.sideStarts,
+          assets: await Promise.all(
+            assets
+              .filter((asset) => asset.kind !== 'cover')
+              .map(
+                async (asset): Promise<ArtistPageAsset> => ({
+                  kind: asset.kind as ArtistPageAsset['kind'],
+                  title: asset.title,
+                  description: asset.description,
+                  url: await this.signedUrl(asset.objectKey),
+                  mimeType: asset.mimeType,
+                }),
+              ),
+          ),
+          editions: products
+            .filter((product) => EDITION_FORMATS.has(product.type))
+            .map(
+              (product): ArtistPageEdition => ({
+                format: product.type as ArtistPageEdition['format'],
+                name: product.name,
+                price: product.minPrice,
+                currency: product.currency,
+                inStock: product.totalStock > 0,
+              }),
+            ),
           price: pricing
             ? {
                 mode: pricing.mode,

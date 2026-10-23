@@ -3,12 +3,13 @@
     #frame
     title="Designer page"
     [src]="safeBundleUrl()"
-    [height]="frameHeight()"
+    [style.height]="fill() ? '100%' : frameHeight() + 'px'"
     sandbox="allow-scripts"
+    allow="fullscreen"
     referrerpolicy="no-referrer"
     width="100%"
     style="border: 0; display: block"
   ></iframe>
 } @else {
-  <div [style.height.px]="frameHeight()"></div>
+  <div [style.height]="fill() ? '100%' : frameHeight() + 'px'"></div>
 }

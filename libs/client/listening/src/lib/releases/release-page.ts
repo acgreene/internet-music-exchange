@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   ElementRef,
   inject,
@@ -15,6 +16,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import {
+  ImmersiveMode,
   PlayerService,
   type QueueTrack,
   SessionService,
@@ -22,6 +24,7 @@ import {
 } from '@ime/client-data';
 import {
   ApiError,
+  type ArtistPagePlayback,
   genreName,
   HttpStatus,
   type ReleaseCard,
@@ -38,7 +41,6 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { ArtistPageHost } from '@ime/client-artist-pages';
-import { BuyPanel } from '../buying/buy-panel';
 import { ReleaseSupporters } from '../comments/release-supporters';
 import { AddToCrate } from '../crates/add-to-crate';
 import { CrateCard } from '../crates/crate-card';
@@ -63,11 +65,14 @@ const CRATES_SHOWN = 6;
 @Component({
   selector: 'ime-release-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class]': "designed() ? 'flex min-h-0 flex-1 flex-col' : ''",
+    '(document:keydown.escape)': 'buyOpen.set(false)',
+  },
   imports: [
     AddToCrate,
     ArtistPageHost,
     AlertComponent,
-    BuyPanel,
     ButtonDirective,
     CoverComponent,
     CrateCard,
@@ -84,47 +89,111 @@ const CRATES_SHOWN = 6;
   ],
   template: `
     @if (page.hasValue() ? page.value() : null; as page) {
-      @if (bundleUrl(); as bundleUrl) {
-        <div class="mx-auto flex max-w-5xl flex-col gap-8">
-          <ime-artist-page-host
-            class="block border border-line"
-            [bundleUrl]="bundleUrl"
-            [payload]="renderPayload()!"
-            (purchaseRequested)="openBuyPanel()"
-            (playRequested)="playPosition($event)"
-          />
-          <section
-            #buySection
-            class="flex flex-col gap-3"
-            aria-label="Get this release"
+      @if (designed(); as design) {
+        <div
+          class="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-surface px-3 md:px-4"
+        >
+          <a
+            class="shrink-0 text-xl leading-none font-black tracking-[-0.06em] text-accent"
+            routerLink="/"
+            aria-label="IME, home"
+            >ime</a
           >
-            @if (buyOpen() || owned()) {
-              <ime-buy-panel
-                class="max-w-md"
+          <span class="min-w-0 flex-1 truncate text-sm">
+            <span class="font-semibold">{{ page.release.title }}</span>
+            <span class="text-ink-muted"> by {{ page.artist.name }}</span>
+          </span>
+          <a
+            class="link hidden shrink-0 text-sm sm:inline"
+            [routerLink]="[]"
+            [queryParams]="{ view: 'plain' }"
+            >Details</a
+          >
+          @if (page.release.status === 'published') {
+            <ime-add-to-crate
+              class="hidden shrink-0 sm:block"
+              [releaseId]="page.release.id"
+            />
+          }
+          <button
+            imeButton
+            size="sm"
+            class="shrink-0"
+            (click)="buyOpen.set(true)"
+          >
+            {{ buyLabel() }}
+          </button>
+          <ime-more-menu
+            class="shrink-0"
+            label="More for this release"
+            [actions]="designedActions()"
+          />
+        </div>
+        <ime-artist-page-host
+          class="min-h-0 flex-1"
+          fill
+          [bundleUrl]="design.bundleUrl"
+          [payload]="design.payload"
+          [playback]="designPlayback()"
+          (purchaseRequested)="buyOpen.set(true)"
+          (playRequested)="playPosition($event)"
+          (pauseRequested)="pause()"
+        />
+        @if (buyOpen()) {
+          <div
+            class="fixed inset-0 z-40 flex justify-end"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="get-it-heading"
+          >
+            <button
+              class="absolute inset-0 cursor-default bg-ink/40"
+              aria-label="Close"
+              (click)="buyOpen.set(false)"
+            ></button>
+            <aside
+              class="relative flex h-full w-full max-w-md flex-col gap-5 overflow-y-auto bg-canvas p-5 shadow-2xl"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <h2
+                  id="get-it-heading"
+                  class="text-2xl leading-tight font-extrabold tracking-[-0.035em]"
+                >
+                  {{ page.release.title }}
+                </h2>
+                <button
+                  class="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-wash"
+                  aria-label="Close"
+                  (click)="buyOpen.set(false)"
+                >
+                  ✕
+                </button>
+              </div>
+              <ime-release-formats
                 [page]="page"
+                [editions]="editions()"
                 [owned]="owned()"
                 (claimed)="viewerPage.reload()"
               />
-            } @else {
-              <div class="flex items-center gap-2">
-                <button imeButton (click)="openBuyPanel()">
-                  {{ page.pricing?.mode === 'free' ? 'Get it free' : 'Buy' }}
-                </button>
-                <ime-more-menu
-                  label="More for this release"
-                  [actions]="releaseActions()"
-                />
-              </div>
-            }
-          </section>
-          <ime-release-supporters
-            [releaseId]="page.release.id"
-            [owned]="owned()"
-            [canModerate]="managesArtist()"
-          />
-        </div>
+              <a
+                class="link text-sm"
+                [routerLink]="[]"
+                [queryParams]="{ view: 'plain' }"
+                >Credits, supporters, and more</a
+              >
+            </aside>
+          </div>
+        }
       } @else {
         <article class="mx-auto flex max-w-6xl flex-col gap-16">
+          @if (bundleUrl()) {
+            <p
+              class="-mb-8 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card border border-line bg-surface px-4 py-3 text-sm"
+            >
+              {{ page.release.title }} has its own designed page.
+              <a class="link font-semibold" [routerLink]="[]">Open it</a>
+            </p>
+          }
           <div
             class="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-12"
           >
@@ -511,11 +580,14 @@ export class ReleasePage {
   private readonly session = inject(SessionService);
   private readonly player = inject(PlayerService);
   private readonly meta = inject(PageMetaService);
+  private readonly immersive = inject(ImmersiveMode);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
 
   public readonly handle = input.required<string>();
   public readonly slug = input.required<string>();
+  /** `?view=plain` shows IME's own page for a release that has a design. */
+  public readonly view = input<string>();
 
   /** The page as anyone sees it, rendered on the server. */
   protected readonly page = resource({
@@ -547,14 +619,46 @@ export class ReleasePage {
   protected readonly bundleUrl = computed(
     () => currentValue(this.renderResource)?.bundleUrl ?? null,
   );
+  /** The design taking over the page, unless the listener asked for IME's. */
+  protected readonly designed = computed(() => {
+    const render = currentValue(this.renderResource);
+    return render?.bundleUrl && this.view() !== 'plain'
+      ? { bundleUrl: render.bundleUrl, payload: render.payload }
+      : null;
+  });
+  /** What is playing from this record, for the design to show. */
+  protected readonly designPlayback = computed<ArtistPagePlayback>(() => {
+    const current = this.player.current();
+    const page = currentValue(this.page);
+    const track =
+      current && page && current.releaseId === page.release.id
+        ? page.tracks.find((candidate) => candidate.trackId === current.trackId)
+        : undefined;
+    return {
+      trackPosition: track?.position ?? null,
+      playing: !!track && this.player.playing(),
+    };
+  });
+  protected readonly buyLabel = computed(() => {
+    if (this.owned()) return 'Yours';
+    return currentValue(this.page)?.pricing?.mode === 'free'
+      ? 'Get it free'
+      : 'Buy';
+  });
+  protected readonly designedActions = computed<MenuAction[]>(() => [
+    {
+      label: 'Details',
+      run: () =>
+        void this.router.navigate([], { queryParams: { view: 'plain' } }),
+    },
+    { label: 'Report', run: () => this.report() },
+  ]);
   protected readonly renderPayload = computed(
     () => currentValue(this.renderResource)?.payload ?? null,
   );
 
   /** A design asked for IME's buy panel, since buying never happens inside it. */
   protected readonly buyOpen = signal(false);
-  private readonly buySection =
-    viewChild<ElementRef<HTMLElement>>('buySection');
   private readonly formats = viewChild('formats', { read: ElementRef });
 
   private readonly editionsResource = resource({
@@ -678,6 +782,10 @@ export class ReleasePage {
   });
 
   constructor() {
+    // a design takes the whole window, and the shell steps back around it
+    effect(() => this.immersive.on.set(!!this.designed()));
+    inject(DestroyRef).onDestroy(() => this.immersive.on.set(false));
+
     effect(() => {
       if (this.isNotFound(this.page.error())) this.meta.notFound();
       const page = currentValue(this.page);
@@ -751,9 +859,8 @@ export class ReleasePage {
     });
   }
 
-  protected openBuyPanel(): void {
-    this.buyOpen.set(true);
-    this.buySection()?.nativeElement.scrollIntoView({ behavior: 'smooth' });
+  protected pause(): void {
+    if (this.player.playing()) void this.player.toggle();
   }
 
   /** Play the track a design asked for, when this listener may. */

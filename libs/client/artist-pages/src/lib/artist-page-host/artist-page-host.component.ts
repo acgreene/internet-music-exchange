@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
   input,
@@ -12,6 +13,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import {
+  type ArtistPagePlayback,
   ArtistPageProtocolMessage,
   type ArtistPageRenderPayload,
   isDesignToHostMessage,
@@ -29,10 +31,15 @@ const INITIAL_FRAME_HEIGHT_PX = 640;
  * reach this document, its cookies, or its storage.
  *
  * A design can only request actions. Acting on a request stays in trusted code.
+ *
+ * Filling, the frame takes the whole box it is given and the design scrolls
+ * inside it, as its own page does, so scroll effects and full-screen scenes
+ * work. Otherwise the frame grows to the height the design reports.
  */
 @Component({
   selector: 'ime-artist-page-host',
   templateUrl: './artist-page-host.component.html',
+  host: { '[class.block]': 'fill()', '[class.h-full]': 'fill()' },
 })
 export class ArtistPageHost {
   /** The signed URL to the design's bundle */
@@ -41,8 +48,17 @@ export class ArtistPageHost {
   /** The release data the design is about to render */
   public readonly payload = input.required<ArtistPageRenderPayload>();
 
+  /** Take the whole box and let the design scroll inside it. */
+  public readonly fill = input(false);
+
+  /** What is playing from this record, passed on to the design. */
+  public readonly playback = input<ArtistPagePlayback | null>(null);
+
   /** Emitted when the design requests a purchase */
   public readonly purchaseRequested = output<void>();
+
+  /** Emitted when the design asks to pause what is playing */
+  public readonly pauseRequested = output<void>();
 
   /**
    * Emitted when the design requests playback of a track where number
@@ -62,6 +78,9 @@ export class ArtistPageHost {
   private readonly iframeElementRef =
     viewChild<ElementRef<HTMLIFrameElement>>('frame');
 
+  /** The design has been sent the release, so it can hear about playback. */
+  private readonly initialized = signal(false);
+
   private readonly sanitizer = inject(DomSanitizer);
 
   /** The URL comes from our API, and the sandbox is what contains the frame. */
@@ -80,6 +99,11 @@ export class ArtistPageHost {
         window.removeEventListener('message', onMessage),
       );
       this.listening.set(true);
+    });
+
+    effect(() => {
+      const playback = this.playback();
+      if (playback && this.initialized()) this.send(playback);
     });
   }
 
@@ -113,6 +137,9 @@ export class ArtistPageHost {
       case ArtistPageProtocolMessage.Play:
         this.playRequested.emit(messageEvent.data.trackPosition);
         break;
+      case ArtistPageProtocolMessage.Pause:
+        this.pauseRequested.emit();
+        break;
     }
   }
 
@@ -122,6 +149,16 @@ export class ArtistPageHost {
         type: ArtistPageProtocolMessage.Init,
         payload: this.payload(),
       },
+      '*',
+    );
+    this.initialized.set(true);
+    const playback = this.playback();
+    if (playback) this.send(playback);
+  }
+
+  private send(playback: ArtistPagePlayback): void {
+    this.iframeElementRef()?.nativeElement.contentWindow?.postMessage(
+      { type: ArtistPageProtocolMessage.Playback, playback },
       '*',
     );
   }

@@ -3,3 +3,4 @@ export * from './lib/player';
 export * from './lib/resource';
 export * from './lib/session';
 export * from './lib/upload';
+export * from './lib/shell';

@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -13,7 +14,12 @@ import { RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import { ArtistPageHost } from '@ime/client-artist-pages';
 import { SessionService, currentValue } from '@ime/client-data';
-import { ApiError, HttpStatus, type Shelf } from '@ime/models';
+import {
+  ApiError,
+  type ArtistPagePlayback,
+  HttpStatus,
+  type Shelf,
+} from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
@@ -62,7 +68,11 @@ const SEGMENT =
         <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section class="flex min-w-0 flex-col gap-3" aria-label="Preview">
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <div class="flex gap-1" role="group" aria-label="Device">
+              <div
+                class="hidden gap-1 md:flex"
+                role="group"
+                aria-label="Device"
+              >
                 @for (option of devices; track option.id) {
                   <button
                     type="button"
@@ -108,28 +118,30 @@ const SEGMENT =
             </div>
 
             <div
-              class="border border-line bg-surface"
+              class="overflow-hidden border border-line bg-surface"
               [class]="
                 device() === 'phone'
-                  ? 'mx-auto max-h-[780px] w-[390px] max-w-full overflow-y-auto rounded-[2rem] border-8 !border-ink [scrollbar-width:none]'
-                  : ''
+                  ? 'mx-auto h-[min(780px,80vh)] w-[390px] max-w-full rounded-[2rem] border-8 !border-ink'
+                  : 'aspect-[16/10] w-full'
               "
             >
               @for (key of [previewKey()]; track key) {
                 <ime-artist-page-host
+                  fill
                   [bundleUrl]="page.bundleUrl"
                   [payload]="payload()"
+                  [playback]="playback()"
                   (playRequested)="play($event)"
+                  (pauseRequested)="stop()"
                   (purchaseRequested)="buy()"
                 />
               }
             </div>
-            <p class="font-mono text-xs text-ink-muted" aria-live="polite">
-              {{ note() }}
-              @if (playing()) {
-                <button class="link ml-2" (click)="stop()">Stop</button>
-              }
-            </p>
+            @if (note(); as note) {
+              <p class="text-sm text-ink-muted" aria-live="polite">
+                {{ note }}
+              </p>
+            }
           </section>
 
           <aside class="flex flex-col gap-6">
@@ -162,11 +174,6 @@ const SEGMENT =
               <a imeButton [routerLink]="useLink()" [queryParams]="useQuery()"
                 >Use it on your music</a
               >
-              <p class="text-xs text-ink-muted">
-                Every design shows the artist, the title, the cover, the
-                tracklist, and a way to buy. Buying always happens in IME's own
-                checkout.
-              </p>
             </div>
 
             @if (page.designer?.openToCommissions) {
@@ -269,13 +276,19 @@ export class DesignPage {
   });
 
   protected readonly device = signal<Device>('desktop');
+  // on a phone, the only preview that makes sense is the phone one
+  private readonly onPhone = afterNextRender(() => {
+    if (matchMedia('(max-width: 767px)').matches) this.device.set('phone');
+  });
   protected readonly kind = signal<PlaceholderKind>('album');
   /** The visitor's own cover, as a data URL. It stays on their device. */
   protected readonly cover = signal<string | null>(null);
-  protected readonly note = signal(
-    'Stand-in content: the cover, titles, and music are placeholders.',
-  );
-  protected readonly playing = signal(false);
+  /** Said once the visitor tries something only a real release does. */
+  protected readonly note = signal<string | null>(null);
+  protected readonly playback = signal<ArtistPagePlayback>({
+    trackPosition: null,
+    playing: false,
+  });
 
   protected readonly message = signal('');
   protected readonly sending = signal(false);
@@ -348,10 +361,7 @@ export class DesignPage {
 
   protected play(position: number): void {
     this.music.play(position);
-    this.playing.set(true);
-    this.note.set(
-      `Playing a stand-in for track ${position}. A real release plays its music here.`,
-    );
+    this.playback.set({ trackPosition: position, playing: true });
   }
 
   protected buy(): void {
@@ -360,8 +370,7 @@ export class DesignPage {
 
   protected stop(): void {
     this.music.stop();
-    this.playing.set(false);
-    this.note.set('Stopped.');
+    this.playback.update((playback) => ({ ...playback, playing: false }));
   }
 
   protected async pickCover(event: Event): Promise<void> {
