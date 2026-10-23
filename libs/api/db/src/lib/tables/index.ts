@@ -44,5 +44,6 @@ export * from './reserve-entries';
 export * from './job-runs';
 export * from './crates';
 export * from './crate-releases';
+export * from './crate-saves';
 export * from './user-followers';
 export * from './chart-entries';

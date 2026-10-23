@@ -183,6 +183,13 @@
       "when": 1792764938481,
       "tag": "0025_release_text_and_private_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792770303701,
+      "tag": "0026_crate_saves",
+      "breakpoints": true
     }
   ]
 }
