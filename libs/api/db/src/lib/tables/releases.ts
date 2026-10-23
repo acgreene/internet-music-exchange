@@ -116,6 +116,12 @@ export const releases = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'`),
+
+    /** What the artist says about the release, shown on its page. */
+    description: text('description'),
+
+    /** Who played, wrote, recorded, and made it, as the artist writes it. */
+    credits: text('credits'),
   },
   (table) => [
     index('releases_artist_id_idx').on(table.artistId),
@@ -133,6 +139,15 @@ export const releases = pgTable(
     check(
       'releases_side_starts_at_most_25',
       sql`cardinality(${table.sideStarts}) <= 25`,
+    ),
+    // `text` is unbounded, so cap the columns
+    check(
+      'releases_description_max_length',
+      sql`length(${table.description}) <= 5000`,
+    ),
+    check(
+      'releases_credits_max_length',
+      sql`length(${table.credits}) <= 5000`,
     ),
     // browsing and search find releases by any of their genres or tags
     index('releases_genres_idx').using('gin', table.genres),

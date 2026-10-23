@@ -33,6 +33,8 @@ export const tracks = pgTable(
      * rows. Null until the first audio file is ingested and probed.
      */
     durationMs: integer('duration_ms'),
+    /** The words, as the artist writes them. */
+    lyrics: text('lyrics'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -40,6 +42,7 @@ export const tracks = pgTable(
   (table) => [
     index('tracks_artist_id_idx').on(table.artistId),
     check('tracks_duration_ms_positive', sql`${table.durationMs} > 0`),
+    check('tracks_lyrics_max_length', sql`length(${table.lyrics}) <= 20000`),
     // a track becomes public once it appears in a published release. Tracks
     // that are unreleased, or only on drafts, stay visible to managers alone
     pgPolicy('Catalog is publicly readable', {

@@ -51,6 +51,9 @@ export const users = pgTable(
 
     /** A designer who welcomes requests for custom designs. */
     openToCommissions: boolean('open_to_commissions').notNull().default(false),
+
+    /** Keep them off the "supported by" list of the releases they own. */
+    hidePurchases: boolean('hide_purchases').notNull().default(false),
   },
   (table) => [
     check(
