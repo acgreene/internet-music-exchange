@@ -22,6 +22,7 @@ import {
 } from 'drizzle-orm';
 import type { Db } from '../database-service';
 import {
+  artistFollowers,
   artists,
   entitlements,
   products,
@@ -88,6 +89,17 @@ export interface ReleaseEdition {
   price: number;
 }
 
+/** An artist a search found, with how big a following and catalog they have. */
+export interface SearchArtist {
+  id: string;
+  name: string;
+  handle: string;
+  city: string | null;
+  country: string | null;
+  followers: number;
+  releases: number;
+}
+
 /** Published, from an artist in good standing. */
 const onSale = and(
   eq(releases.status, 'published'),
@@ -119,6 +131,10 @@ const digitalPrice = sql`coalesce(${releasePricing.minimumPrice}, 0)`;
 
 function contains(word: string): string {
   return `%${word.replace(/[\\%_]/g, '\\$&')}%`;
+}
+
+function startsWith(text: string): string {
+  return `${text.replace(/[\\%_]/g, '\\$&')}%`;
 }
 
 /**
@@ -396,6 +412,50 @@ export class SearchRepository {
       .limit(limit);
   }
 
+  /**
+   * Artists in good standing whose name has the text, names that start with
+   * it first, then the most followed.
+   */
+  public async searchArtists(
+    text: string,
+    limit: number,
+  ): Promise<SearchArtist[]> {
+    const followers = this.db.$count(
+      artistFollowers,
+      eq(artistFollowers.artistId, artists.id),
+    );
+    return this.db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        handle: artists.handle,
+        city: artists.city,
+        country: artists.country,
+        followers,
+        releases: this.db.$count(
+          releases,
+          and(
+            eq(releases.artistId, artists.id),
+            eq(releases.status, 'published'),
+          ),
+        ),
+      })
+      .from(artists)
+      .where(
+        and(
+          ilike(artists.name, contains(text)),
+          isNull(artists.suspendedAt),
+          isNull(artists.offSaleAt),
+        ),
+      )
+      .orderBy(
+        sql`${artists.name} ilike ${startsWith(text)} desc`,
+        desc(followers),
+        asc(artists.name),
+      )
+      .limit(limit);
+  }
+
   /** Releases whose title has the text, for suggestions while typing. */
   public async suggestReleases(
     text: string,
@@ -403,7 +463,7 @@ export class SearchRepository {
   ): Promise<ShelfRelease[]> {
     return this.releaseQuery(ilike(releases.title, contains(text)))
       .orderBy(
-        sql`${releases.title} ilike ${`${text.replace(/[\\%_]/g, '\\$&')}%`} desc`,
+        sql`${releases.title} ilike ${startsWith(text)} desc`,
         desc(releases.publishedAt),
       )
       .limit(limit);
@@ -422,7 +482,7 @@ export class SearchRepository {
           .where(onSale)
           .as('tags'),
       )
-      .where(ilike(tag, `${text.replace(/[\\%_]/g, '\\$&')}%`))
+      .where(ilike(tag, startsWith(text)))
       .groupBy(tag)
       .orderBy(desc(count()), tag)
       .limit(limit);

@@ -10,10 +10,17 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { type Params, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, type Params, Router } from '@angular/router';
 import { ApiClient } from '@ime/api-client';
-import { GENRES, parseSearch, type SearchSuggestions } from '@ime/models';
+import {
+  GENRES,
+  parseSearch,
+  placeLabel,
+  type SearchSuggestions,
+} from '@ime/models';
 import { CoverComponent } from '@ime/ui';
+import { filter, map } from 'rxjs';
 import { KnownPlaces } from './known-places';
 import { paramsForPhrase } from './search-params';
 
@@ -120,20 +127,22 @@ interface Group {
             >
               @switch (option.kind) {
                 @case ('search') {
-                  <span class="min-w-0 truncate">
-                    Search
-                    <span class="font-semibold">“{{ option.label }}”</span>
-                  </span>
-                  @if (option.chips?.length) {
-                    <span class="flex shrink-0 flex-wrap gap-1">
-                      @for (chip of option.chips; track chip) {
-                        <span
-                          class="rounded-full border border-ink px-2 text-xs font-medium"
-                          >{{ chip }}</span
-                        >
-                      }
+                  <span class="flex min-w-0 flex-col gap-1.5">
+                    <span class="truncate">
+                      Search
+                      <span class="font-semibold">“{{ option.label }}”</span>
                     </span>
-                  }
+                    @if (option.chips?.length) {
+                      <span class="flex flex-wrap gap-1">
+                        @for (chip of option.chips; track chip) {
+                          <span
+                            class="rounded-full border border-ink px-2 text-xs font-medium"
+                            >{{ chip }}</span
+                          >
+                        }
+                      </span>
+                    }
+                  </span>
                 }
                 @case ('release') {
                   <ime-cover
@@ -173,8 +182,6 @@ export class SearchBox {
   private readonly router = inject(Router);
   private readonly known = inject(KnownPlaces);
 
-  /** What the box starts with, such as the words of the current search. */
-  public readonly value = input('');
   public readonly placeholder = input('Search artists, releases, genres');
   /** Show the `/` hint, where the shortcut reaches this box. */
   public readonly shortcut = input(false, { transform: booleanAttribute });
@@ -182,7 +189,21 @@ export class SearchBox {
   private readonly field = viewChild<ElementRef<HTMLInputElement>>('field');
 
   protected readonly listboxId = `ime-search-${nextId++}`;
-  protected readonly text = linkedSignal(() => this.value());
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+  /** On the results page, what was searched, as it was typed. */
+  protected readonly text = linkedSignal(() => {
+    const tree = this.router.parseUrl(this.url());
+    if (tree.root.children['primary']?.segments[0]?.path !== 'search') {
+      return '';
+    }
+    return tree.queryParams['said'] ?? tree.queryParams['q'] ?? '';
+  });
   protected readonly focused = signal(false);
   private readonly dismissed = signal(false);
   private readonly suggestions = signal<SearchSuggestions | null>(null);
@@ -243,6 +264,7 @@ export class SearchBox {
           id: `${this.listboxId}-artist-${artist.handle}`,
           kind: 'artist',
           label: artist.name,
+          detail: placeLabel(artist.city, artist.country),
           commands: ['/artists', artist.handle],
         })),
       });

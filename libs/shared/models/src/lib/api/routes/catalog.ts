@@ -2,7 +2,6 @@ import * as z from 'zod';
 import type { RouteContracts } from '../contract';
 import { pageQuerySchema, signedUrlSchema, timestampSchema } from '../general';
 import { HttpMethod } from '../http-method';
-import { artistSchema } from './artists';
 import { productTypeSchema } from './merch';
 import {
   currencySchema,
@@ -236,13 +235,29 @@ export const searchReleaseSchema = z.object({
 export type SearchRelease = z.infer<typeof searchReleaseSchema>;
 
 /**
+ * An artist a search found, with where they are based and how big a
+ * following and catalog they have.
+ */
+export const searchArtistSchema = z.object({
+  name: z.string(),
+  handle: z.string(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+  followers: z.number().int(),
+  /** How many releases they have out. */
+  releases: z.number().int(),
+});
+
+export type SearchArtist = z.infer<typeof searchArtistSchema>;
+
+/**
  * What a search finds, and how many releases each filter value would leave.
  */
 export const searchResultsSchema = z.object({
   releases: z.array(searchReleaseSchema),
   /** How many releases match in all. */
   total: z.number().int(),
-  artists: z.array(artistSchema),
+  artists: z.array(searchArtistSchema),
   /** Merch that is not a record. */
   merch: z.array(shelfItemSchema),
   facets: z.object({
@@ -263,7 +278,14 @@ export type SearchResults = z.infer<typeof searchResultsSchema>;
  * Quick suggestions while someone types in the search box.
  */
 export const searchSuggestionsSchema = z.object({
-  artists: z.array(z.object({ name: z.string(), handle: z.string() })),
+  artists: z.array(
+    z.object({
+      name: z.string(),
+      handle: z.string(),
+      city: z.string().nullable(),
+      country: z.string().nullable(),
+    }),
+  ),
   releases: z.array(
     z.object({
       title: z.string(),

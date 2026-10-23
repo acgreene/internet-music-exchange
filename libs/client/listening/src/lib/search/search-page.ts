@@ -21,6 +21,7 @@ import {
   FORMATS,
   genreName,
   type GenreId,
+  placeLabel,
   placeName,
   priceLabel,
   SEARCH_KINDS,
@@ -77,7 +78,15 @@ const OPTION =
   ],
   template: `
     <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <ime-search-box class="md:hidden" [value]="state().q" />
+      <ime-search-box class="md:hidden" />
+
+      <h1 class="text-3xl font-black tracking-[-0.04em] md:text-4xl">
+        @if (searched(); as searched) {
+          Results for “{{ searched }}”
+        } @else {
+          Browse releases
+        }
+      </h1>
 
       @if (chips().length) {
         <div class="flex flex-wrap items-center gap-2 text-sm">
@@ -113,285 +122,330 @@ const OPTION =
         </div>
       }
 
-      <div class="grid gap-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
-        <div class="flex flex-col">
-          <button
-            class="flex items-center justify-between rounded-control border border-line px-3 py-2 text-sm font-semibold lg:hidden"
-            aria-controls="search-filters"
-            [attr.aria-expanded]="railOpen()"
-            (click)="railOpen.set(!railOpen())"
-          >
-            {{ railOpen() ? 'Hide filters' : 'Filters' }}
-            @if (chips().length) {
-              <span class="text-ink-muted">{{ chips().length }} on</span>
-            }
-          </button>
-          @if (facets(); as facets) {
-            <nav
-              id="search-filters"
-              class="mt-4 flex-col gap-6 lg:mt-0 lg:flex"
-              [class.flex]="railOpen()"
-              [class.hidden]="!railOpen()"
-              aria-label="Filters"
+      <div
+        class="grid gap-8"
+        [class]="showRail() ? 'lg:grid-cols-[14rem_minmax(0,1fr)]' : ''"
+      >
+        @if (showRail()) {
+          <div class="flex flex-col">
+            <button
+              class="flex items-center justify-between rounded-control border border-line px-3 py-2 text-sm font-semibold lg:hidden"
+              aria-controls="search-filters"
+              [attr.aria-expanded]="railOpen()"
+              (click)="railOpen.set(!railOpen())"
             >
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Format
-                </h2>
-                <a
-                  [class]="option"
-                  [class.font-semibold]="!state().format"
-                  routerLink="/search"
-                  [queryParams]="with({ format: undefined })"
-                  >Any format</a
-                >
-                @for (format of formats(); track format.id) {
-                  <a
-                    [class]="option"
-                    [class.font-semibold]="state().format === format.id"
-                    [attr.aria-current]="state().format === format.id || null"
-                    routerLink="/search"
-                    [queryParams]="with({ format: format.id })"
-                    >{{ format.name }}
-                    <span class="font-mono text-xs text-ink-muted">{{
-                      format.count
-                    }}</span></a
+              {{ railOpen() ? 'Hide filters' : 'Filters' }}
+              @if (chips().length) {
+                <span class="text-ink-muted">{{ chips().length }} on</span>
+              }
+            </button>
+            @if (facets(); as facets) {
+              <nav
+                id="search-filters"
+                class="mt-4 flex-col gap-6 lg:mt-0 lg:flex"
+                [class.flex]="railOpen()"
+                [class.hidden]="!railOpen()"
+                aria-label="Filters"
+              >
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
                   >
-                }
-              </section>
+                    Format
+                  </h2>
+                  <a
+                    [class]="option"
+                    [class.font-semibold]="!state().format"
+                    routerLink="/search"
+                    [queryParams]="with({ format: undefined })"
+                    >Any format</a
+                  >
+                  @for (format of formats(); track format.id) {
+                    <a
+                      [class]="option"
+                      [class.font-semibold]="state().format === format.id"
+                      [attr.aria-current]="state().format === format.id || null"
+                      routerLink="/search"
+                      [queryParams]="with({ format: format.id })"
+                      >{{ format.name }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        format.count
+                      }}</span></a
+                    >
+                  }
+                </section>
 
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Genre
-                </h2>
-                @for (genre of genres(); track genre.id) {
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
+                  >
+                    Genre
+                  </h2>
+                  @for (genre of genres(); track genre.id) {
+                    <a
+                      [class]="option"
+                      routerLink="/search"
+                      [queryParams]="withGenre(genre.id)"
+                      [attr.aria-current]="genre.chosen || null"
+                    >
+                      <span class="flex items-center gap-2">
+                        <span
+                          class="flex size-3.5 items-center justify-center rounded-sm border border-ink text-[10px]"
+                          [class.bg-ink]="genre.chosen"
+                          [class.text-canvas]="genre.chosen"
+                          aria-hidden="true"
+                          >{{ genre.chosen ? '✓' : '' }}</span
+                        >
+                        <span [class.font-semibold]="genre.chosen">{{
+                          genre.name
+                        }}</span>
+                      </span>
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        genre.count
+                      }}</span>
+                    </a>
+                  }
+                  @if (moreGenres()) {
+                    <button
+                      class="link px-2 text-left text-sm"
+                      (click)="allGenres.set(!allGenres())"
+                    >
+                      {{ allGenres() ? 'Show fewer' : 'Show all genres' }}
+                    </button>
+                  }
+                </section>
+
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
+                  >
+                    Price
+                  </h2>
+                  <a
+                    [class]="option"
+                    [class.font-semibold]="state().under === undefined"
+                    routerLink="/search"
+                    [queryParams]="with({ under: undefined })"
+                    >Any price</a
+                  >
+                  @for (price of facets.prices; track price.value) {
+                    <a
+                      [class]="option"
+                      [class.font-semibold]="state().under === price.value"
+                      [attr.aria-current]="
+                        state().under === price.value || null
+                      "
+                      routerLink="/search"
+                      [queryParams]="with({ under: price.value })"
+                      >{{ priceName(price.value) }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        price.count
+                      }}</span></a
+                    >
+                  }
+                </section>
+
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
+                  >
+                    Released
+                  </h2>
+                  <a
+                    [class]="option"
+                    [class.font-semibold]="!state().year"
+                    routerLink="/search"
+                    [queryParams]="with({ year: undefined })"
+                    >Any time</a
+                  >
+                  @if (state().year?.endsWith('s')) {
+                    <span [class]="option" class="font-semibold">{{
+                      yearName(state().year!)
+                    }}</span>
+                  }
+                  @for (year of facets.years; track year.value) {
+                    <a
+                      [class]="option"
+                      [class.font-semibold]="state().year === '' + year.value"
+                      routerLink="/search"
+                      [queryParams]="with({ year: '' + year.value })"
+                      >{{ year.value }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        year.count
+                      }}</span></a
+                    >
+                  }
+                </section>
+
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
+                  >
+                    Kind
+                  </h2>
+                  <a
+                    [class]="option"
+                    [class.font-semibold]="!state().kind"
+                    routerLink="/search"
+                    [queryParams]="with({ kind: undefined })"
+                    >Any kind</a
+                  >
+                  @for (kind of kinds(); track kind.id) {
+                    <a
+                      [class]="option"
+                      [class.font-semibold]="state().kind === kind.id"
+                      routerLink="/search"
+                      [queryParams]="with({ kind: kind.id })"
+                      >{{ kind.name }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        kind.count
+                      }}</span></a
+                    >
+                  }
+                </section>
+
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
+                  >
+                    Based in
+                  </h2>
+                  <a
+                    [class]="option"
+                    [class.font-semibold]="!state().country"
+                    routerLink="/search"
+                    [queryParams]="
+                      with({ country: undefined, city: undefined })
+                    "
+                    >Anywhere</a
+                  >
+                  @if (state().country; as country) {
+                    <a
+                      [class]="option"
+                      [class.font-semibold]="!state().city"
+                      routerLink="/search"
+                      [queryParams]="with({ country, city: undefined })"
+                      >All of {{ countryName(country) }}
+                      <span class="font-mono text-xs text-ink-muted">{{
+                        countryTotal()
+                      }}</span></a
+                    >
+                    @for (city of cities(); track city.name) {
+                      <a
+                        [class]="option"
+                        class="pl-5"
+                        [class.font-semibold]="city.chosen"
+                        [attr.aria-current]="city.chosen || null"
+                        routerLink="/search"
+                        [queryParams]="with({ country, city: city.name })"
+                        >{{ city.name }}
+                        <span class="font-mono text-xs text-ink-muted">{{
+                          city.count
+                        }}</span></a
+                      >
+                    }
+                  } @else {
+                    @for (country of countries(); track country.code) {
+                      <a
+                        [class]="option"
+                        routerLink="/search"
+                        [queryParams]="
+                          with({ country: country.code, city: undefined })
+                        "
+                        >{{ country.name }}
+                        <span class="font-mono text-xs text-ink-muted">{{
+                          country.count
+                        }}</span></a
+                      >
+                    }
+                    @if (moreCountries()) {
+                      <button
+                        class="link px-2 text-left text-sm"
+                        (click)="allCountries.set(!allCountries())"
+                      >
+                        {{ allCountries() ? 'Show fewer' : 'Show all places' }}
+                      </button>
+                    }
+                  }
+                </section>
+
+                <section class="flex flex-col gap-1">
+                  <h2
+                    class="px-2 text-xs font-semibold tracking-wider uppercase"
+                  >
+                    Extras
+                  </h2>
                   <a
                     [class]="option"
                     routerLink="/search"
-                    [queryParams]="withGenre(genre.id)"
-                    [attr.aria-current]="genre.chosen || null"
+                    [queryParams]="with({ designed: !state().designed })"
+                    [attr.aria-current]="state().designed || null"
                   >
                     <span class="flex items-center gap-2">
                       <span
                         class="flex size-3.5 items-center justify-center rounded-sm border border-ink text-[10px]"
-                        [class.bg-ink]="genre.chosen"
-                        [class.text-canvas]="genre.chosen"
+                        [class.bg-ink]="state().designed"
+                        [class.text-canvas]="state().designed"
                         aria-hidden="true"
-                        >{{ genre.chosen ? '✓' : '' }}</span
+                        >{{ state().designed ? '✓' : '' }}</span
                       >
-                      <span [class.font-semibold]="genre.chosen">{{
-                        genre.name
-                      }}</span>
+                      <span [class.font-semibold]="state().designed"
+                        >Designed pages</span
+                      >
                     </span>
                     <span class="font-mono text-xs text-ink-muted">{{
-                      genre.count
+                      facets.designed
                     }}</span>
                   </a>
-                }
-                @if (moreGenres()) {
-                  <button
-                    class="link px-2 text-left text-sm"
-                    (click)="allGenres.set(!allGenres())"
-                  >
-                    {{ allGenres() ? 'Show fewer' : 'Show all genres' }}
-                  </button>
-                }
-              </section>
-
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Price
-                </h2>
-                <a
-                  [class]="option"
-                  [class.font-semibold]="state().under === undefined"
-                  routerLink="/search"
-                  [queryParams]="with({ under: undefined })"
-                  >Any price</a
-                >
-                @for (price of facets.prices; track price.value) {
-                  <a
-                    [class]="option"
-                    [class.font-semibold]="state().under === price.value"
-                    [attr.aria-current]="state().under === price.value || null"
-                    routerLink="/search"
-                    [queryParams]="with({ under: price.value })"
-                    >{{ priceName(price.value) }}
-                    <span class="font-mono text-xs text-ink-muted">{{
-                      price.count
-                    }}</span></a
-                  >
-                }
-              </section>
-
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Released
-                </h2>
-                <a
-                  [class]="option"
-                  [class.font-semibold]="!state().year"
-                  routerLink="/search"
-                  [queryParams]="with({ year: undefined })"
-                  >Any time</a
-                >
-                @if (state().year?.endsWith('s')) {
-                  <span [class]="option" class="font-semibold">{{
-                    yearName(state().year!)
-                  }}</span>
-                }
-                @for (year of facets.years; track year.value) {
-                  <a
-                    [class]="option"
-                    [class.font-semibold]="state().year === '' + year.value"
-                    routerLink="/search"
-                    [queryParams]="with({ year: '' + year.value })"
-                    >{{ year.value }}
-                    <span class="font-mono text-xs text-ink-muted">{{
-                      year.count
-                    }}</span></a
-                  >
-                }
-              </section>
-
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Kind
-                </h2>
-                <a
-                  [class]="option"
-                  [class.font-semibold]="!state().kind"
-                  routerLink="/search"
-                  [queryParams]="with({ kind: undefined })"
-                  >Any kind</a
-                >
-                @for (kind of kinds(); track kind.id) {
-                  <a
-                    [class]="option"
-                    [class.font-semibold]="state().kind === kind.id"
-                    routerLink="/search"
-                    [queryParams]="with({ kind: kind.id })"
-                    >{{ kind.name }}
-                    <span class="font-mono text-xs text-ink-muted">{{
-                      kind.count
-                    }}</span></a
-                  >
-                }
-              </section>
-
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Based in
-                </h2>
-                <a
-                  [class]="option"
-                  [class.font-semibold]="!state().country"
-                  routerLink="/search"
-                  [queryParams]="with({ country: undefined, city: undefined })"
-                  >Anywhere</a
-                >
-                @if (state().country; as country) {
-                  <a
-                    [class]="option"
-                    [class.font-semibold]="!state().city"
-                    routerLink="/search"
-                    [queryParams]="with({ country, city: undefined })"
-                    >All of {{ countryName(country) }}
-                    <span class="font-mono text-xs text-ink-muted">{{
-                      countryTotal()
-                    }}</span></a
-                  >
-                  @for (city of cities(); track city.name) {
-                    <a
-                      [class]="option"
-                      class="pl-5"
-                      [class.font-semibold]="city.chosen"
-                      [attr.aria-current]="city.chosen || null"
-                      routerLink="/search"
-                      [queryParams]="with({ country, city: city.name })"
-                      >{{ city.name }}
-                      <span class="font-mono text-xs text-ink-muted">{{
-                        city.count
-                      }}</span></a
-                    >
-                  }
-                } @else {
-                  @for (country of countries(); track country.code) {
-                    <a
-                      [class]="option"
-                      routerLink="/search"
-                      [queryParams]="
-                        with({ country: country.code, city: undefined })
-                      "
-                      >{{ country.name }}
-                      <span class="font-mono text-xs text-ink-muted">{{
-                        country.count
-                      }}</span></a
-                    >
-                  }
-                  @if (moreCountries()) {
-                    <button
-                      class="link px-2 text-left text-sm"
-                      (click)="allCountries.set(!allCountries())"
-                    >
-                      {{ allCountries() ? 'Show fewer' : 'Show all places' }}
-                    </button>
-                  }
-                }
-              </section>
-
-              <section class="flex flex-col gap-1">
-                <h2 class="px-2 text-xs font-semibold tracking-wider uppercase">
-                  Extras
-                </h2>
-                <a
-                  [class]="option"
-                  routerLink="/search"
-                  [queryParams]="with({ designed: !state().designed })"
-                  [attr.aria-current]="state().designed || null"
-                >
-                  <span class="flex items-center gap-2">
-                    <span
-                      class="flex size-3.5 items-center justify-center rounded-sm border border-ink text-[10px]"
-                      [class.bg-ink]="state().designed"
-                      [class.text-canvas]="state().designed"
-                      aria-hidden="true"
-                      >{{ state().designed ? '✓' : '' }}</span
-                    >
-                    <span [class.font-semibold]="state().designed"
-                      >Designed pages</span
-                    >
-                  </span>
-                  <span class="font-mono text-xs text-ink-muted">{{
-                    facets.designed
-                  }}</span>
-                </a>
-              </section>
-            </nav>
-          }
-        </div>
+                </section>
+              </nav>
+            }
+          </div>
+        }
 
         <div class="flex min-w-0 flex-col gap-8">
           @if (found(); as found) {
+            @if (nothingFound()) {
+              <div class="flex flex-col gap-1 py-8">
+                <p class="font-semibold">Nothing matches that.</p>
+                <p class="text-sm text-ink-muted">
+                  Try taking off a filter, or searching fewer words.
+                </p>
+              </div>
+            }
+
             @if (found.artists.length) {
               <section
-                class="flex flex-col gap-2"
+                class="flex flex-col gap-3"
                 aria-labelledby="artists-heading"
               >
                 <h2 id="artists-heading" class="text-lg font-bold">Artists</h2>
-                <ul class="flex flex-wrap gap-2">
-                  @for (artist of found.artists; track artist.id) {
+                <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  @for (artist of found.artists; track artist.handle) {
                     <li>
                       <a
-                        class="flex items-center gap-2 rounded-full border border-line py-1 pr-3 pl-1 text-sm font-medium hover:bg-wash"
+                        class="flex items-center gap-3 rounded-card border border-line p-3 hover:bg-wash"
                         [routerLink]="['/artists', artist.handle]"
                       >
                         <span
-                          class="flex size-6 items-center justify-center rounded-full bg-wash text-xs font-semibold uppercase"
+                          class="flex size-14 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xl font-bold uppercase"
                           aria-hidden="true"
                           >{{ artist.name.charAt(0) }}</span
                         >
-                        {{ artist.name }}
+                        <span class="flex min-w-0 flex-col">
+                          <span class="truncate font-bold">{{
+                            artist.name
+                          }}</span>
+                          @if (artist.country) {
+                            <span class="truncate text-sm text-ink-muted">{{
+                              place(artist.city, artist.country)
+                            }}</span>
+                          }
+                          <span class="font-mono text-xs text-ink-muted"
+                            >{{ count(artist.followers, 'follower') }} ·
+                            {{ count(artist.releases, 'release') }}</span
+                          >
+                        </span>
                       </a>
                     </li>
                   }
@@ -413,96 +467,95 @@ const OPTION =
               </section>
             }
 
-            <section
-              class="flex flex-col gap-4"
-              aria-labelledby="releases-heading"
-            >
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <h2 id="releases-heading" class="text-lg font-bold">
-                  {{ found.total }}
-                  {{ found.total === 1 ? 'release' : 'releases' }}
-                </h2>
-                <label class="flex items-center gap-2 text-sm">
-                  Sort by
-                  <select
-                    class="rounded-control border border-line bg-canvas px-2 py-1.5"
-                    (change)="sortBy($any($event.target).value)"
-                  >
-                    @for (option of sorts(); track option.id) {
-                      <option
-                        [value]="option.id"
-                        [selected]="option.id === sort()"
-                      >
-                        {{ option.name }}
-                      </option>
-                    }
-                  </select>
-                </label>
-              </div>
-
-              <ul
-                class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 xl:grid-cols-4"
+            @if (found.total) {
+              <section
+                class="flex flex-col gap-4"
+                aria-labelledby="releases-heading"
               >
-                @for (item of releases(); track item.release.id) {
-                  <li class="flex flex-col gap-1.5">
-                    <a
-                      class="group flex flex-col gap-1.5"
-                      [routerLink]="[
-                        '/artists',
-                        item.release.artistHandle,
-                        item.release.slug,
-                      ]"
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <h2 id="releases-heading" class="text-lg font-bold">
+                    Releases
+                    <span
+                      class="font-mono text-sm font-normal text-ink-muted"
+                      >{{ found.total }}</span
                     >
-                      <ime-cover
-                        class="w-full border border-line"
-                        [src]="item.release.coverUrl"
-                        [alt]="'Cover of ' + item.release.title"
-                      />
-                      <span class="truncate font-bold group-hover:underline">{{
-                        item.release.title
-                      }}</span>
-                    </a>
-                    <a
-                      class="-mt-1 truncate text-sm text-ink-muted hover:underline"
-                      [routerLink]="['/artists', item.release.artistHandle]"
-                      >{{ item.release.artistName }}</a
+                  </h2>
+                  <label class="flex items-center gap-2 text-sm">
+                    Sort by
+                    <select
+                      class="rounded-control border border-line bg-canvas px-2 py-1.5"
+                      (change)="sortBy($any($event.target).value)"
                     >
-                    <ul class="flex flex-col font-mono text-xs">
-                      @for (format of formatsOf(item); track format.label) {
-                        <li>
-                          <a
-                            class="flex justify-between gap-2 hover:underline"
-                            [routerLink]="format.link"
-                          >
-                            <span>{{ format.label }}</span>
-                            <span class="text-right">{{ format.price }}</span>
-                          </a>
-                        </li>
+                      @for (option of sorts(); track option.id) {
+                        <option
+                          [value]="option.id"
+                          [selected]="option.id === sort()"
+                        >
+                          {{ option.name }}
+                        </option>
                       }
-                    </ul>
-                  </li>
-                } @empty {
-                  <li class="col-span-full flex flex-col gap-1 py-8">
-                    <p class="font-semibold">Nothing matches that.</p>
-                    <p class="text-sm text-ink-muted">
-                      Try taking off a filter, or searching fewer words.
-                    </p>
-                  </li>
-                }
-              </ul>
-              @if (hasMore()) {
-                <div>
-                  <button
-                    imeButton
-                    variant="secondary"
-                    [busy]="loadingMore()"
-                    (click)="loadMore()"
-                  >
-                    Show more
-                  </button>
+                    </select>
+                  </label>
                 </div>
-              }
-            </section>
+
+                <ul
+                  class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 xl:grid-cols-4"
+                >
+                  @for (item of releases(); track item.release.id) {
+                    <li class="flex flex-col gap-1.5">
+                      <a
+                        class="group flex flex-col gap-1.5"
+                        [routerLink]="[
+                          '/artists',
+                          item.release.artistHandle,
+                          item.release.slug,
+                        ]"
+                      >
+                        <ime-cover
+                          class="w-full border border-line"
+                          [src]="item.release.coverUrl"
+                          [alt]="'Cover of ' + item.release.title"
+                        />
+                        <span
+                          class="truncate font-bold group-hover:underline"
+                          >{{ item.release.title }}</span
+                        >
+                      </a>
+                      <a
+                        class="-mt-1 truncate text-sm text-ink-muted hover:underline"
+                        [routerLink]="['/artists', item.release.artistHandle]"
+                        >{{ item.release.artistName }}</a
+                      >
+                      <ul class="flex flex-col font-mono text-xs">
+                        @for (format of formatsOf(item); track format.label) {
+                          <li>
+                            <a
+                              class="flex justify-between gap-2 hover:underline"
+                              [routerLink]="format.link"
+                            >
+                              <span>{{ format.label }}</span>
+                              <span class="text-right">{{ format.price }}</span>
+                            </a>
+                          </li>
+                        }
+                      </ul>
+                    </li>
+                  }
+                </ul>
+                @if (hasMore()) {
+                  <div>
+                    <button
+                      imeButton
+                      variant="secondary"
+                      [busy]="loadingMore()"
+                      (click)="loadMore()"
+                    >
+                      Show more
+                    </button>
+                  </div>
+                }
+              </section>
+            }
 
             @if (merchShelf(); as shelf) {
               <ime-shelf-row [shelf]="shelf" />
@@ -530,8 +583,13 @@ export class SearchPage {
   protected readonly priceName = priceLabel;
   protected readonly yearName = yearLabel;
   protected readonly countryName = countryName;
+  protected readonly place = placeLabel;
 
   protected readonly state = computed(() => readSearchParams(this.params()));
+  /** What was searched for, as it was typed. */
+  protected readonly searched = computed(
+    () => this.state().said ?? this.state().q,
+  );
   protected readonly sort = computed<SearchSort>(
     () => this.state().sort ?? (this.state().q ? 'relevance' : 'newest'),
   );
@@ -558,6 +616,20 @@ export class SearchPage {
     },
   });
   protected readonly facets = computed(() => this.found()?.facets);
+  protected readonly nothingFound = computed(() => {
+    const found = this.found();
+    return (
+      !!found &&
+      !found.total &&
+      !found.artists.length &&
+      !found.merch.length &&
+      !this.crates.value()?.length
+    );
+  });
+  /** Filters with nothing to narrow and none to take off only get in the way. */
+  protected readonly showRail = computed(
+    () => !this.nothingFound() || this.chips().length > 0,
+  );
 
   private readonly more = linkedSignal<SearchRelease[], SearchRelease[]>({
     source: () => this.found()?.releases ?? [],
@@ -721,6 +793,10 @@ export class SearchPage {
         }
       : null;
   });
+
+  protected count(n: number, noun: string): string {
+    return `${n} ${n === 1 ? noun : `${noun}s`}`;
+  }
 
   /** The address of this search with some filters changed. */
   protected with(change: Partial<SearchState>): Params {

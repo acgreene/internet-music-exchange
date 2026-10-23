@@ -4,7 +4,6 @@ import {
   eq,
   exists,
   getTableColumns,
-  ilike,
   isNull,
   ne,
   notExists,
@@ -60,8 +59,6 @@ export interface ArtistManagerProfile {
   name: string | null;
   createdAt: Date;
 }
-
-const DEFAULT_SEARCH_LIMIT = 20;
 
 /**
  * Queries for the artist profile and the users permitted to act on its behalf.
@@ -171,27 +168,6 @@ export class ArtistRepository {
     params: UpdateArtistParams,
   ): Promise<void> {
     await this.db.update(artists).set(params).where(eq(artists.id, artistId));
-  }
-
-  /**
-   * Find artists whose name contains the given text.
-   *
-   * @param query - The text to match against artist names, case-insensitive.
-   * @param limit - The maximum number of artists to return.
-   * @returns Matching artist rows in alphabetical order.
-   */
-  public async searchByName(
-    query: string,
-    limit: number = DEFAULT_SEARCH_LIMIT,
-  ): Promise<Artist[]> {
-    return this.db
-      .select()
-      .from(artists)
-      .where(
-        and(ilike(artists.name, `%${query}%`), isNull(artists.suspendedAt)),
-      )
-      .orderBy(asc(artists.name))
-      .limit(limit);
   }
 
   /**

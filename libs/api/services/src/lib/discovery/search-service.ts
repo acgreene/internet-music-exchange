@@ -84,7 +84,7 @@ export class SearchService {
       this.cards.releases(rows),
       this.db.search.listEditions(rows.map((row) => row.id)),
       wordsOnly && !query.offset
-        ? this.db.artists.searchByName(search.words.join(' '), ARTISTS_SHOWN)
+        ? this.db.search.searchArtists(search.words.join(' '), ARTISTS_SHOWN)
         : [],
       wordsOnly && !query.offset
         ? this.db.search.searchMerch(search.words, MERCH_SHOWN)
@@ -98,7 +98,7 @@ export class SearchService {
         editions: cheapestByFormat(editions, card.release.id),
       })),
       total,
-      artists: artists.filter((artist) => !artist.offSaleAt),
+      artists,
       merch: await this.cards.products(merch),
       facets: { genres, formats, prices, years, kinds, designed, places },
     };
@@ -120,13 +120,18 @@ export class SearchService {
     const typed = text.trim().slice(0, 100);
     if (!typed) return { artists: [], releases: [], tags: [] };
     const [artists, releases, tags] = await Promise.all([
-      this.db.artists.searchByName(typed, SUGGESTIONS.artists),
+      this.db.search.searchArtists(typed, SUGGESTIONS.artists),
       this.db.search.suggestReleases(typed, SUGGESTIONS.releases),
       this.db.search.suggestTags(typed, SUGGESTIONS.tags),
     ]);
     const cards = await this.cards.releases(releases);
     return {
-      artists: artists.map(({ name, handle }) => ({ name, handle })),
+      artists: artists.map(({ name, handle, city, country }) => ({
+        name,
+        handle,
+        city,
+        country,
+      })),
       releases: cards.map(({ release }) => ({
         title: release.title,
         slug: release.slug,
