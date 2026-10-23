@@ -43,7 +43,7 @@ Each month, a seller's share is the sum of:
 2. **Shared costs**: the month's platform-wide costs that belong to no one seller, divided evenly by the number of sellers. These include servers, database, email, domain, monitoring, and the ownership guarantee (see below).
 3. **Card fees** on that seller's own top-ups.
 
-Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. No seller pays more than $1 a month toward shared costs. While there are too few sellers to keep shares at cents, IME's founder pays the rest out of pocket, and each statement shows that subsidy. It fades on its own as sellers join.
+Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. At launch, while there are too few sellers for shared costs to be small, IME's founder covers part of them so joining is not a burden, and each statement shows that subsidy. Once there are enough sellers, shared costs are simply split evenly. This is a launch measure, not a promise, and public copy does not advertise it.
 
 ## Paying
 
@@ -95,8 +95,8 @@ How people can give:
 ### Public costs page
 
 - Leads with what every seller paid toward shared costs last month, the same for all, and the typical seller's whole share.
-- The promises: never more than $1 a month toward shared costs, how long the smallest top-up lasts the typical seller, and no cut of sales.
-- The month in full: what it cost, by category (storage and delivery, hosting, database, other services, ownership guarantee), and who paid it (sellers, the founder's subsidy, the reserve). The two balance, apart from rounding.
+- How long the smallest top-up lasts the typical seller, and that there is no cut of sales.
+- The month in full: what it cost, by category (storage and delivery, hosting, database, other services, ownership guarantee), and who paid it (sellers, and the reserve when it steadied shares).
 - The reserve against its target, gifts to hosting that month, and what was given back to sellers.
 - This month's thank-you list.
 - A rough estimate of what a seller would pay, from how many songs, releases, and plays they have, at the latest rates.

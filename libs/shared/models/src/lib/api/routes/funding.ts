@@ -249,7 +249,6 @@ export const publicCostsSchema = z.object({
   reserveTarget: z.number().int(),
   /** Who asked to be thanked by name for gifts this month, alphabetically. */
   thanks: z.object({ month: z.string(), names: z.array(z.string()) }),
-  sharedCostCap: z.number().int(),
   minimumTopUp: z.number().int(),
   rates: z
     .object({

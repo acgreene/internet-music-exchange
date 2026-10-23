@@ -5,10 +5,7 @@ import {
 } from '@ime/db';
 import { MIN_TOP_UP } from './billing-service';
 import { monthSpan } from './month-span';
-import {
-  RESERVE_TARGET_MONTHS,
-  SHARED_COST_CAP,
-} from './monthly-close-service';
+import { RESERVE_TARGET_MONTHS } from './monthly-close-service';
 
 /**
  * One closed month on the public costs page: what it cost, and who paid.
@@ -24,7 +21,7 @@ export interface PublicCostMonth {
   medianShare: number;
   /** Every seller's shares together, before card fees. */
   sellersPaid: number;
-  /** What IME's founder paid so no seller's shared part passed the cap. */
+  /** What was covered so shares stayed low while IME was small. */
   subsidy: number;
   /** Taken from the reserve to steady shares. */
   coveredFromReserve: number;
@@ -40,8 +37,6 @@ export interface PublicCosts {
   reserveTarget: number;
   /** Who asked to be thanked by name for gifts this month. */
   thanks: { month: string; names: string[] };
-  /** The most any seller pays for the shared bills in a month. */
-  sharedCostCap: number;
   /** The smallest top-up a seller can make. */
   minimumTopUp: number;
   /** The provider's current rates, which a seller's own usage is billed at. */
@@ -84,7 +79,6 @@ export class PublicCostsService {
         month: thisMonth.toISOString().slice(0, 10),
         names: await this.db.funding.listThanksNames(thisMonth, now),
       },
-      sharedCostCap: SHARED_COST_CAP,
       minimumTopUp: MIN_TOP_UP,
       rates: latest
         ? {

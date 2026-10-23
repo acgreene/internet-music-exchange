@@ -113,16 +113,7 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
               the provider's rate. The typical seller's whole share came to
               {{ month.medianShare | money: 'usd' }}.
             </p>
-            <ul class="grid gap-3 sm:grid-cols-3">
-              <li [class]="promise">
-                <span class="font-bold"
-                  >Never more than {{ data.sharedCostCap | money: 'usd' }} a
-                  month</span
-                >
-                <span class="text-sm text-ink-muted"
-                  >for the shared bills. IME's founder pays the rest.</span
-                >
-              </li>
+            <ul class="grid gap-3 sm:grid-cols-2">
               <li [class]="promise">
                 <span class="font-bold"
                   >One {{ data.minimumTopUp | money: 'usd' }} top-up</span
@@ -193,17 +184,6 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                       </dt>
                       <dd class="font-mono">
                         {{ month.sellersPaid | money: 'usd' }}
-                      </dd>
-                    </div>
-                    <div class="flex justify-between gap-4 py-3">
-                      <dt>
-                        <span class="block font-semibold">IME's founder</span>
-                        <span class="text-ink-muted"
-                          >Whatever would have put a share over the cap.</span
-                        >
-                      </dt>
-                      <dd class="font-mono">
-                        {{ month.subsidy | money: 'usd' }}
                       </dd>
                     </div>
                     @if (month.coveredFromReserve) {
@@ -369,7 +349,7 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                 class="overflow-x-auto rounded-card border border-line bg-surface"
               >
                 <table
-                  class="w-full min-w-[44rem] border-collapse text-left text-sm"
+                  class="w-full min-w-[38rem] border-collapse text-left text-sm"
                 >
                   <thead class="border-b border-line">
                     <tr>
@@ -385,9 +365,6 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                       </th>
                       <th scope="col" class="p-3 text-right font-semibold">
                         Typical share
-                      </th>
-                      <th scope="col" class="p-3 text-right font-semibold">
-                        Founder paid
                       </th>
                       <th scope="col" class="p-3 text-right font-semibold">
                         Given back
@@ -409,9 +386,6 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                         </td>
                         <td class="p-3 text-right">
                           {{ row.medianShare | money: 'usd' }}
-                        </td>
-                        <td class="p-3 text-right">
-                          {{ row.subsidy | money: 'usd' }}
                         </td>
                         <td class="p-3 text-right">
                           {{ row.creditedToSellers | money: 'usd' }}
@@ -464,10 +438,9 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
               >
             </li>
             <li class="flex flex-col gap-1">
-              <span class="font-bold">Cents now, less as IME grows</span>
+              <span class="font-bold">Cheaper as IME grows</span>
               <span class="text-ink-muted"
-                >Until there are enough sellers to keep shares at cents, IME's
-                founder pays the difference out of pocket. Each new seller makes
+                >The shared bills are split evenly, so each new seller makes
                 everyone's share smaller.</span
               >
             </li>
@@ -482,8 +455,7 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
               provider's actual rates, with nothing added.
             </li>
             <li>
-              <b>An even share</b> of the bills that belong to no one seller,
-              never more than {{ data.sharedCostCap | money: 'usd' }} a month.
+              <b>An even share</b> of the bills that belong to no one seller.
             </li>
             <li><b>Card fees</b> on your own top-ups.</li>
             <li>
