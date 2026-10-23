@@ -80,6 +80,12 @@ export const designs = pgTable(
     minimumPrice: integer('minimum_price').notNull().default(0),
     suggestedPrice: integer('suggested_price'),
 
+    /** Up to three ids from IME's list of design styles, most fitting first. */
+    styles: text('styles')
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+
     /** When the design first became available. Null while it is a draft. */
     publishedAt: timestamp('published_at', { withTimezone: true }),
 
@@ -110,6 +116,12 @@ export const designs = pgTable(
     ),
     // pricing rules match release_pricing
     check('designs_minimum_not_negative', sql`${table.minimumPrice} >= 0`),
+    check(
+      'designs_styles_at_most_three',
+      sql`cardinality(${table.styles}) <= 3`,
+    ),
+    // the gallery finds designs by any of their styles
+    index('designs_styles_idx').using('gin', table.styles),
     check(
       'designs_currency_required_when_paid',
       sql`${table.pricingMode} = 'free' OR ${table.currency} IS NOT NULL`,
