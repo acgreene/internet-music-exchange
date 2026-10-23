@@ -34,7 +34,7 @@ An artist is the selling identity on IME: the entity that publishes releases, se
 
 - An artist's page leads with their photo and name, over their header image when they uploaded one (there is no stand-in banner), with where they are based, their followers, and a follow button. Reporting the artist is offered quietly, in a menu.
 - Beside the music sits an About panel: the bio, where they are based, when they joined IME, and their links.
-- The music starts with their latest release, shown large with its price and, where it has previews, a play button. Below it the discography is grouped into albums, EPs, singles, and everything else, newest first, each release with its year and price.
+- Their discography is one list, newest release first, each with its kind, year, and price.
 - Their merch follows, showing when an item is running low or sold out.
 - Artist pages use IME's own layout; designs for them may come later.
 

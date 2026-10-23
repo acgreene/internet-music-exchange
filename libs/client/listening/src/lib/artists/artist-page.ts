@@ -12,16 +12,14 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
-import { PlayerService, SessionService, currentValue } from '@ime/client-data';
+import { SessionService, currentValue } from '@ime/client-data';
 import {
   ApiError,
   type DiscographyItem,
   HttpStatus,
   placeLabel,
-  type ReleaseKind,
 } from '@ime/models';
 import {
-  ButtonDirective,
   CoverComponent,
   ReleaseCardComponent,
   SpinnerComponent,
@@ -36,26 +34,14 @@ import {
   releasePriceLabel,
 } from '../releases/release-labels';
 
-/** How the discography is grouped, in the order the groups appear. */
-const GROUPS: { label: string; kinds: ReleaseKind[] }[] = [
-  { label: 'Albums', kinds: ['album', 'lp'] },
-  { label: 'EPs', kinds: ['ep'] },
-  { label: 'Singles', kinds: ['single'] },
-  {
-    label: 'More',
-    kinds: ['compilation', 'remaster', 'soundtrack', 'score', 'demo', 'other'],
-  },
-];
-
 /**
  * An artist's public profile, `/artists/<handle>`: who they are beside
- * their latest release, their discography by kind, and their merch.
+ * their discography, newest first, and their merch.
  */
 @Component({
   selector: 'ime-artist-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    ButtonDirective,
     CoverComponent,
     DatePipe,
     FollowButton,
@@ -171,118 +157,43 @@ const GROUPS: { label: string; kinds: ReleaseKind[] }[] = [
           <div
             class="flex min-w-0 flex-col gap-12 lg:col-start-1 lg:row-start-1"
           >
-            @if (latest(); as latest) {
-              <section
-                class="flex flex-col gap-3"
-                aria-labelledby="latest-heading"
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="discography-heading"
+            >
+              <h2
+                id="discography-heading"
+                class="text-2xl font-extrabold tracking-[-0.035em]"
               >
-                <h2
-                  id="latest-heading"
-                  class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+                Discography
+              </h2>
+              @if (discography.hasValue()) {
+                <ul
+                  class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4"
                 >
-                  Latest release
-                </h2>
-                <div
-                  class="grid gap-5 rounded-card border border-line bg-surface p-4 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-center"
-                >
-                  <a
-                    [routerLink]="[
-                      '/artists',
-                      profile.artist.handle,
-                      latest.slug,
-                    ]"
-                    tabindex="-1"
-                  >
-                    <ime-cover
-                      class="w-full border border-line"
-                      [src]="latest.coverUrl"
-                      [alt]="'Cover of ' + latest.title"
-                    />
-                  </a>
-                  <div class="flex min-w-0 flex-col gap-2">
-                    <p
-                      class="font-mono text-xs tracking-wider text-ink-muted uppercase"
-                    >
-                      {{ kindLabel(latest.kind) }}
-                      @if (releaseDate(latest); as date) {
-                        · {{ date | date: 'longDate' : 'UTC' }}
-                      }
-                    </p>
-                    <h3
-                      class="text-3xl leading-[0.95] font-black tracking-[-0.04em] text-balance md:text-4xl"
-                    >
-                      <a
-                        class="hover:underline"
-                        [routerLink]="[
+                  @for (release of releases(); track release.id) {
+                    <li>
+                      <ime-release-card
+                        [title]="release.title"
+                        [link]="[
                           '/artists',
                           profile.artist.handle,
-                          latest.slug,
+                          release.slug,
                         ]"
-                        >{{ latest.title }}</a
-                      >
-                    </h3>
-                    <p class="font-mono text-sm">
-                      {{ priceLabel(latest.pricing) }}
-                    </p>
-                    <div class="mt-1 flex flex-wrap items-center gap-2">
-                      @if (latestPlayable().length) {
-                        <button imeButton (click)="playLatest()">
-                          {{ latestPage()?.owned ? 'Play' : 'Play preview' }}
-                        </button>
-                      }
-                      <a
-                        imeButton
-                        variant="secondary"
-                        [routerLink]="[
-                          '/artists',
-                          profile.artist.handle,
-                          latest.slug,
-                        ]"
-                        >Go to release</a
-                      >
-                    </div>
-                  </div>
-                </div>
-              </section>
-            }
-
-            @if (discography.hasValue()) {
-              @for (group of groups(); track group.label) {
-                <section
-                  class="flex flex-col gap-4"
-                  [attr.aria-labelledby]="'group-' + group.label"
-                >
-                  <h2
-                    class="text-2xl font-extrabold tracking-[-0.035em]"
-                    [id]="'group-' + group.label"
-                  >
-                    {{ group.label }}
-                  </h2>
-                  <ul
-                    class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4"
-                  >
-                    @for (release of group.releases; track release.id) {
-                      <li>
-                        <ime-release-card
-                          [title]="release.title"
-                          [link]="[
-                            '/artists',
-                            profile.artist.handle,
-                            release.slug,
-                          ]"
-                          [coverUrl]="release.coverUrl"
-                          [subtitle]="subtitleFor(release)"
-                        />
-                      </li>
-                    }
-                  </ul>
-                </section>
-              } @empty {
-                <p class="text-sm text-ink-muted">Nothing released yet.</p>
+                        [coverUrl]="release.coverUrl"
+                        [subtitle]="subtitleFor(release)"
+                      />
+                    </li>
+                  } @empty {
+                    <li class="text-sm text-ink-muted">
+                      Nothing released yet.
+                    </li>
+                  }
+                </ul>
+              } @else if (discography.isLoading()) {
+                <ime-spinner />
               }
-            } @else if (discography.isLoading()) {
-              <ime-spinner />
-            }
+            </section>
 
             @if (store().length) {
               <section
@@ -326,15 +237,12 @@ export class ArtistPage {
   private readonly api = inject(ApiClient);
   private readonly session = inject(SessionService);
   private readonly meta = inject(PageMetaService);
-  private readonly player = inject(PlayerService);
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
 
   public readonly handle = input.required<string>();
 
   protected readonly place = placeLabel;
-  protected readonly kindLabel = releaseKindLabel;
-  protected readonly priceLabel = releasePriceLabel;
 
   protected readonly profile = resource({
     id: 'artist-profile',
@@ -361,42 +269,11 @@ export class ArtistPage {
   });
 
   /** Every release, newest first. */
-  private readonly releases = computed(() =>
+  protected readonly releases = computed(() =>
     [...(currentValue(this.discography) ?? [])].sort((a, b) =>
       (this.releaseDate(b) ?? '').localeCompare(this.releaseDate(a) ?? ''),
     ),
   );
-  protected readonly latest = computed(() => this.releases()[0] ?? null);
-  protected readonly groups = computed(() =>
-    GROUPS.map((group) => ({
-      label: group.label,
-      releases: this.releases().filter((release) =>
-        group.kinds.includes(release.kind),
-      ),
-    })).filter((group) => group.releases.length),
-  );
-
-  /** The latest release's tracks, to play from the top of the page. */
-  protected readonly latestPageResource = resource({
-    params: () => {
-      const latest = this.latest();
-      const userId = this.session.user()?.id;
-      return latest ? { slug: latest.slug, userId } : undefined;
-    },
-    loader: async ({ params }) =>
-      unwrap(await this.api.catalog.getReleasePage(this.handle(), params.slug)),
-  });
-  protected readonly latestPage = computed(() =>
-    currentValue(this.latestPageResource),
-  );
-  protected readonly latestPlayable = computed(() => {
-    const page = this.latestPage();
-    if (!page) return [];
-    return page.tracks.filter(
-      (track) => page.owned || (track.isPreview && page.onSale),
-    );
-  });
-
   protected readonly artistActions = computed<MenuAction[]>(() => [
     { label: 'Report', run: () => this.report() },
   ]);
@@ -451,30 +328,12 @@ export class ArtistPage {
 
   protected subtitleFor(release: DiscographyItem): string {
     return [
+      releaseKindLabel(release.kind),
       this.releaseDate(release)?.slice(0, 4),
       releasePriceLabel(release.pricing),
     ]
       .filter(Boolean)
       .join(' · ');
-  }
-
-  protected async playLatest(): Promise<void> {
-    const page = this.latestPage();
-    if (!page) return;
-    await this.player.play(
-      this.latestPlayable().map((track) => ({
-        releaseId: page.release.id,
-        trackId: track.trackId,
-        title: track.title,
-        durationMs: track.durationMs,
-        releaseTitle: page.release.title,
-        releaseSlug: page.release.slug,
-        artistName: page.artist.name,
-        artistHandle: page.artist.handle,
-        coverUrl: page.coverUrl,
-      })),
-      0,
-    );
   }
 
   private async report(): Promise<void> {
