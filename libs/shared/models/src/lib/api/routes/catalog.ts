@@ -243,6 +243,7 @@ export const searchArtistSchema = z.object({
   handle: z.string(),
   city: z.string().nullable(),
   country: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
   followers: z.number().int(),
   /** How many releases they have out. */
   releases: z.number().int(),
@@ -284,6 +285,7 @@ export const searchSuggestionsSchema = z.object({
       handle: z.string(),
       city: z.string().nullable(),
       country: z.string().nullable(),
+      avatarUrl: z.string().nullable(),
     }),
   ),
   releases: z.array(

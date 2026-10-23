@@ -1,10 +1,11 @@
 import {
   DatabaseRepository,
   type ProductType,
+  type SearchArtist,
   type ShelfProduct,
   type ShelfRelease,
 } from '@ime/db';
-import type { ShelfItem } from '@ime/models';
+import type { SearchArtist as SearchArtistCard, ShelfItem } from '@ime/models';
 import { CloudStorageService } from '../storage';
 
 const IMAGE_URL_EXPIRY_SECONDS = 3600;
@@ -92,6 +93,16 @@ export class CatalogCards {
             [cover.releaseId, await this.signedUrl(cover.objectKey)] as const,
         ),
       ),
+    );
+  }
+
+  /** Artists with their avatars, for those that have one. */
+  public async artists(rows: SearchArtist[]): Promise<SearchArtistCard[]> {
+    return Promise.all(
+      rows.map(async ({ avatarKey, ...artist }) => ({
+        ...artist,
+        avatarUrl: avatarKey ? await this.signedUrl(avatarKey) : null,
+      })),
     );
   }
 

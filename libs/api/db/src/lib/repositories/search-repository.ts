@@ -23,6 +23,7 @@ import {
 import type { Db } from '../database-service';
 import {
   artistFollowers,
+  artistImages,
   artists,
   entitlements,
   products,
@@ -91,11 +92,12 @@ export interface ReleaseEdition {
 
 /** An artist a search found, with how big a following and catalog they have. */
 export interface SearchArtist {
-  id: string;
   name: string;
   handle: string;
   city: string | null;
   country: string | null;
+  /** Where the artist's avatar is stored, when they have one. */
+  avatarKey: string | null;
   followers: number;
   releases: number;
 }
@@ -426,11 +428,11 @@ export class SearchRepository {
     );
     return this.db
       .select({
-        id: artists.id,
         name: artists.name,
         handle: artists.handle,
         city: artists.city,
         country: artists.country,
+        avatarKey: artistImages.objectKey,
         followers,
         releases: this.db.$count(
           releases,
@@ -441,6 +443,13 @@ export class SearchRepository {
         ),
       })
       .from(artists)
+      .leftJoin(
+        artistImages,
+        and(
+          eq(artistImages.artistId, artists.id),
+          eq(artistImages.kind, 'avatar'),
+        ),
+      )
       .where(
         and(
           ilike(artists.name, contains(text)),

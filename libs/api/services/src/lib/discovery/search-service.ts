@@ -98,7 +98,7 @@ export class SearchService {
         editions: cheapestByFormat(editions, card.release.id),
       })),
       total,
-      artists,
+      artists: await this.cards.artists(artists),
       merch: await this.cards.products(merch),
       facets: { genres, formats, prices, years, kinds, designed, places },
     };
@@ -124,14 +124,20 @@ export class SearchService {
       this.db.search.suggestReleases(typed, SUGGESTIONS.releases),
       this.db.search.suggestTags(typed, SUGGESTIONS.tags),
     ]);
-    const cards = await this.cards.releases(releases);
+    const [cards, artistCards] = await Promise.all([
+      this.cards.releases(releases),
+      this.cards.artists(artists),
+    ]);
     return {
-      artists: artists.map(({ name, handle, city, country }) => ({
-        name,
-        handle,
-        city,
-        country,
-      })),
+      artists: artistCards.map(
+        ({ name, handle, city, country, avatarUrl }) => ({
+          name,
+          handle,
+          city,
+          country,
+          avatarUrl,
+        }),
+      ),
       releases: cards.map(({ release }) => ({
         title: release.title,
         slug: release.slug,

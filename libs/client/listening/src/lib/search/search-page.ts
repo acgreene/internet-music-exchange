@@ -427,11 +427,19 @@ const OPTION =
                         class="flex items-center gap-3 rounded-card border border-line p-3 hover:bg-wash"
                         [routerLink]="['/artists', artist.handle]"
                       >
-                        <span
-                          class="flex size-14 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xl font-bold uppercase"
-                          aria-hidden="true"
-                          >{{ artist.name.charAt(0) }}</span
-                        >
+                        @if (artist.avatarUrl) {
+                          <ime-cover
+                            class="size-14 shrink-0 rounded-full"
+                            [src]="artist.avatarUrl"
+                            alt=""
+                          />
+                        } @else {
+                          <span
+                            class="flex size-14 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xl font-bold uppercase"
+                            aria-hidden="true"
+                            >{{ artist.name.charAt(0) }}</span
+                          >
+                        }
                         <span class="flex min-w-0 flex-col">
                           <span class="truncate font-bold">{{
                             artist.name

@@ -159,6 +159,29 @@ interface Group {
                     }}</span>
                   </span>
                 }
+                @case ('artist') {
+                  @if (option.coverUrl) {
+                    <ime-cover
+                      class="size-8 shrink-0 rounded-full"
+                      [src]="option.coverUrl"
+                      alt=""
+                    />
+                  } @else {
+                    <span
+                      class="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-muted text-xs font-bold uppercase"
+                      aria-hidden="true"
+                      >{{ option.label.charAt(0) }}</span
+                    >
+                  }
+                  <span class="min-w-0 truncate font-medium">{{
+                    option.label
+                  }}</span>
+                  @if (option.detail) {
+                    <span class="ml-auto shrink-0 text-xs text-ink-muted">{{
+                      option.detail
+                    }}</span>
+                  }
+                }
                 @default {
                   <span class="min-w-0 truncate font-medium">{{
                     option.label
@@ -265,6 +288,7 @@ export class SearchBox {
           kind: 'artist',
           label: artist.name,
           detail: placeLabel(artist.city, artist.country),
+          coverUrl: artist.avatarUrl,
           commands: ['/artists', artist.handle],
         })),
       });

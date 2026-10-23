@@ -62,7 +62,7 @@ A shelf scrolls sideways: swiped on a phone, and dragged or paged with arrow but
 - The results page shows a rail of filters with live counts (format, genre, price, release date, where the artist is based, and extras such as designed pages or included downloads), and a sort.
 - When a search contains words IME recognizes as filters, such as a format, a genre, a price, a year, or a place, it is shown as those filters ("We read that as: genre shoegaze, format vinyl, based in Glasgow"), each removable, with one click to search the plain words instead. Recognizing filters uses fixed rules and the catalog's own genres and places, never AI.
 - Results are headed with what was searched and grouped by kind: artists, crates, releases, and merch. A group shows only when something in it matches, and when nothing matches at all the page says so.
-- An artist result is a small card with where the artist is based, when they have said, and how many followers and releases they have.
+- An artist result is a small card with their photo, where the artist is based, when they have said, and how many followers and releases they have.
 - Results show every format a release is offered in and its price, so a listener can pick one from the results.
 
 ## Charts
