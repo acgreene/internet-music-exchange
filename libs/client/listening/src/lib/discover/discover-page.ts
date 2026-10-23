@@ -62,7 +62,7 @@ const PAGE_SIZE = 24;
 
       @if (designed().length) {
         <section
-          class="grid items-center gap-8 border-y border-line py-10 md:grid-cols-2"
+          class="grid items-center gap-8 border-y border-line py-12 md:grid-cols-2"
           aria-labelledby="designed-heading"
         >
           <div class="flex flex-col gap-3">
@@ -131,7 +131,7 @@ const PAGE_SIZE = 24;
 
       @if (topSellers().length) {
         <section
-          class="grid gap-8 border-b border-line pb-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center"
+          class="grid gap-8 border-y border-line py-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center"
           aria-labelledby="charts-heading"
         >
           <div class="flex flex-col gap-3">
@@ -201,7 +201,10 @@ const PAGE_SIZE = 24;
       }
 
       @if (crates().length) {
-        <section class="flex flex-col gap-6" aria-labelledby="crates-heading">
+        <section
+          class="flex flex-col gap-6 border-y border-line py-12"
+          aria-labelledby="crates-heading"
+        >
           <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
             <div class="flex max-w-2xl flex-col gap-3">
               <span
@@ -243,11 +246,11 @@ const PAGE_SIZE = 24;
 
       @if (digLink(); as dig) {
         <section
-          class="rounded-card bg-ink px-6 py-12 text-canvas md:px-10 md:py-14"
+          class="border-y border-line py-12"
           aria-labelledby="dig-heading"
         >
           <div
-            class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12"
+            class="flex flex-col gap-6 rounded-card bg-ink px-6 py-12 text-canvas md:flex-row md:items-end md:justify-between md:gap-12 md:px-10 md:py-14"
           >
             <div class="flex max-w-2xl flex-col gap-3">
               <span
