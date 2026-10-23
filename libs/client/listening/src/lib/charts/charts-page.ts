@@ -79,16 +79,6 @@ const SEGMENT =
             }
           </div>
         </div>
-        <p class="max-w-prose text-sm leading-relaxed md:text-base">
-          @if (kind() === 'selling') {
-            Ranked by how many people paid for each release, as a download or a
-            record, tape, or CD. Each buyer counts once.
-          } @else {
-            Ranked by how many people got each release's download, paid or free.
-            Each person counts once.
-          }
-          New charts every Monday.
-        </p>
       </header>
 
       <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -232,10 +222,9 @@ const SEGMENT =
             }
           </ol>
           <p class="text-xs text-ink-muted">
-            Movement is against last week's chart. Peak and weeks are a
-            release's run on the weekly chart{{
-              genre() ? ' for this genre' : ''
-            }}.
+            Each person counts once. New charts every Monday. Movement is
+            against last week's chart; peak and weeks are a release's run on the
+            weekly chart{{ genre() ? ' for this genre' : '' }}.
           </p>
         </section>
       } @else if (charts.error()) {
