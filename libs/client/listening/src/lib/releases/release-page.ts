@@ -219,23 +219,34 @@ const CRATES_SHOWN = 6;
               class="contents lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:gap-12"
             >
               <header class="order-2 flex flex-col gap-3">
-                <p
-                  class="font-mono text-xs tracking-wider text-ink-muted uppercase"
-                >
-                  {{ metaLine() }}
-                </p>
                 <h1
                   class="text-5xl leading-[0.9] font-black tracking-[-0.05em] text-balance md:text-7xl"
                 >
                   {{ page.release.title }}
                 </h1>
-                <p class="text-lg">
-                  by
-                  <a
-                    class="link font-semibold"
-                    [routerLink]="['/artists', page.artist.handle]"
-                    >{{ page.artist.name }}</a
+                <p
+                  class="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-lg"
+                >
+                  <span
+                    >by
+                    <a
+                      class="link font-semibold"
+                      [routerLink]="['/artists', page.artist.handle]"
+                      >{{ page.artist.name }}</a
+                    ></span
                   >
+                  @if (page.release.releasedAt) {
+                    <time
+                      class="text-base text-ink-muted"
+                      [attr.datetime]="page.release.releasedAt"
+                      >{{ releaseDate() }}</time
+                    >
+                  }
+                </p>
+                <p
+                  class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+                >
+                  {{ metaLine() }}
                 </p>
                 <div class="mt-1 flex flex-wrap items-center gap-2">
                   @if (playable().length) {
@@ -700,10 +711,6 @@ export class ReleasePage {
     return kind ? releaseKindLabel(kind) : '';
   });
 
-  protected readonly trackCount = computed(() => {
-    const count = currentValue(this.page)?.tracks.length ?? 0;
-    return `${count} ${count === 1 ? 'track' : 'tracks'}`;
-  });
   /** How long the whole release runs, once every track's length is known. */
   protected readonly runtime = computed(() => {
     const tracks = currentValue(this.page)?.tracks ?? [];
@@ -717,17 +724,17 @@ export class ReleasePage {
       : `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
   });
 
-  /** Kind, release date, tracks, and length, like the spine of a record. */
-  protected readonly metaLine = computed(() => {
-    const release = currentValue(this.page)?.release;
-    if (!release) return '';
-    const date = release.releasedAt
-      ? formatDate(release.releasedAt, 'longDate', 'en-US', 'UTC')
+  /** When it came out, as people say it: "March 19, 2026". */
+  protected readonly releaseDate = computed(() => {
+    const releasedAt = currentValue(this.page)?.release.releasedAt;
+    return releasedAt
+      ? formatDate(releasedAt, 'longDate', 'en-US', 'UTC')
       : null;
-    return [this.kindLabel(), date, this.trackCount(), this.runtime()]
-      .filter(Boolean)
-      .join(' // ');
   });
+  /** Kind and length, like the spine of a record. */
+  protected readonly metaLine = computed(() =>
+    [this.kindLabel(), this.runtime()].filter(Boolean).join(' // '),
+  );
 
   protected readonly releaseActions = computed<MenuAction[]>(() => [
     { label: 'Report', run: () => this.report() },
