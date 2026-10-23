@@ -1,0 +1,333 @@
+:root {
+  --paper: #f6f1e7;
+  --ink: #1d1a16;
+  --muted: #6f675b;
+  --rule: #1d1a1633;
+  --red: #b8321f;
+  --serif:
+    'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia,
+    serif;
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 19px/1.6 var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+.book {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 5vw, 64px) 12vh;
+}
+h2 {
+  font: 600 12px/1 var(--sans);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin: 0 0 36px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+h2::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+.mast {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 0 14px;
+  border-bottom: 3px double var(--ink);
+  font: 600 11px/1.3 var(--sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.page {
+  padding-block: clamp(56px, 12vh, 140px);
+  border-bottom: 1px solid var(--rule);
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 1s ease,
+    transform 1s ease;
+}
+.page.in {
+  opacity: 1;
+  transform: none;
+}
+.cover {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: clamp(24px, 4vw, 56px) clamp(28px, 5vw, 72px);
+  align-items: end;
+  opacity: 1;
+  transform: none;
+}
+.cover h1 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: clamp(52px, 12vw, 176px);
+  overflow-wrap: anywhere;
+  line-height: 0.88;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+figure {
+  margin: 0;
+}
+figcaption {
+  margin-top: 12px;
+  font: 13px/1.45 var(--sans);
+  color: var(--muted);
+}
+.byline {
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.1;
+  font-style: italic;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: start;
+  border-top: 2px solid var(--ink);
+  padding-top: 16px;
+}
+.byline small {
+  font: 600 11px/1.3 var(--sans);
+  font-style: normal;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cover img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  box-shadow:
+    0 1px 0 var(--rule),
+    0 30px 60px -40px #0007;
+}
+.contents ol {
+  list-style: none;
+  counter-reset: song;
+  margin: 0;
+  padding: 0;
+  max-width: 760px;
+  margin-left: auto;
+}
+.contents li {
+  counter-increment: song;
+}
+.contents button {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  text-align: left;
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.2;
+}
+.contents button::before {
+  content: counter(song, upper-roman) '.';
+  min-width: 2.6em;
+  font: 600 13px/1 var(--sans);
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.contents .t {
+  transition: color 0.2s;
+}
+.contents button:hover .t,
+.contents .is-playing .t {
+  color: var(--red);
+  font-style: italic;
+}
+.contents .is-playing::before {
+  content: '\25B6';
+  color: var(--red);
+}
+.leader {
+  flex: 1;
+  border-bottom: 1px dotted var(--muted);
+  transform: translateY(-6px);
+}
+.p {
+  font: 13px/1 var(--sans);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cols {
+  columns: 2 320px;
+  column-gap: 56px;
+  column-rule: 1px solid var(--rule);
+}
+.cols p {
+  margin: 0 0 1em;
+  hyphens: auto;
+  text-align: justify;
+}
+.cols > p:first-child::first-letter {
+  float: left;
+  font-size: 5.4em;
+  line-height: 0.82;
+  padding: 0.06em 0.1em 0 0;
+  color: var(--red);
+  font-style: italic;
+}
+blockquote {
+  break-inside: avoid;
+  margin: 0.4em 0 1.2em;
+  padding: 0.5em 0;
+  border-block: 2px solid var(--ink);
+  font-size: 1.7em;
+  line-height: 1.15;
+  font-style: italic;
+  text-align: left;
+}
+.plates {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 48px 32px;
+}
+.plate {
+  grid-column: span 3;
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s ease;
+}
+.plate.in {
+  opacity: 1;
+  transform: none;
+}
+.plate.p0 {
+  grid-column: 1 / -1;
+}
+.plate.p2 {
+  margin-top: 12vh;
+}
+.plate img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.plate.p0 img {
+  aspect-ratio: 21 / 9;
+}
+.plate.square img {
+  aspect-ratio: 1;
+  max-width: 560px;
+}
+.plate b {
+  color: var(--ink);
+}
+.poems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 64px 56px;
+}
+.poems h2 {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+.poem {
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.poem.in {
+  opacity: 1;
+}
+.poem h3 {
+  margin: 0 0 16px;
+  font-weight: 400;
+  font-size: 26px;
+  font-style: italic;
+}
+.poem h3 button:hover,
+.poem .is-playing {
+  color: var(--red);
+}
+.poem p {
+  margin: 0;
+  padding-left: 1.2em;
+  border-left: 2px solid var(--red);
+  font-size: 18px;
+  line-height: 1.75;
+}
+.colophon .grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 56px;
+}
+.credits {
+  margin: 0 0 24px;
+  font-size: 17px;
+  line-height: 1.75;
+}
+.set {
+  margin: 0;
+  font: 13px/1.5 var(--sans);
+  color: var(--muted);
+}
+.order h3 {
+  margin: 0 0 14px;
+  font: 600 12px/1 var(--sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.order button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  font-size: 18px;
+}
+.order button:first-of-type {
+  border-top: 2px solid var(--ink);
+}
+.order button:hover {
+  color: var(--red);
+  font-style: italic;
+}
+.order button span:last-child {
+  font: 600 14px/1.5 var(--sans);
+}
+@media (max-width: 760px) {
+  .cover,
+  .colophon .grid {
+    grid-template-columns: 1fr;
+  }
+  .plate,
+  .plate.p0 {
+    grid-column: 1 / -1;
+  }
+  .plate.p2 {
+    margin-top: 0;
+  }
+  .cols p {
+    text-align: left;
+  }
+  .mast span:nth-child(3) {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .plate,
+  .poem {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

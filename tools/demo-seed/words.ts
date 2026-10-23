@@ -583,6 +583,70 @@ const REPORT_NOTES = [
   null,
 ];
 
+/** Paragraphs for a release's notes, written the way artists write them. */
+const LINER_NOTES = [
+  'We made this record over one long winter, with the heat broken and the tape machine running every night. Most of it is first takes.',
+  'These songs started as voice memos on the walk home from work. It took two years and three apartments to finish them.',
+  'Everything here was tracked live in one room, facing each other, with the windows open. You can hear the street on the quiet parts.',
+  'This is the record we wanted to make the first time. Fewer songs, more room, and nothing we would skip.',
+  'Half of it was written on tour, in vans and green rooms and one very long ferry ride. The other half was written after, about coming home.',
+  'We kept every mistake that sounded like the truth. The click track got turned off on the second day and never came back.',
+  'Thank you to everyone who came to the shows while these songs were still figuring themselves out. You heard them first.',
+  'Mixed slowly, mostly at night, by people who should have been asleep. Play it start to finish if you can.',
+];
+
+/** Lines that read like song lyrics, a few to a verse. */
+const LYRIC_LINES = [
+  'turned the radio low so the static could sing',
+  'every station a coastline, every coastline a ring',
+  "we were weathervanes spinning in somebody's yard",
+  'pointing home for a minute, then pointing too far',
+  'I left the porch light on in case you changed your mind',
+  'the city hums a song it never learned the words to',
+  'count the bridges back to where we started',
+  'your coat still on the hook by the door',
+  'all the windows down and nowhere to be',
+  'we said forever like it was a place',
+  'the last train hums the same note every night',
+  'I kept your letters in a shoebox under the stairs',
+  'summer came in sideways through the screen door',
+  'hold the light a little longer',
+  'nobody tells you how quiet it gets',
+  'we were young enough to think the tide would wait',
+  'I sang it to the dashboard till the dawn came up',
+  'there is a song in the floorboards of this house',
+];
+
+/** What a band might call the photos they put with a record. */
+const PHOTO_TITLES = [
+  'The rehearsal room',
+  'Load-in, first night of the tour',
+  'Where most of it was recorded',
+  'The tape machine',
+  'Last show of the winter',
+  'Out back of the studio',
+  'Soundcheck',
+  'The van, somewhere in the middle',
+];
+
+const ROLES = [
+  'voice, guitar',
+  'bass, organ',
+  'drums, tape loops',
+  'keys, backing vocals',
+  'guitar, pedal steel',
+  'synths, drum machine',
+];
+
+const STUDIOS = [
+  'Low Ceiling',
+  'The Annex',
+  'Dovetail Sound',
+  'Room 9',
+  'Basement East',
+  'Kettle House',
+];
+
 export const words = {
   personName: (random: Random) =>
     `${random.pick(FIRST_NAMES)} ${random.pick(LAST_NAMES)}`,
@@ -648,6 +712,32 @@ export const words = {
   crateLine: (random: Random) => random.pick(CRATE_LINES),
 
   comment: (random: Random) => random.pick(COMMENTS),
+
+  /** A release's notes: one or two paragraphs. */
+  linerNotes: (random: Random) =>
+    random.sample(LINER_NOTES, random.int(1, 2)).join('\n\n'),
+
+  /** A song's words: two verses of four lines. */
+  lyrics: (random: Random) =>
+    [random.sample(LYRIC_LINES, 4), random.sample(LYRIC_LINES, 4)]
+      .map((verse) => verse.join('\n'))
+      .join('\n\n'),
+
+  photoTitle: (random: Random) => random.pick(PHOTO_TITLES),
+
+  /** Who played what, where it was made, and who made the art. */
+  credits(random: Random, artistName: string): string {
+    const players = random
+      .sample(ROLES, random.int(2, 4))
+      .map((role) => `${words.personName(random)}: ${role}`);
+    const studio = random.pick(STUDIOS);
+    return [
+      `Written and performed by ${artistName}`,
+      ...players,
+      `Recorded and mixed by ${words.personName(random)} at ${studio}`,
+      `Artwork by ${words.personName(random)}`,
+    ].join('\n');
+  },
   reportNote: (random: Random) => random.pick(REPORT_NOTES),
 
   address(random: Random, name: string) {

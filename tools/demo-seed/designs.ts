@@ -1,107 +1,238 @@
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { join } from 'node:path';
+import { buildSync } from 'esbuild';
 import type { DesignSlot } from '../../libs/api/db/src/lib/tables/design-versions';
 
+const require = createRequire(import.meta.url);
+const BUNDLES = join(import.meta.dirname, 'design-bundles');
+
+/** A library a design can carry inside its own file. */
+type Library = 'gsap' | 'three';
+
 /**
- * Release page designs for the marketplace. Each is one self-contained HTML
- * file that speaks the artist page protocol: it says it is ready, renders the
- * payload it is sent, reports its height, and asks the host to play or sell.
+ * A release page design for the marketplace. Its look and behavior live in
+ * `design-bundles/<slug>/` as `design.css` and `design.js`, which defines
+ * `render(r, c)` and may define `mount(r, c, ime)`. Each version is built
+ * into one self-contained HTML file with the shared runtime and any
+ * libraries it uses inlined, since a design reaches nothing but its bundle
+ * and the release it is sent.
  */
 export interface DemoDesignTemplate {
+  slug: string;
   name: string;
   description: string;
+  /** Ids from IME's list of design styles, most fitting first. */
+  styles: string[];
   slots: DesignSlot[];
-  /** The page's styles. */
-  css: string;
-  /** Builds the page's markup from the payload, in the browser. */
-  render: string;
+  libs?: Library[];
+  pricing:
+    | { mode: 'free' }
+    | { mode: 'fixed'; price: number }
+    | { mode: 'name_your_price'; minimum: number; suggested: number };
 }
 
-const PROTOCOL = `
-const send = (message) => parent.postMessage(message, '*');
-const esc = (text) => String(text ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const time = (ms) => ms ? Math.floor(ms / 60000) + ':' + String(Math.floor(ms / 1000) % 60).padStart(2, '0') : '';
-const price = (p) => p.mode === 'free' ? 'Free' : (p.mode === 'fixed' ? '' : 'Name your price, from ') + new Intl.NumberFormat('en', { style: 'currency', currency: p.currency || 'usd' }).format((p.minimumPrice || 0) / 100);
-window.addEventListener('message', (event) => {
-  if (event.data?.type !== 'artist-page:init') return;
-  const { release, customization } = event.data.payload;
-  document.body.innerHTML = render(release, customization || {});
-  document.querySelectorAll('[data-play]').forEach((el) => el.addEventListener('click', () => send({ type: 'artist-page:play', trackPosition: Number(el.dataset.play) })));
-  document.querySelectorAll('[data-buy]').forEach((el) => el.addEventListener('click', () => send({ type: 'artist-page:purchase' })));
-  const report = () => send({ type: 'artist-page:resize', height: document.documentElement.scrollHeight });
-  new ResizeObserver(report).observe(document.body);
-  document.querySelectorAll('img').forEach((img) => img.addEventListener('load', report));
-  report();
-});
-send({ type: 'artist-page:ready' });
-`;
+const read = (path: string) => readFileSync(path, 'utf8');
+
+const libraries = new Map<Library, string>();
+function library(name: Library): string {
+  const known = libraries.get(name);
+  if (known) return known;
+  const source =
+    name === 'gsap'
+      ? [
+          read(require.resolve('gsap/dist/gsap.min.js')),
+          read(require.resolve('gsap/dist/ScrollTrigger.min.js')),
+        ].join('\n')
+      : buildSync({
+          stdin: {
+            contents: "import * as THREE from 'three'; window.THREE = THREE;",
+            resolveDir: import.meta.dirname,
+          },
+          bundle: true,
+          minify: true,
+          format: 'iife',
+          write: false,
+        }).outputFiles[0].text;
+  libraries.set(name, source);
+  return source;
+}
+
+/** Keeps inlined code from closing the script element it sits in. */
+const inline = (code: string) => code.replace(/<\/script/gi, '<\\/script');
 
 export function bundleHtml(
   template: DemoDesignTemplate,
   version: number,
 ): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${template.name} v${version}</title><style>*{box-sizing:border-box}body{margin:0}${template.css}</style></head><body><script>const render = ${template.render};${PROTOCOL}</script></body></html>`;
+  const dir = join(BUNDLES, template.slug);
+  const css = read(join(dir, 'design.css'));
+  const js = read(join(dir, 'design.js'));
+  const libs = (template.libs ?? [])
+    .map((name) => `<script>${inline(library(name))}</script>`)
+    .join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${template.name} v${version}</title><style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}img{display:block;max-width:100%}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}${css}</style></head><body>${libs}<script>${inline(js)}\n${inline(read(join(BUNDLES, 'runtime.js')))}</script></body></html>`;
 }
 
 export const DESIGN_TEMPLATES: DemoDesignTemplate[] = [
   {
-    name: 'Liner Notes',
+    slug: 'gatefold',
+    name: 'Gatefold',
     description:
-      'A quiet, bookish page: the cover beside a long-form essay, with a numbered tracklist set like the back of a sleeve.',
+      'The record as an object. Scroll and the sleeve turns toward you, opens like a gatefold, and slides the disc out of its pocket, spinning while a track plays. Liner notes on the inside left, the tracklist on the right, the back cover after.',
+    styles: ['3d', 'motion', 'interactive'],
     slots: [
-      { name: 'essay', kind: 'text', label: 'Liner notes' },
-      { name: 'credits', kind: 'text', label: 'Credits' },
+      { name: 'accent', kind: 'text', label: 'Accent color' },
+      { name: 'quote', kind: 'text', label: 'A line for the inside sleeve' },
     ],
-    css: `body{font:17px/1.6 Georgia,serif;background:#f6f1e7;color:#2b2420;padding:48px}main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:48px;max-width:1000px;margin:auto}img{width:100%;box-shadow:0 20px 40px #0003}h1{font-size:44px;line-height:1;margin:0 0 4px}ol{padding-left:20px}li{padding:6px 0;border-bottom:1px solid #d8cdb8;cursor:pointer}li:hover{color:#9b2c2c}button{font:inherit;background:#2b2420;color:#f6f1e7;border:0;padding:10px 18px;cursor:pointer}.essay{white-space:pre-line;font-style:italic}small{color:#7a6d5f}@media(max-width:700px){main{grid-template-columns:1fr}}`,
-    render: `(r, c) => \`<main><div><img src="\${esc(r.coverUrl)}" alt=""><p class="essay">\${esc(c.essay || 'Recorded over a handful of weekends, mostly at night.')}</p><small>\${esc(c.credits || '')}</small></div><div><h1>\${esc(r.title)}</h1><p>by \${esc(r.artistName)}</p><ol>\${r.tracks.map((t) => \`<li data-play="\${t.position}">\${esc(t.title)} <small>\${time(t.durationMs)}</small></li>\`).join('')}</ol><p>\${price(r.price)}</p><button data-buy>Get the record</button></div></main>\``,
+    libs: ['gsap'],
+    pricing: { mode: 'fixed', price: 2400 },
   },
   {
-    name: 'Billboard',
+    slug: 'monolith',
+    name: 'Monolith',
     description:
-      'Huge type, loud color, the cover tilted on a poster. Built for singles and anything meant to be played loud.',
+      'A slow, glossy sculpture turning in the dark, breathing harder while the music plays. The cover floats beside it, and the record unfolds below as you scroll.',
+    styles: ['3d', 'generative', 'minimal'],
     slots: [
-      { name: 'headline', kind: 'text', label: 'Big headline' },
-      { name: 'color', kind: 'text', label: 'Accent color (CSS)' },
+      { name: 'accent', kind: 'text', label: 'Sculpture color' },
+      { name: 'statement', kind: 'text', label: 'One line about the record' },
     ],
-    css: `body{font:600 16px/1.4 Helvetica,Arial,sans-serif;background:#111;color:#fff;overflow-x:hidden}.hero{padding:40px;min-height:520px;position:relative}h1{font-size:clamp(56px,12vw,150px);line-height:.85;letter-spacing:-.06em;margin:0;text-transform:uppercase}img{position:absolute;right:40px;top:60px;width:min(40%,360px);transform:rotate(6deg);border:8px solid #fff}.tracks{padding:0 40px 40px;display:flex;flex-wrap:wrap;gap:8px}.tracks span{border:2px solid #fff;padding:8px 14px;cursor:pointer}.tracks span:hover{background:#fff;color:#111}button{font:inherit;font-size:20px;border:0;padding:16px 28px;margin:0 40px 40px;cursor:pointer}`,
-    render: `(r, c) => { const accent = /^[#a-z0-9(),. %]+$/i.test(c.color || '') ? c.color : '#ff3c00'; return \`<section class="hero" style="background:\${accent}"><h1>\${esc(c.headline || r.title)}</h1><p>\${esc(r.artistName)}</p><img src="\${esc(r.coverUrl)}" alt=""></section><div class="tracks">\${r.tracks.map((t) => \`<span data-play="\${t.position}">\${t.position}. \${esc(t.title)}</span>\`).join('')}</div><button data-buy style="background:\${accent};color:#fff">Buy, \${price(r.price)}</button>\`; }`,
+    libs: ['three'],
+    pricing: { mode: 'name_your_price', minimum: 1000, suggested: 1800 },
   },
   {
-    name: 'Blueprint',
+    slug: 'riot',
+    name: 'Riot',
     description:
-      'Technical drawing aesthetic: grid paper, measurement lines, and the tracklist as a parts list. A backdrop image slot sits behind the cover.',
+      'Gig poster energy. Black and white photos thrown across the page, giant outlined title banners sliding through them, and the tracklist as ticket stubs. Built for live bands.',
+    styles: ['collage', 'typographic', 'retro'],
     slots: [
-      { name: 'backdrop', kind: 'image', label: 'Backdrop image' },
-      { name: 'catalog', kind: 'text', label: 'Catalog number' },
+      { name: 'shout', kind: 'text', label: 'Banner word' },
+      { name: 'flyer', kind: 'image', label: 'A live photo' },
     ],
-    css: `body{font:14px/1.5 ui-monospace,Menlo,monospace;color:#e8f1ff;background:#123a7a;background-image:linear-gradient(#ffffff14 1px,transparent 1px),linear-gradient(90deg,#ffffff14 1px,transparent 1px);background-size:24px 24px;padding:40px}.sheet{max-width:960px;margin:auto;border:2px solid #e8f1ff;padding:28px;position:relative}.art{position:relative;aspect-ratio:16/7;overflow:hidden;border:1px dashed #e8f1ffaa}.art .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35}.art .cover{position:relative;height:90%;margin:2.5%;border:2px solid #e8f1ff}h1{font-size:30px;margin:20px 0 0;text-transform:uppercase}table{width:100%;border-collapse:collapse;margin-top:16px}td{border-top:1px solid #e8f1ff55;padding:8px 4px;cursor:pointer}tr:hover td{background:#ffffff14}button{font:inherit;color:#123a7a;background:#e8f1ff;border:0;padding:10px 16px;margin-top:20px;cursor:pointer}`,
-    render: `(r, c) => \`<div class="sheet"><div class="art">\${c.backdrop ? \`<img class="bg" src="\${esc(c.backdrop)}" alt="">\` : ''}<img class="cover" src="\${esc(r.coverUrl)}" alt=""></div><h1>\${esc(r.title)}</h1><p>\${esc(r.artistName)} // \${esc(c.catalog || 'CAT-001')}</p><table>\${r.tracks.map((t) => \`<tr data-play="\${t.position}"><td>\${String(t.position).padStart(2, '0')}</td><td>\${esc(t.title)}</td><td style="text-align:right">\${time(t.durationMs)}</td></tr>\`).join('')}</table><button data-buy>[ \${price(r.price)} ]</button></div>\``,
+    libs: ['gsap'],
+    pricing: { mode: 'fixed', price: 1800 },
   },
   {
-    name: 'Soft Focus',
+    slug: 'booklet',
+    name: 'Booklet',
     description:
-      'Blurred cover as an ambient backdrop with frosted glass panels. Gentle and minimal, made for ambient and dream pop.',
-    slots: [{ name: 'tagline', kind: 'text', label: 'Tagline' }],
-    css: `body{font:16px/1.5 -apple-system,Helvetica,sans-serif;color:#fff;min-height:100vh;position:relative;padding:48px}.blur{position:fixed;inset:-40px;background-size:cover;background-position:center;filter:blur(40px) brightness(.7);z-index:-1}.panel{max-width:720px;margin:auto;background:#ffffff22;backdrop-filter:blur(14px);border:1px solid #ffffff44;border-radius:24px;padding:32px;display:grid;grid-template-columns:200px 1fr;gap:28px}img{width:100%;border-radius:12px}h1{font-weight:300;font-size:38px;margin:0}ul{list-style:none;padding:0}li{padding:8px 12px;border-radius:10px;cursor:pointer}li:hover{background:#ffffff22}button{font:inherit;color:#111;background:#fff;border:0;border-radius:999px;padding:10px 20px;cursor:pointer}@media(max-width:640px){.panel{grid-template-columns:1fr}}`,
-    render: `(r, c) => \`<div class="blur" style="background-image:url('\${esc(r.coverUrl)}')"></div><div class="panel"><img src="\${esc(r.coverUrl)}" alt=""><div><h1>\${esc(r.title)}</h1><p>\${esc(c.tagline || r.artistName)}</p><ul>\${r.tracks.map((t) => \`<li data-play="\${t.position}">\${esc(t.title)}</li>\`).join('')}</ul><button data-buy>\${price(r.price)}</button></div></div>\``,
+      'The liner notes booklet, as a magazine. A long essay with a drop cap, photos with captions, lyrics set like poems, a table of contents that plays, and credits as the colophon.',
+    styles: ['editorial', 'typographic', 'minimal'],
+    slots: [
+      { name: 'pullquote', kind: 'text', label: 'Pull quote' },
+      { name: 'issue', kind: 'text', label: 'Issue line' },
+    ],
+    pricing: { mode: 'free' },
+  },
+  {
+    slug: 'signal',
+    name: 'Signal',
+    description:
+      'A living field of lines drawn by a shader, drifting like a slow oscilloscope and quickening while a track plays. The cover turns at its center like a record on a platter.',
+    styles: ['generative', 'motion', 'minimal'],
+    slots: [
+      { name: 'color1', kind: 'text', label: 'First color' },
+      { name: 'color2', kind: 'text', label: 'Second color' },
+    ],
+    pricing: { mode: 'name_your_price', minimum: 500, suggested: 1200 },
+  },
+  {
+    slug: 'night-drive',
+    name: 'Night Drive',
+    description:
+      'Neon over a full-bleed photo, layers sliding past at different speeds, film grain, and a strip of photos that scrolls sideways like streetlights. The tracklist is the car radio.',
+    styles: ['photographic', 'motion', 'retro'],
+    slots: [
+      { name: 'neon', kind: 'text', label: 'Neon color' },
+      { name: 'backdrop', kind: 'image', label: 'Night photo' },
+    ],
+    libs: ['gsap'],
+    pricing: { mode: 'fixed', price: 2000 },
+  },
+  {
+    slug: 'concrete',
+    name: 'Concrete',
+    description:
+      'Raw and loud. Thick rules, a brutal grid, monospace everything, a halftone cover cropped hard, and the cover chasing your cursor down the tracklist.',
+    styles: ['brutalist', 'typographic', 'interactive'],
+    slots: [
+      { name: 'acid', kind: 'text', label: 'Acid color' },
+      { name: 'manifesto', kind: 'text', label: 'Manifesto' },
+    ],
+    pricing: { mode: 'free' },
+  },
+  {
+    slug: 'scrapbook',
+    name: 'Scrapbook',
+    description:
+      'Everything that came with the record, taped to kraft paper: polaroids, the back cover, a ticket, a notebook page of songs. Pick anything up and move it around.',
+    styles: ['collage', 'interactive', 'illustrated'],
+    slots: [
+      { name: 'note', kind: 'text', label: 'A handwritten note' },
+      { name: 'snapshot', kind: 'image', label: 'A snapshot' },
+    ],
+    pricing: { mode: 'name_your_price', minimum: 0, suggested: 800 },
+  },
+  {
+    slug: 'grid',
+    name: 'Grid',
+    description:
+      'Swiss poster discipline. Huge numerals, a strict grid, one red, and every track its own full screen with its lyrics, snapping into place as you scroll.',
+    styles: ['typographic', 'minimal', 'editorial'],
+    slots: [{ name: 'red', kind: 'text', label: 'Accent color' }],
+    pricing: { mode: 'fixed', price: 1200 },
+  },
+  {
+    slug: 'orbit',
+    name: 'Orbit',
+    description:
+      'Indigo on black. Mixed-weight statement type, photos hung at angles in 3D that swing as you scroll, a numbered tracklist, a wireframe globe turning over where the artist is based.',
+    styles: ['3d', 'motion', 'typographic'],
+    slots: [
+      { name: 'indigo', kind: 'text', label: 'Signature color' },
+      { name: 'statement', kind: 'text', label: 'Statement' },
+    ],
+    libs: ['three'],
+    pricing: { mode: 'name_your_price', minimum: 800, suggested: 1500 },
   },
 ];
 
-/** Slot text an artist might fill a design with. */
+/** Sample words for each text slot, picked for the demo's releases. */
 export const SLOT_TEXT: Record<string, string[]> = {
-  essay: [
-    'We made this record in the winter, in a cabin with no heat and one good microphone. Every song was a single take, mistakes and all.',
-    'These songs were written on night shifts and recorded on days off. It took three years. It was worth it.',
+  accent: ['#ff5a1f', '#e63946', '#2a9d8f', '#f4a259', '#7678ed'],
+  quote: [
+    'Play it loud, then play it again.',
+    'For everyone who stayed until the lights came up.',
+    'Made in one room, over one winter.',
+  ],
+  statement: [
     'A record about leaving home and finding out you brought it with you.',
+    'Songs written on night shifts and recorded on days off.',
+    'Everything we had, pressed into forty minutes.',
   ],
-  credits: [
-    'Recorded and mixed at home. Mastered by a friend. Cover photo by our drummer.',
-    'All songs written and performed by the band. Strings on track 4 by the neighbors.',
+  shout: ['LOUD', 'LIVE', 'RIOT', 'ENCORE'],
+  pullquote: [
+    'We kept every mistake that sounded like the truth.',
+    'It took three years. It was worth it.',
+    'Half of it was recorded with the window open.',
   ],
-  headline: ['OUT NOW', 'LOUDER', 'NEW SINGLE', 'TURN IT UP'],
-  color: ['#ff3c00', '#1d4ed8', '#e63946', '#06d6a0', '#7678ed'],
-  catalog: ['IME-001', 'HM-07', 'CS-112', 'LP-2026-04'],
-  tagline: [
-    'music for slow mornings',
-    'headphones recommended',
-    'for the drive home',
+  issue: ['No. 1', 'Spring issue', 'Vol. 2'],
+  color1: ['#00e5ff', '#ff4d8d', '#c6ff00', '#ffb000'],
+  color2: ['#6a00ff', '#0047ff', '#ff3d00', '#00c853'],
+  neon: ['#ff2bd6', '#00f0ff', '#ffe600', '#7cff00'],
+  acid: ['#d4ff00', '#00ff85', '#ff3b00', '#00e0ff'],
+  manifesto: [
+    'NO FILLER. NO ALGORITHM. NO APOLOGIES.',
+    'MADE BY HAND. PLAYED TOO LOUD.',
+    'EVERY SONG IS A FIRST TAKE.',
   ],
+  note: [
+    'thank you for listening. really.',
+    'track 3 is the one. trust me.',
+    'recorded in the kitchen, mostly at 2am',
+  ],
+  red: ['#e10600', '#ff3b30', '#0047ab'],
+  indigo: ['#6366f1', '#8b5cf6', '#22d3ee'],
 };

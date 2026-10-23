@@ -731,66 +731,55 @@ export function buildWorld(options: WorldOptions) {
   }
 
   // --------------------------------------------------------------- designs
-  const designerUsers = [...designers, ...sellers.slice(0, 3)];
+  // its own sequence, so reworking the designs leaves the rest of the world be
+  const dressing = new Random(8118);
   interface DemoDesign {
     id: string;
-    published: boolean;
     paid: boolean;
     price: number;
     versionIds: string[];
     template: (typeof DESIGN_TEMPLATES)[number];
   }
   const demoDesigns: DemoDesign[] = [];
-  const suffixes = ['', ' Noir', ' Deluxe', ' Mini', ' 2', ' Bright'];
-  for (let d = 0; d < 16; d++) {
-    const template = DESIGN_TEMPLATES[d % DESIGN_TEMPLATES.length];
-    const designer = designerUsers[d % designerUsers.length];
-    const createdAt = random.dateBetween(designer.createdAt, now);
-    const status = random.weighted([
-      ['published', 85],
-      ['draft', 10],
-      ['archived', 5],
-    ] as const);
-    const mode = random.weighted([
-      ['free', 40],
-      ['fixed', 30],
-      ['name_your_price', 30],
-    ] as const);
+  DESIGN_TEMPLATES.forEach((template, d) => {
+    // seven designers share the ten, so a few have more than one
+    const designer = designers[d % 7];
+    const createdAt = dressing.dateBetween(designer.createdAt, now);
+    const publishedAt = later(createdAt, 10, dressing, now);
+    const { pricing } = template;
     const minimum =
-      mode === 'free'
-        ? 0
-        : mode === 'fixed'
-          ? random.int(5, 25) * 100
-          : random.int(0, 5) * 100;
+      pricing.mode === 'fixed'
+        ? pricing.price
+        : pricing.mode === 'name_your_price'
+          ? pricing.minimum
+          : 0;
     const design: DemoDesign = {
       id: next('design'),
-      published: status === 'published',
-      paid: mode !== 'free',
-      price: mode === 'fixed' ? minimum : Math.max(minimum, 1000),
+      paid: pricing.mode !== 'free',
+      price: pricing.mode === 'name_your_price' ? pricing.suggested : minimum,
       versionIds: [],
       template,
     };
     demoDesigns.push(design);
-    const publishedAt =
-      status === 'draft' ? null : later(createdAt, 10, random, now);
     rows.designs.push({
       id: design.id,
       designerUserId: designer.id,
-      name: `${template.name}${suffixes[Math.floor(d / DESIGN_TEMPLATES.length)] ?? ''}`,
+      name: template.name,
       description: template.description,
       surface: 'release',
-      status,
-      visibility: random.chance(0.1) ? 'private' : 'public',
-      pricingMode: mode,
-      currency: mode === 'free' ? null : 'usd',
+      status: 'published',
+      visibility: 'public',
+      styles: template.styles,
+      pricingMode: pricing.mode,
+      currency: pricing.mode === 'free' ? null : 'usd',
       minimumPrice: minimum,
       suggestedPrice:
-        mode === 'name_your_price' ? Math.max(minimum, 1000) : null,
+        pricing.mode === 'name_your_price' ? pricing.suggested : null,
       publishedAt,
       createdAt,
-      updatedAt: publishedAt ?? createdAt,
+      updatedAt: publishedAt,
     });
-    const versions = random.int(1, 3);
+    const versions = dressing.int(1, 2);
     for (let version = 1; version <= versions; version++) {
       const versionId = next('designVersion');
       design.versionIds.push(versionId);
@@ -805,7 +794,7 @@ export function buildWorld(options: WorldOptions) {
         objectKey: key,
         byteSize: bytes(html),
         slots: template.slots,
-        createdAt: later(createdAt, 60 * version, random, now),
+        createdAt: later(createdAt, 60 * version, dressing, now),
       });
     }
     if (
@@ -826,17 +815,57 @@ export function buildWorld(options: WorldOptions) {
         updatedAt: createdAt,
       });
     }
-  }
+  });
+
+  /**
+   * A designed release has the things a design shows off: notes, credits,
+   * words for some songs, a back cover, and a few photos.
+   */
+  const furnish = (release: DemoRelease) => {
+    const row = rows.releases.find((r) => r.id === release.id);
+    if (!row) return;
+    row.description = words.linerNotes(dressing);
+    row.credits = words.credits(dressing, release.artist.name);
+    for (const trackId of release.trackIds) {
+      const track = rows.tracks.find((t) => t.id === trackId);
+      if (track && dressing.chance(0.5)) track.lyrics = words.lyrics(dressing);
+    }
+    const assets = rows.releaseAssets.filter((a) => a.releaseId === release.id);
+    let position = Math.max(...assets.map((a) => a.position ?? 0)) + 1;
+    const add = (kind: 'back_cover' | 'photo', title: string, body: string) => {
+      const id = next('asset');
+      const key = `${DEMO_PREFIX}releases/${release.id}/${kind}-${id.slice(-6)}.svg`;
+      rows.releaseAssets.push({
+        id,
+        releaseId: release.id,
+        kind,
+        title,
+        bucket,
+        objectKey: key,
+        mimeType: 'image/svg+xml',
+        byteSize: svgFile(key, body),
+        requiresPurchase: false,
+        position: position++,
+        createdAt: release.publishedAt ?? now,
+      });
+    };
+    if (!assets.some((a) => a.kind === 'back_cover')) {
+      add('back_cover', 'Back cover', coverArt(dressing, '', ''));
+    }
+    const photos = assets.filter((a) => a.kind === 'photo').length;
+    for (let i = photos; i < 3; i++) {
+      add('photo', words.photoTitle(dressing), headerArt(dressing));
+    }
+  };
 
   // artists license designs and dress some releases in them
-  const licensable = demoDesigns.filter((design) => design.published);
   let licensePayment = 0;
-  for (const artist of random.sample(
+  for (const artist of dressing.sample(
     artists.filter((a) => a.releases.length),
     45,
   )) {
-    for (const design of random.sample(licensable, random.int(1, 2))) {
-      const grant = random.chance(0.1);
+    for (const design of dressing.sample(demoDesigns, dressing.int(1, 2))) {
+      const grant = dressing.chance(0.1);
       const paid = design.paid && !grant;
       rows.designLicenses.push({
         designId: design.id,
@@ -848,18 +877,20 @@ export function buildWorld(options: WorldOptions) {
         stripePaymentIntentId: paid
           ? `pi_demo_license_${licensePayment++}`
           : null,
-        createdAt: random.dateBetween(artist.joinedAt, now),
+        createdAt: dressing.dateBetween(artist.joinedAt, now),
       });
       const release = artist.releases.find(
         (r) =>
           r.status === 'published' &&
           !rows.releaseDesigns.some((d) => d.releaseId === r.id),
       );
-      if (!release || !random.chance(0.75)) continue;
+      if (!release || !dressing.chance(0.75)) continue;
       const customization: Record<string, string> = {};
       for (const slot of design.template.slots) {
         if (slot.kind === 'text') {
-          customization[slot.name] = random.pick(SLOT_TEXT[slot.name] ?? ['']);
+          customization[slot.name] = dressing.pick(
+            SLOT_TEXT[slot.name] ?? [''],
+          );
         } else {
           const imageId = next('designImage');
           const key = `${DEMO_PREFIX}release-designs/${release.id}/${imageId}.svg`;
@@ -869,18 +900,17 @@ export function buildWorld(options: WorldOptions) {
             bucket,
             objectKey: key,
             mimeType: 'image/svg+xml',
-            byteSize: svgFile(key, slotArt(random)),
+            byteSize: svgFile(key, slotArt(dressing)),
           });
           customization[slot.name] = imageId;
         }
       }
       rows.releaseDesigns.push({
         releaseId: release.id,
-        designVersionId: random.chance(0.8)
-          ? design.versionIds[design.versionIds.length - 1]
-          : design.versionIds[0],
+        designVersionId: design.versionIds[design.versionIds.length - 1],
         customization,
       });
+      furnish(release);
     }
   }
 
@@ -1347,7 +1377,7 @@ export function buildWorld(options: WorldOptions) {
   const openMonth = monthStart(now, 0);
   const sellerIds = new Set([
     ...sellers.map((s) => s.id),
-    ...designerUsers.map((d) => d.id),
+    ...designers.map((d) => d.id),
   ]);
   const lapsed = new Set(random.sample(sellers, 3).map((s) => s.id));
   const balance = new Map<string, number>();
@@ -1678,9 +1708,7 @@ export function buildWorld(options: WorldOptions) {
     );
   if (publishedProducts.length)
     report('product', random.pick(publishedProducts).id, 'copyright');
-  const reportedDesign = demoDesigns.find((d) => d.published);
-  if (reportedDesign)
-    report('design', reportedDesign.id, 'harmful_design_code');
+  report('design', demoDesigns[0].id, 'harmful_design_code');
   const claimed = random.pick(byPopularity.slice(30, 120));
   rows.reports.push({
     id: next('report'),

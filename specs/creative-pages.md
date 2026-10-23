@@ -21,13 +21,17 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 - Getting a design gives the artist a **license**: permanent use of that design, including every future version, on any of that artist's releases.
 - Applying a design to a release stores the chosen version and the artist's slot values (their **customization**). A release with no design falls back to the default layout.
 - Designs are third-party code. They are rendered in a sandboxed, isolated context and receive only the release's data and the artist's customization, never the platform's internal data.
+- A designed release is a page of its own, like opening a record: front and back cover, the inside of the gatefold, liner notes, photos, lyrics. The design gets the whole window. IME keeps only a slim bar with the release, its artist, a way back to the plain page, adding to a crate, buying, and reporting.
+- A design is sent the release's public content: title, kind, release date, description, credits, genres and tags, the artist's name, handle, place, picture, and header, the tracklist with durations, lyrics, which tracks preview and where each side starts, the public extras (back cover, photos, documents), the physical editions with price and stock, and the price.
+- A design can ask IME to play, pause, or buy, and IME tells the design what is playing, so a design can move with the music.
+- A design has up to three **styles** from IME's fixed list: typographic, editorial, photographic, illustrated, collage, minimal, brutalist, retro, 3D, motion, interactive, and generative.
 
 ## Web app designer surface
 
-- A user can create a design, giving it a name, a description, and the surface it is built for, and upload its first version.
+- A user can create a design, giving it a name, a description, up to three styles, and the surface it is built for, and upload its first version.
 - A design starts as a **draft**, visible only to its creator, and is **published** to make it available.
 - A designer can publish a new version by uploading a revised bundle. Earlier versions keep working for the releases that use them.
-- A designer can update a design's name, description, and price.
+- A designer can update a design's name, description, styles, and price.
 - A designer can make a design private and grant it to specific artists, for example after a commission arranged and paid outside IME.
 - To sell paid designs, a designer connects a payment account the same way an artist does (see [Getting Paid](./getting-paid.md)). Designers are paid directly and IME takes no cut.
 - A designer pays their share of hosting costs at cost, like any seller (see [Funding](./funding.md)).
@@ -46,10 +50,13 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 
 ## Design gallery
 
-- Public designs are on show to everyone, signed in or not, in a gallery that explains what designed releases are.
+- The gallery is the marketplace for how a record looks. Public designs are on show to everyone, signed in or not, under a short explanation of what designed releases are.
+- Visitors search designs and designers by name, narrow designs by style, by price (free or under $10), and by whether the designer takes custom requests, and sort them by most used, newest, or rarely used.
+- Designers are sellers in their own right. The gallery shows designers who take requests, or the designers matching a search, and each designer's profile shows their designs.
+- The plain release page keeps everything a design may leave out, like supporters, notes, and the full credits, and a designed release links to it.
 - Each design can be tried with placeholder content: a stand-in cover, title, tracklist, and music, on a desktop or phone frame and for an album, EP, or single, so anyone can see what a release would look like in it. A visitor can try their own cover image in the preview; it stays on their device.
 - From a design, a visitor can hear it on real releases that use it, start selling on IME to use it, or ask its designer for a custom design.
-- Designers can say whether they are open to commissions. Asking for a custom design sends the designer the request; the commission itself is arranged between them and delivered as a private design.
+- Designers can say whether they are open to commissions. Asking for a custom design emails the designer the request; the commission itself is arranged between them and delivered as a private design.
 
 ## Mobile app
 
@@ -70,7 +77,9 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 ## Out of scope / future
 
 - Designs for artist home pages, music pages, and merch pages.
-- Marketplace categories, ranking, and featured designs.
-- Commissions paid through IME.
+- Featured designs and editorial picks in the gallery.
+- Commissions paid through IME, and messaging designers inside IME instead of by email.
+- A designer studio with guides and documentation for building designs.
+- Serving release images to designs with cross-origin headers, so designs can use them as WebGL textures.
 - Designs that span multiple releases or a full artist storefront.
 - A live design preview or editor inside IME.
