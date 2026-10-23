@@ -289,7 +289,7 @@ type Working =
                     reasonLabel(report.reason)
                   }}</span>
                   <span class="text-ink-muted">
-                    {{ report.createdAt | date: 'medium' }} ·
+                    {{ report.createdAt | date: 'medium' }},
                     <span [class.font-semibold]="report.status === 'open'">{{
                       report.status
                     }}</span>
@@ -332,7 +332,7 @@ type Working =
                     }
                   </span>
                   <span class="text-ink-muted">
-                    {{ action.createdAt | date: 'medium' }} ·
+                    {{ action.createdAt | date: 'medium' }},
                     {{ action.adminUserId ? 'an admin' : 'IME' }}
                   </span>
                 </div>

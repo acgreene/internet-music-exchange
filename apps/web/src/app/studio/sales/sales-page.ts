@@ -89,9 +89,11 @@ const PAGE_SIZE = 50;
                       sale.buyerName || 'A buyer'
                     }}</span>
                     <span class="text-sm text-ink-muted">
-                      Paid {{ sale.createdAt | date: 'mediumDate' }}
+                      <span
+                        >Paid {{ sale.createdAt | date: 'mediumDate' }}</span
+                      >
                       @if (sale.shippingAddress; as address) {
-                        · {{ address.city }}, {{ address.country }}
+                        <span>, {{ address.city }}, {{ address.country }}</span>
                       }
                     </span>
                   </span>
@@ -122,10 +124,12 @@ const PAGE_SIZE = 50;
                     sale.buyerName || 'A buyer'
                   }}</span>
                   <span class="text-sm text-ink-muted">
-                    {{ sale.createdAt | date: 'mediumDate' }} ·
-                    {{ statusLabel(sale.status) }}
+                    <span
+                      >{{ sale.createdAt | date: 'mediumDate' }},
+                      {{ statusLabel(sale.status) }}</span
+                    >
                     @if (sale.fulfillmentStatus; as shipping) {
-                      · {{ shipLabel(shipping) }}
+                      <span>, {{ shipLabel(shipping) }}</span>
                     }
                   </span>
                 </span>

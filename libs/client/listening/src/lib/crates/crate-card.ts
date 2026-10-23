@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { CrateCard as Crate } from '@ime/models';
 import { CrateMosaic } from './crate-mosaic';
@@ -18,16 +23,7 @@ import { CrateMosaic } from './crate-mosaic';
         <span class="truncate font-bold group-hover:underline">{{
           crate().name
         }}</span>
-        <span class="truncate text-sm text-ink-muted">
-          @if (byLine() && crate().makerUsername) {
-            &#64;{{ crate().makerUsername }} ·
-          }
-          {{ crate().itemCount }}
-          {{ crate().itemCount === 1 ? 'record' : 'records' }}
-          @if (crate().visibility === 'private') {
-            · private
-          }
-        </span>
+        <span class="truncate text-sm text-ink-muted">{{ details() }}</span>
       </span>
     </a>
   `,
@@ -36,4 +32,17 @@ export class CrateCard {
   public readonly crate = input.required<Crate>();
   /** Show who made it, as lists of other people's crates do. */
   public readonly byLine = input(true);
+
+  /** Who made it, how many records, and whether it is private. */
+  protected readonly details = computed(() => {
+    const crate = this.crate();
+    const count = `${crate.itemCount} ${crate.itemCount === 1 ? 'record' : 'records'}`;
+    return [
+      this.byLine() && crate.makerUsername ? `@${crate.makerUsername}` : null,
+      count,
+      crate.visibility === 'private' ? 'private' : null,
+    ]
+      .filter(Boolean)
+      .join(', ');
+  });
 }

@@ -101,7 +101,7 @@ import { RELEASE_KINDS, STATUS_LABELS } from './release-options';
                 <span class="flex min-w-0 flex-col">
                   <span class="truncate font-medium">{{ release.title }}</span>
                   <span class="text-sm text-ink-muted">
-                    {{ kindLabel(release.kind) }} · created
+                    {{ kindLabel(release.kind) }}, created
                     {{ release.createdAt | date: 'mediumDate' }}
                   </span>
                 </span>

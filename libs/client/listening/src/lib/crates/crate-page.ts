@@ -118,16 +118,7 @@ import { CrateMosaic } from './crate-mosaic';
                 <span
                   class="font-mono text-xs tracking-wider text-ink-muted uppercase"
                 >
-                  {{
-                    page.crate.visibility === 'public'
-                      ? 'Crate'
-                      : 'Private crate'
-                  }}
-                  · {{ page.crate.itemCount }}
-                  {{ page.crate.itemCount === 1 ? 'record' : 'records' }}
-                  @for (genre of page.genres; track genre) {
-                    · {{ genreName(genre) }}
-                  }
+                  {{ labelLine() }}
                 </span>
                 <h1
                   class="text-4xl leading-[0.95] font-black tracking-[-0.05em] text-balance md:text-6xl"
@@ -151,12 +142,7 @@ import { CrateMosaic } from './crate-mosaic';
                 } @else {
                   someone on IME
                 }
-                <span class="text-ink-muted"
-                  >· {{ makerRole() }}
-                  @if (page.crate.visibility === 'public') {
-                    · {{ saves() }} {{ saves() === 1 ? 'save' : 'saves' }}
-                  }
-                </span>
+                <span class="text-ink-muted">, {{ bylineRest() }}</span>
               </p>
               <div class="flex flex-wrap items-center gap-2">
                 @if (page.items.length) {
@@ -323,6 +309,32 @@ export class CratePage {
   protected readonly related = computed(() =>
     currentValue(this.relatedResource),
   );
+
+  /** What it is, how many records, and its genres, along the top. */
+  protected readonly labelLine = computed(() => {
+    const page = this.page();
+    if (!page) return '';
+    const count = page.crate.itemCount;
+    return [
+      page.crate.visibility === 'public' ? 'Crate' : 'Private crate',
+      `${count} ${count === 1 ? 'record' : 'records'}`,
+      ...page.genres.map((genre) => genreName(genre)),
+    ].join(' / ');
+  });
+  /** After the maker's name: who they are, and how many saved it. */
+  protected readonly bylineRest = computed(() => {
+    const page = this.page();
+    if (!page) return '';
+    const saves = this.saves();
+    return [
+      this.makerRole(),
+      page.crate.visibility === 'public'
+        ? `${saves} ${saves === 1 ? 'save' : 'saves'}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(', ');
+  });
 
   protected readonly crateActions = computed<MenuAction[]>(() => [
     { label: 'Report', run: () => this.report() },

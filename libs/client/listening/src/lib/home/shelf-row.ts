@@ -126,7 +126,7 @@ const DRAG_PX = 6;
                   item.artistName
                 }}</span>
                 <span class="font-mono text-xs"
-                  >{{ typeLabel(item.productType) }} ·
+                  >{{ typeLabel(item.productType) }},
                   {{ item.price | money: item.currency }}</span
                 >
               </a>

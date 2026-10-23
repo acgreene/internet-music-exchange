@@ -80,8 +80,7 @@ import { discographySubtitle, newestFirst } from '../releases/release-labels';
                       city: profile.artist.city ?? undefined,
                     }"
                     >{{ place(profile.artist.city, country) }}</a
-                  >
-                  ·
+                  >,
                 }
                 {{ followerCount() }}
                 {{ followerCount() === 1 ? 'follower' : 'followers' }}

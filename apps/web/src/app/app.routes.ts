@@ -16,21 +16,21 @@ export const appRoutes: Route[] = [
       ...listeningRoutes,
       {
         path: 'sign-in',
-        title: 'Sign in · IME',
+        title: 'Sign in | IME',
         canActivate: [signedOutGuard],
         loadComponent: () =>
           import('./accounts/sign-in-page').then((m) => m.SignInPage),
       },
       {
         path: 'sign-up',
-        title: 'Create your account · IME',
+        title: 'Create your account | IME',
         canActivate: [signedOutGuard],
         loadComponent: () =>
           import('./accounts/sign-up-page').then((m) => m.SignUpPage),
       },
       {
         path: 'forgot-password',
-        title: 'Reset your password · IME',
+        title: 'Reset your password | IME',
         loadComponent: () =>
           import('./accounts/forgot-password-page').then(
             (m) => m.ForgotPasswordPage,
@@ -38,7 +38,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'reset-password',
-        title: 'Choose a new password · IME',
+        title: 'Choose a new password | IME',
         loadComponent: () =>
           import('./accounts/reset-password-page').then(
             (m) => m.ResetPasswordPage,
@@ -46,46 +46,46 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'account',
-        title: 'Account settings · IME',
+        title: 'Account settings | IME',
         canActivate: [signedInGuard],
         loadComponent: () =>
           import('./accounts/account-page').then((m) => m.AccountPage),
       },
       {
         path: 'users/:username',
-        title: 'Profile · IME',
+        title: 'Profile | IME',
         loadComponent: () =>
           import('./accounts/user-profile-page').then((m) => m.UserProfilePage),
       },
       {
         path: 'costs',
-        title: 'What it costs to run IME · IME',
+        title: 'What it costs to run IME | IME',
         loadComponent: () =>
           import('./funding/costs-page').then((m) => m.CostsPage),
       },
       {
         path: 'donate',
-        title: 'Chip in · IME',
+        title: 'Chip in | IME',
         loadComponent: () =>
           import('./funding/donate-page').then((m) => m.DonatePage),
       },
       {
         path: 'terms',
-        title: 'Terms of service · IME',
+        title: 'Terms of service | IME',
         data: { heading: 'Terms of service' },
         loadComponent: () =>
           import('./pages/legal-page').then((m) => m.LegalPage),
       },
       {
         path: 'privacy',
-        title: 'Privacy policy · IME',
+        title: 'Privacy policy | IME',
         data: { heading: 'Privacy policy' },
         loadComponent: () =>
           import('./pages/legal-page').then((m) => m.LegalPage),
       },
       {
         path: 'artist-pages/releases/:releaseId',
-        title: 'Artist page · IME',
+        title: 'Artist page | IME',
         loadComponent: () =>
           import('./artist-page/artist-page.component').then(
             (m) => m.ArtistPage,
@@ -93,7 +93,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: '**',
-        title: 'Not found · IME',
+        title: 'Not found | IME',
         loadComponent: () =>
           import('./pages/not-found-page').then((m) => m.NotFoundPage),
       },

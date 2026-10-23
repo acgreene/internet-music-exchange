@@ -450,7 +450,7 @@ const OPTION =
                             }}</span>
                           }
                           <span class="font-mono text-xs text-ink-muted"
-                            >{{ count(artist.followers, 'follower') }} ·
+                            >{{ count(artist.followers, 'follower') }},
                             {{ count(artist.releases, 'release') }}</span
                           >
                         </span>

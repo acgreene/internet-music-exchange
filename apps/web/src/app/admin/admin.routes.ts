@@ -12,23 +12,23 @@ export const adminRoutes: Route[] = [
     children: [
       {
         path: '',
-        title: 'Reports · Admin · IME',
+        title: 'Reports | Admin | IME',
         loadComponent: () => import('./queue-page').then((m) => m.QueuePage),
       },
       {
         path: 'cases/:targetType/:targetId',
-        title: 'Case · Admin · IME',
+        title: 'Case | Admin | IME',
         loadComponent: () => import('./case-page').then((m) => m.CasePage),
       },
       {
         path: 'billing',
-        title: 'Billing months · Admin · IME',
+        title: 'Billing months | Admin | IME',
         loadComponent: () =>
           import('./billing-month-page').then((m) => m.BillingMonthPage),
       },
       {
         path: 'claims/new',
-        title: 'Copyright claim · Admin · IME',
+        title: 'Copyright claim | Admin | IME',
         loadComponent: () =>
           import('./copyright-claim-page').then((m) => m.CopyrightClaimPage),
       },

@@ -135,7 +135,7 @@ const RESULTS_SHOWN = 8;
           <div class="flex flex-col gap-2">
             <span
               class="font-mono text-xs tracking-wider text-ink-muted uppercase"
-              >Built by IME · {{ crate.items.length }} records</span
+              >Built by IME / {{ crate.items.length }} records</span
             >
             <h2
               id="built-heading"

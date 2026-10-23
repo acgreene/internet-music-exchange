@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, formatDate } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -163,14 +163,7 @@ const CRATES_SHOWN = 6;
                 <p
                   class="font-mono text-xs tracking-wider text-ink-muted uppercase"
                 >
-                  {{ kindLabel() }}
-                  @if (page.release.releasedAt; as releasedAt) {
-                    · {{ releasedAt | date: 'longDate' : 'UTC' }}
-                  }
-                  · {{ trackCount() }}
-                  @if (runtime(); as runtime) {
-                    · {{ runtime }}
-                  }
+                  {{ metaLine() }}
                 </p>
                 <h1
                   class="text-5xl leading-[0.9] font-black tracking-[-0.05em] text-balance md:text-7xl"
@@ -649,6 +642,18 @@ export class ReleasePage {
       : `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
   });
 
+  /** Kind, release date, tracks, and length, like the spine of a record. */
+  protected readonly metaLine = computed(() => {
+    const release = currentValue(this.page)?.release;
+    if (!release) return '';
+    const date = release.releasedAt
+      ? formatDate(release.releasedAt, 'longDate', 'en-US', 'UTC')
+      : null;
+    return [this.kindLabel(), date, this.trackCount(), this.runtime()]
+      .filter(Boolean)
+      .join(' / ');
+  });
+
   protected readonly releaseActions = computed<MenuAction[]>(() => [
     { label: 'Report', run: () => this.report() },
   ]);
@@ -727,7 +732,7 @@ export class ReleasePage {
 
   protected cardSubtitle(release: ReleaseCard): string {
     const year = release.releasedAt?.slice(0, 4);
-    return [releaseKindLabel(release.kind), year].filter(Boolean).join(' · ');
+    return [releaseKindLabel(release.kind), year].filter(Boolean).join(', ');
   }
 
   private async report(): Promise<void> {

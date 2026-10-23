@@ -59,7 +59,7 @@ import { currentValue } from '@ime/client-data';
             }
           </h1>
           <p class="text-sm text-ink-muted">
-            {{ detail.purchase.createdAt | date: 'medium' }} ·
+            {{ detail.purchase.createdAt | date: 'medium' }},
             {{ statusLabel(detail.purchase.status) }}
           </p>
         </header>

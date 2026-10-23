@@ -44,8 +44,8 @@ import { AlertComponent, ButtonDirective, InputDirective } from '@ime/ui';
                 >v{{ version.version }}</span
               >
               <span class="text-ink-muted">
-                {{ version.createdAt | date: 'mediumDate' }} ·
-                {{ kilobytes(version.byteSize) }} KB ·
+                {{ version.createdAt | date: 'mediumDate' }},
+                {{ kilobytes(version.byteSize) }} KB,
                 {{ version.slots.length }}
                 {{ version.slots.length === 1 ? 'slot' : 'slots' }}
               </span>

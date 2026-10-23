@@ -52,7 +52,7 @@ import { StudioService } from '../studio.service';
             {{ detail.buyerName || 'A buyer' }}
           </h1>
           <p class="text-sm text-ink-muted">
-            {{ detail.sale.createdAt | date: 'medium' }} ·
+            {{ detail.sale.createdAt | date: 'medium' }},
             {{ statusLabel(detail.sale.status) }}
           </p>
         </header>
@@ -114,11 +114,16 @@ import { StudioService } from '../studio.service';
                   shipLabel(fulfillment.status)
                 }}</span>
                 @if (fulfillment.shippedAt) {
-                  · shipped {{ fulfillment.shippedAt | date: 'mediumDate' }}
+                  <span
+                    >, shipped
+                    {{ fulfillment.shippedAt | date: 'mediumDate' }}</span
+                  >
                 }
                 @if (fulfillment.trackingNumber) {
-                  · {{ fulfillment.carrier || 'Tracking' }}
-                  {{ fulfillment.trackingNumber }}
+                  <span
+                    >, {{ fulfillment.carrier || 'Tracking' }}
+                    {{ fulfillment.trackingNumber }}</span
+                  >
                 }
               </p>
               @if (detail.sale.status === 'completed') {

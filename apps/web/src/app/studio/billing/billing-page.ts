@@ -399,7 +399,7 @@ const toDollars = (cents: number | null | undefined) =>
                   <span>
                     {{ entryLabel(entry.kind) }}
                     <span class="text-ink-muted"
-                      >· {{ entry.createdAt | date: 'mediumDate' }}</span
+                      >({{ entry.createdAt | date: 'mediumDate' }})</span
                     >
                   </span>
                   <span

@@ -55,11 +55,13 @@ const PAGE_SIZE = 25;
                   purchase.artistName
                 }}</span>
                 <span class="text-sm text-ink-muted">
-                  {{ purchase.createdAt | date: 'mediumDate' }} ·
-                  {{ statusLabel(purchase.status) }}
-                  @if (purchase.fulfillmentStatus; as shipping) {
-                    · {{ shipLabel(shipping) }}
-                  }
+                  {{ purchase.createdAt | date: 'mediumDate' }},
+                  {{ statusLabel(purchase.status)
+                  }}{{
+                    purchase.fulfillmentStatus
+                      ? ', ' + shipLabel(purchase.fulfillmentStatus)
+                      : ''
+                  }}
                 </span>
               </span>
               <span class="shrink-0 font-medium">{{

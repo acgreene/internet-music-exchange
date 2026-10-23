@@ -91,7 +91,7 @@ const PANEL =
           <div class="my-auto flex flex-col gap-2.5 short:gap-1.5 lg:my-0">
             <span
               class="border-b border-dashed border-ink pb-2 font-mono text-xs tracking-wide uppercase short:pb-1 short:text-[10px]"
-              >Receipt · you buy a {{ price | money: 'usd' }} album</span
+              >Receipt: you buy a {{ price | money: 'usd' }} album</span
             >
             <dl
               class="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 font-mono text-sm short:gap-y-0.5 short:text-[12px]"

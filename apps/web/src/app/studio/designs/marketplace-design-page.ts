@@ -41,7 +41,7 @@ import { designPriceLabel } from './design-price';
             {{ detail.design.name }}
           </h1>
           <p class="font-mono text-sm">
-            {{ price(detail.design) }} · version {{ detail.latestVersion }}
+            {{ price(detail.design) }}, version {{ detail.latestVersion }}
           </p>
           <div>
             <ime-report-button

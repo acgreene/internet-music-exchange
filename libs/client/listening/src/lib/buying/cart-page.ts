@@ -127,7 +127,7 @@ const lineTotal = (entry: CartEntry) =>
                       >{{ item.name }}</a
                     >
                     <span class="text-sm text-ink-muted">
-                      {{ item.variantLabel ?? 'Merch' }} ·
+                      {{ item.variantLabel ?? 'Merch' }},
                       {{ item.unitPrice | money: item.currency }} each
                     </span>
                   </div>

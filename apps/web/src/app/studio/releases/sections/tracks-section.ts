@@ -275,9 +275,7 @@ export class TracksSection {
     const size = `${original.format.toUpperCase()}, ${(original.byteSize / MB).toFixed(1)} MB`;
     const ready =
       original.format === 'mp3' || this.streamable().has(track.trackId);
-    return ready
-      ? `${size} · ready to stream`
-      : `${size} · preparing the stream`;
+    return ready ? `${size}, ready to stream` : `${size}, preparing the stream`;
   }
 
   protected async add(event: Event): Promise<void> {

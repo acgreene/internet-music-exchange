@@ -18,7 +18,7 @@ export class PageMetaService {
   private readonly response = inject(RESPONSE_INIT, { optional: true });
 
   public set({ title, description, image }: PageMeta): void {
-    this.title.setTitle(`${title} · IME`);
+    this.title.setTitle(`${title} | IME`);
     this.meta.updateTag({ property: 'og:title', content: title });
     this.meta.updateTag({ property: 'og:type', content: 'website' });
     if (description) {
@@ -40,7 +40,7 @@ export class PageMetaService {
    * engines drop the address.
    */
   public notFound(): void {
-    this.title.setTitle('Not found · IME');
+    this.title.setTitle('Not found | IME');
     if (this.response) this.response.status = 404;
   }
 }

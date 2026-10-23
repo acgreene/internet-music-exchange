@@ -61,7 +61,7 @@ import { StudioService } from '../studio.service';
                 </span>
                 <span class="text-sm text-ink-muted">
                   @if (manager.username) {
-                    &#64;{{ manager.username }} ·
+                    &#64;{{ manager.username }},
                   }
                   since {{ manager.createdAt | date: 'mediumDate' }}
                 </span>

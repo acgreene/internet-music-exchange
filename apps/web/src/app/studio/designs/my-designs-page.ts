@@ -138,7 +138,7 @@ import { designPriceLabel } from './design-price';
                 <span class="flex min-w-0 flex-col">
                   <span class="truncate font-medium">{{ design.name }}</span>
                   <span class="font-mono text-sm text-ink-muted">
-                    {{ price(design) }} · {{ design.visibility }}
+                    {{ price(design) }}, {{ design.visibility }}
                   </span>
                 </span>
                 <span

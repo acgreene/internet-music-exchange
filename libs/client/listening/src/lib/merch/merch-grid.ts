@@ -35,7 +35,7 @@ import { LOW_STOCK, productTypeLabel } from './merch-labels';
               item.name
             }}</span>
             <span class="text-sm text-ink-muted">
-              {{ typeLabel(item.type) }} ·
+              {{ typeLabel(item.type) }},
               @if (item.totalStock === 0) {
                 Sold out
               } @else {

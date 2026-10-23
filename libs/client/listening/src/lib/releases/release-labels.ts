@@ -60,7 +60,7 @@ export function discographySubtitle(release: DiscographyItem): string {
     releasePriceLabel(release.pricing),
   ]
     .filter(Boolean)
-    .join(' · ');
+    .join(', ');
 }
 
 /** What a release costs, as a card or result shows it. */

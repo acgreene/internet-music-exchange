@@ -58,7 +58,7 @@ const SOURCE_LABELS: Record<LibraryItem['source'], string> = {
               [subtitleLink]="['/artists', item.artistHandle]"
             />
             <span class="text-xs text-ink-subtle">
-              {{ sourceLabel(item.source) }} ·
+              {{ sourceLabel(item.source) }},
               {{ item.acquiredAt | date: 'mediumDate' }}
             </span>
           </li>

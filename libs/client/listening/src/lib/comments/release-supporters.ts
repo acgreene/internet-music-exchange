@@ -148,11 +148,9 @@ const TONES = [
                   }}</span>
                 }
                 <span
-                  >· {{ note.createdAt | date: 'mediumDate' }}
-                  @if (note.edited) {
-                    · edited
-                  }
-                </span>
+                  >{{ note.createdAt | date: 'mediumDate'
+                  }}{{ note.edited ? ' (edited)' : '' }}</span
+                >
                 <ime-more-menu
                   class="-my-1 ml-auto"
                   label="More for this note"

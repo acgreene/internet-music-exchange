@@ -68,12 +68,12 @@ import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
                     group.subject?.label ?? 'Gone'
                   }}</span>
                   <span class="truncate text-sm text-ink-muted">
-                    {{ targetLabel(group.targetType) }}
+                    <span>{{ targetLabel(group.targetType) }}</span>
                     @if (group.subject?.context; as context) {
-                      · {{ context }}
+                      <span>, {{ context }}</span>
                     }
                     @if (group.subject?.down) {
-                      · <span class="text-danger">down</span>
+                      <span>, <span class="text-danger">down</span></span>
                     }
                   </span>
                   <span class="text-sm">{{ reasons(group.reasons) }}</span>

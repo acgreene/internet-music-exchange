@@ -80,7 +80,7 @@ import { DesignThumbnail } from './design-thumbnail';
                   </span>
                   <span class="text-sm text-ink-muted">
                     @if (item.designer?.username; as username) {
-                      by &#64;{{ username }} ·
+                      by &#64;{{ username }},
                     }
                     {{ usedOn(item) }}
                   </span>

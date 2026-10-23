@@ -7,12 +7,12 @@ import { signedInGuard } from '@ime/client-data';
 export const digRoutes: Route[] = [
   {
     path: 'dig/crates/:crateId',
-    title: 'Dig · IME',
+    title: 'Dig | IME',
     loadComponent: () => import('./dig/dig-page').then((m) => m.DigPage),
   },
   {
     path: 'dig/sound',
-    title: 'Dig · IME',
+    title: 'Dig | IME',
     loadComponent: () => import('./dig/dig-page').then((m) => m.DigPage),
   },
 ];
@@ -29,38 +29,38 @@ export const listeningRoutes: Route[] = [
   },
   {
     path: 'search',
-    title: 'Search · IME',
+    title: 'Search | IME',
     loadComponent: () =>
       import('./search/search-page').then((m) => m.SearchPage),
   },
   {
     path: 'charts',
-    title: 'Charts · IME',
+    title: 'Charts | IME',
     loadComponent: () =>
       import('./charts/charts-page').then((m) => m.ChartsPage),
   },
   {
     path: 'crates',
-    title: 'Crates · IME',
+    title: 'Crates | IME',
     loadComponent: () =>
       import('./crates/crates-page').then((m) => m.CratesPage),
   },
   {
     path: 'crates/sound',
-    title: 'A crate by sound · IME',
+    title: 'A crate by sound | IME',
     data: { kind: 'sound' },
     loadComponent: () =>
       import('./crates/built-crate-page').then((m) => m.BuiltCratePage),
   },
   {
     path: 'crates/genre/:genre',
-    title: 'Crates by genre · IME',
+    title: 'Crates by genre | IME',
     loadComponent: () =>
       import('./crates/genre-crates-page').then((m) => m.GenreCratesPage),
   },
   {
     path: 'crates/day',
-    title: 'Your crate of the day · IME',
+    title: 'Your crate of the day | IME',
     data: { kind: 'day' },
     canActivate: [signedInGuard],
     loadComponent: () =>
@@ -68,82 +68,82 @@ export const listeningRoutes: Route[] = [
   },
   {
     path: 'crates/build',
-    title: 'Build a crate · IME',
+    title: 'Build a crate | IME',
     data: { kind: 'records' },
     loadComponent: () =>
       import('./crates/built-crate-page').then((m) => m.BuiltCratePage),
   },
   {
     path: 'crates/:crateId',
-    title: 'Crate · IME',
+    title: 'Crate | IME',
     loadComponent: () => import('./crates/crate-page').then((m) => m.CratePage),
   },
   {
     path: 'designs',
-    title: 'Design gallery · IME',
+    title: 'Design gallery | IME',
     loadComponent: () =>
       import('./designs/gallery-page').then((m) => m.GalleryPage),
   },
   {
     path: 'designs/:designId',
-    title: 'Design · IME',
+    title: 'Design | IME',
     loadComponent: () =>
       import('./designs/design-page').then((m) => m.DesignPage),
   },
   {
     path: 'following',
-    title: 'Following · IME',
+    title: 'Following | IME',
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./follow/following-page').then((m) => m.FollowingPage),
   },
   {
     path: 'artists/:handle',
-    title: 'Artist · IME',
+    title: 'Artist | IME',
     loadComponent: () =>
       import('./artists/artist-page').then((m) => m.ArtistPage),
   },
   {
     path: 'artists/:handle/:slug',
-    title: 'Release · IME',
+    title: 'Release | IME',
     loadComponent: () =>
       import('./releases/release-page').then((m) => m.ReleasePage),
   },
   {
     path: 'artists/:handle/merch/:productId',
-    title: 'Merch · IME',
+    title: 'Merch | IME',
     loadComponent: () =>
       import('./merch/product-page').then((m) => m.ProductPage),
   },
   {
     path: 'cart',
-    title: 'Cart · IME',
+    title: 'Cart | IME',
     loadComponent: () => import('./buying/cart-page').then((m) => m.CartPage),
   },
   {
     path: 'checkout/:orderId',
-    title: 'Checkout · IME',
+    title: 'Checkout | IME',
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./buying/checkout-page').then((m) => m.CheckoutPage),
   },
   {
     path: 'library',
-    title: 'Library · IME',
+    title: 'Library | IME',
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./buying/library-page').then((m) => m.LibraryPage),
   },
   {
     path: 'purchases',
-    title: 'Purchases · IME',
+    title: 'Purchases | IME',
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./buying/purchases-page').then((m) => m.PurchasesPage),
   },
   {
     path: 'purchases/:artistOrderId',
-    title: 'Purchase · IME',
+    title: 'Purchase | IME',
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./buying/purchase-page').then((m) => m.PurchasePage),

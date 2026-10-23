@@ -73,7 +73,7 @@ import { StudioService } from '../studio.service';
                   <span>
                     {{ nameOf(share.userId) }}
                     <span class="text-sm text-ink-muted"
-                      >· {{ share.acceptedAt ? 'accepted' : 'waiting' }}</span
+                      >({{ share.acceptedAt ? 'accepted' : 'waiting' }})</span
                     >
                   </span>
                   <span class="font-medium tabular-nums"
