@@ -10,7 +10,6 @@ import {
   inArray,
   isNull,
   lt,
-  lte,
   min,
   ne,
   notExists,
@@ -117,10 +116,10 @@ export class ShelfRepository {
   }
 
   /**
-   * The newest releases.
+   * The newest releases priced pay what you want.
    */
-  public async listNewest(limit: number): Promise<ShelfRelease[]> {
-    return this.releaseShelf(undefined)
+  public async listNameYourPrice(limit: number): Promise<ShelfRelease[]> {
+    return this.releaseShelf(eq(releasePricing.mode, 'name_your_price'))
       .orderBy(desc(releases.publishedAt))
       .limit(limit);
   }
@@ -274,29 +273,6 @@ export class ShelfRepository {
   }
 
   /**
-   * The releases the most people came to own since a moment, bought or
-   * claimed alike.
-   *
-   * @param since - The start of the period.
-   */
-  public async listMostKept(
-    since: Date,
-    limit: number,
-  ): Promise<ShelfRelease[]> {
-    const keepers = countDistinct(entitlements.userId);
-    return this.db
-      .select(shelfReleaseColumns)
-      .from(entitlements)
-      .innerJoin(releases, eq(releases.id, entitlements.releaseId))
-      .innerJoin(artists, eq(artists.id, releases.artistId))
-      .leftJoin(releasePricing, eq(releasePricing.releaseId, releases.id))
-      .where(and(onSale, gte(entitlements.createdAt, since)))
-      .groupBy(releases.id, artists.id, releasePricing.releaseId)
-      .orderBy(desc(keepers), desc(releases.publishedAt))
-      .limit(limit);
-  }
-
-  /**
    * Releases owned by the people who own what a listener owns, that the
    * listener does not own yet, the most widely shared first.
    *
@@ -337,16 +313,11 @@ export class ShelfRepository {
   }
 
   /**
-   * Published products of some types with a variant in stock, at or under
-   * a price, newest first.
-   *
-   * @param maxPrice - The most the cheapest variant may cost, in minor
-   * units; none for any price.
+   * Published products of some types with a variant in stock, newest first.
    */
   public async listProducts(
     types: ProductType[],
     limit: number,
-    maxPrice?: number,
   ): Promise<ShelfProduct[]> {
     const price = min(productVariants.price);
     return this.db
@@ -370,9 +341,6 @@ export class ShelfRepository {
           isNull(artists.offSaleAt),
           inArray(products.type, types),
           sql`${productVariants.stock} > 0`,
-          maxPrice === undefined
-            ? undefined
-            : lte(productVariants.price, maxPrice),
         ),
       )
       .groupBy(products.id, artists.id)

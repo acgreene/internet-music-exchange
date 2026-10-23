@@ -1,9 +1,10 @@
 import {
+  type ChartKind,
   DatabaseRepository,
   type ShelfProduct,
   type ShelfRelease,
 } from '@ime/db';
-import type { CatalogHome, Shelf, ShelfItem } from '@ime/models';
+import { type CatalogHome, GENRES, genreName, type Shelf } from '@ime/models';
 import { CloudStorageService } from '../storage';
 import { CatalogCards } from './catalog-cards';
 import { dailyRank } from './daily-rank';
@@ -15,30 +16,39 @@ const SHELF_SIZE = 12;
 /** A shelf with fewer than this is too thin to show. */
 const MIN_SHELF_SIZE = 6;
 /** How many shelves the home page shows at once. */
-const SHELVES_SHOWN = 6;
-/** How many recent public crates the featured one is picked from. */
+const SHELVES_SHOWN = 10;
+/** How many recent public crates the featured ones are picked from. */
 const FEATURE_POOL = 40;
+/** How many crates someone made are featured as shelves each day. */
+const FEATURED_CRATES = 2;
+/** How many genres are tried for the genre of the day before giving up. */
+const GENRE_TRIES = 8;
 /** How many designed releases the home page shows off. */
 const SHOWCASE_SIZE = 3;
 
-type Recipe = {
+/** What a recipe cooks: a shelf's heading and its records or merch. */
+type Cooked = Omit<Shelf, 'id' | 'items'> &
+  ({ releases: ShelfRelease[] } | { products: ShelfProduct[] });
+
+interface Recipe {
   id: string;
-  title: string;
-  reason: string;
   /** Only for a signed-in listener, drawn from their own library. */
   personal?: boolean;
-} & (
-  | { releases: (userId: string | undefined) => Promise<ShelfRelease[]> }
-  | { products: () => Promise<ShelfProduct[]> }
-);
+  /** A shelf of merch, spread between the shelves of records. */
+  merch?: boolean;
+  cook: (day: string, userId?: string) => Promise<Cooked | null>;
+}
 
 /**
  * The home page's shelves: rows of records, each chosen by a recipe, a fixed
- * rule over the catalog or the listener's library. Which catalog shelves
- * appear changes daily, and a shelf that comes up thin is skipped, so the
- * page stays fresh without anyone curating it.
+ * rule over the catalog or the listener's library, never by AI. Which
+ * catalog shelves appear changes daily, two crates people made are featured
+ * among them, and a shelf that comes up thin is skipped, so the page stays
+ * fresh without anyone curating it.
  */
 export class ShelfService {
+  private readonly cards: CatalogCards;
+
   constructor(
     private readonly db: DatabaseRepository = new DatabaseRepository(),
     storage: CloudStorageService = new CloudStorageService(),
@@ -46,88 +56,105 @@ export class ShelfService {
     this.cards = new CatalogCards(db, storage);
   }
 
-  private readonly cards: CatalogCards;
-
   private readonly recipes: Recipe[] = [
     {
       id: 'following',
-      title: 'New from artists you follow',
-      reason: 'because you follow them',
       personal: true,
-      releases: (userId) =>
-        this.db.shelves.listFromFollowed(userId as string, SHELF_SIZE),
-    },
-    {
-      id: 'kindred',
-      title: 'Pulled for you',
-      reason: 'from people who own what you own',
-      personal: true,
-      releases: (userId) =>
-        this.db.shelves.listOwnedByKindredListeners(
+      cook: async (_, userId) => ({
+        title: 'From artists you follow',
+        reason: '',
+        releases: await this.db.shelves.listFromFollowed(
           userId as string,
           SHELF_SIZE,
         ),
+      }),
     },
     {
-      id: 'just-landed',
-      title: 'Just landed',
-      reason: 'the newest releases on IME',
-      releases: () => this.db.shelves.listNewest(SHELF_SIZE),
+      id: 'kindred',
+      personal: true,
+      cook: async (_, userId) => ({
+        title: 'Pulled for you',
+        reason: 'from people who own what you own',
+        releases: await this.db.shelves.listOwnedByKindredListeners(
+          userId as string,
+          SHELF_SIZE,
+        ),
+      }),
     },
     {
-      id: 'most-kept',
-      title: 'Most kept this week',
-      reason: 'by how many people took them home, not by sales',
-      releases: () => this.db.shelves.listMostKept(this.daysAgo(7), SHELF_SIZE),
+      id: 'best-selling',
+      cook: async () => ({
+        title: 'Best selling this week',
+        reason: '',
+        link: '/charts',
+        releases: await this.thisWeek('selling'),
+      }),
+    },
+    {
+      id: 'most-downloaded',
+      cook: async () => ({
+        title: 'Most downloaded this week',
+        reason: '',
+        link: '/charts?chart=downloads',
+        releases: await this.thisWeek('downloads'),
+      }),
     },
     {
       id: 'free',
-      title: 'Free to keep',
-      reason: 'download them and they are yours',
-      releases: () => this.db.shelves.listFree(SHELF_SIZE),
+      cook: async () => ({
+        title: 'Free releases',
+        reason: '',
+        releases: await this.db.shelves.listFree(SHELF_SIZE),
+      }),
+    },
+    {
+      id: 'name-your-price',
+      cook: async () => ({
+        title: 'Name your price',
+        reason: 'pay what you want for these',
+        releases: await this.db.shelves.listNameYourPrice(SHELF_SIZE),
+      }),
     },
     {
       id: 'first-releases',
-      title: 'First releases',
-      reason: 'from artists new to IME this season',
-      releases: () =>
-        this.db.shelves.listFirstReleases(this.daysAgo(90), SHELF_SIZE),
+      cook: async () => ({
+        title: 'First releases',
+        reason: 'from artists new to IME this season',
+        releases: await this.db.shelves.listFirstReleases(
+          this.daysAgo(90),
+          SHELF_SIZE,
+        ),
+      }),
     },
-    {
-      id: 'designed',
-      title: 'Designed releases',
-      reason: 'each comes with a page built by a designer',
-      releases: () => this.db.shelves.listDesigned(SHELF_SIZE),
-    },
-    {
-      id: 'tapes',
-      title: 'Tapes under $10',
-      reason: 'still in stock',
-      products: () =>
-        this.db.shelves.listProducts(['cassette'], SHELF_SIZE, 1000),
-    },
+    { id: 'genre-of-the-day', cook: (day) => this.genreOfTheDay(day) },
+    { id: 'place-of-the-day', cook: (day) => this.placeOfTheDay(day) },
     {
       id: 'vinyl',
-      title: 'New on vinyl',
-      reason: 'pressings still in stock',
-      products: () => this.db.shelves.listProducts(['vinyl'], SHELF_SIZE),
+      merch: true,
+      cook: async () => ({
+        title: 'New on vinyl',
+        reason: 'pressings still in stock',
+        products: await this.db.shelves.listProducts(['vinyl'], SHELF_SIZE),
+      }),
     },
     {
       id: 'apparel',
-      title: 'Shirts and hoodies',
-      reason: 'from the artists who made the music',
-      products: () =>
-        this.db.shelves.listProducts(
+      merch: true,
+      cook: async () => ({
+        title: 'Shirts and hoodies',
+        reason: 'from the artists who made the music',
+        products: await this.db.shelves.listProducts(
           ['shirt', 'hoodie', 'sweatshirt'],
           SHELF_SIZE,
         ),
+      }),
     },
   ];
 
   /**
    * Today's home page: the listener's own shelves first, then catalog
-   * shelves in an order that changes daily, and how much of each format is
-   * on offer.
+   * shelves in an order that changes daily with crates people made among
+   * them, a few designed releases, and how much of each format is on offer.
    *
    * @param userId - The signed-in listener, if any.
    */
@@ -139,10 +166,8 @@ export class ShelfService {
     const personal = userId ? this.recipes.filter((r) => r.personal) : [];
     const daily = (group: Recipe[]) =>
       group.sort((a, b) => dailyRank(day, a.id) - dailyRank(day, b.id));
-    const records = daily(
-      this.recipes.filter((r) => !r.personal && 'releases' in r),
-    );
-    const goods = daily(this.recipes.filter((r) => 'products' in r));
+    const records = daily(this.recipes.filter((r) => !r.personal && !r.merch));
+    const goods = daily(this.recipes.filter((r) => r.merch));
     // two shelves of records for each shelf of merch, records first
     const catalog: Recipe[] = [];
     while (records.length || goods.length) {
@@ -152,20 +177,14 @@ export class ShelfService {
     const shelves: Shelf[] = [];
     for (const recipe of [...personal, ...catalog]) {
       if (shelves.length >= SHELVES_SHOWN) break;
-      const items = await this.cook(recipe, userId);
-      if (items.length >= MIN_SHELF_SIZE) {
-        shelves.push({
-          id: recipe.id,
-          title: recipe.title,
-          reason: recipe.reason,
-          items,
-        });
-      }
+      const shelf = await this.serve(recipe.id, await recipe.cook(day, userId));
+      if (shelf) shelves.push(shelf);
     }
 
-    // one of today's shelves is a crate someone made, after the first
-    const crate = await this.featuredCrate(day);
-    if (crate) shelves.splice(1, 0, crate);
+    // crates people made sit among the shelves: after the first, and halfway
+    const [first, second] = await this.featuredCrates(day, userId);
+    if (second) shelves.splice(5, 0, second);
+    if (first) shelves.splice(1, 0, first);
     shelves.splice(SHELVES_SHOWN);
 
     const [formats, designed] = await Promise.all([
@@ -179,37 +198,120 @@ export class ShelfService {
     };
   }
 
+  /** Turn a cooked recipe into a shelf, or nothing when it came up thin. */
+  private async serve(
+    id: string,
+    cooked: Cooked | null,
+  ): Promise<Shelf | null> {
+    if (!cooked) return null;
+    const { title, reason, link } = cooked;
+    const items =
+      'releases' in cooked
+        ? await this.cards.releases(cooked.releases)
+        : await this.cards.products(cooked.products);
+    if (items.length < MIN_SHELF_SIZE) return null;
+    return { id, title, reason, ...(link ? { link } : {}), items };
+  }
+
+  /** The releases on sale most people bought, or downloaded, in a week. */
+  private async thisWeek(chart: ChartKind): Promise<ShelfRelease[]> {
+    const counts = await this.db.charts.countPeople(
+      chart,
+      this.daysAgo(7),
+      new Date(),
+      { limit: SHELF_SIZE },
+    );
+    const rows = await this.db.shelves.listOnSaleByIds(
+      counts.map((count) => count.releaseId),
+    );
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return counts.flatMap((count) => byId.get(count.releaseId) ?? []);
+  }
+
   /**
-   * A public crate for today's home page, picked by the date among the most
-   * recently changed ones with enough records still on sale.
+   * A genre picked by the date, among those with enough releases, its most
+   * kept first.
    */
-  private async featuredCrate(day: string): Promise<Shelf | null> {
+  private async genreOfTheDay(day: string): Promise<Cooked | null> {
+    const genres = [...GENRES]
+      .sort((a, b) => dailyRank(day, a.id) - dailyRank(day, b.id))
+      .slice(0, GENRE_TRIES);
+    for (const genre of genres) {
+      const releases = await this.db.search.searchReleases(
+        { words: [], genres: [genre.id] },
+        'most-kept',
+        SHELF_SIZE,
+        0,
+      );
+      if (releases.length < MIN_SHELF_SIZE) continue;
+      return {
+        title: genreName(genre.id),
+        reason: 'genre of the day',
+        link: `/search?genres=${genre.id}`,
+        releases,
+      };
+    }
+    return null;
+  }
+
+  /**
+   * A city picked by the date, among those with enough releases from the
+   * artists based there, its newest first.
+   */
+  private async placeOfTheDay(day: string): Promise<Cooked | null> {
+    const places = (
+      await this.db.search.countPlaces({ words: [], genres: [] })
+    ).filter((place) => place.city && place.count >= MIN_SHELF_SIZE);
+    const [place] = places.sort(
+      (a, b) =>
+        dailyRank(day, `${a.country}:${a.city}`) -
+        dailyRank(day, `${b.country}:${b.city}`),
+    );
+    if (!place?.city) return null;
+    const releases = await this.db.search.searchReleases(
+      { words: [], genres: [], country: place.country, city: place.city },
+      'newest',
+      SHELF_SIZE,
+      0,
+    );
+    return {
+      title: `Made in ${place.city}`,
+      reason: 'place of the day',
+      link: `/search?country=${place.country}&city=${encodeURIComponent(place.city)}`,
+      releases,
+    };
+  }
+
+  /**
+   * Public crates for today's home page, picked by the date among the most
+   * recently changed ones with enough records still on sale, never the
+   * viewer's own.
+   */
+  private async featuredCrates(day: string, userId?: string): Promise<Shelf[]> {
     const crates = (await this.db.crates.listPublic(FEATURE_POOL)).sort(
       (a, b) => dailyRank(day, a.id) - dailyRank(day, b.id),
     );
+    const featured: Shelf[] = [];
     for (const crate of crates) {
+      if (featured.length >= FEATURED_CRATES) break;
+      if (crate.ownerUserId === userId) continue;
+      // two crates of the same name side by side would read as a mistake
+      if (featured.some((shelf) => shelf.title === crate.name)) continue;
       const items = (await this.db.crates.listItems(crate.id))
         .filter((item) => item.available)
         .slice(0, SHELF_SIZE);
       if (items.length < MIN_SHELF_SIZE) continue;
-      return {
-        id: 'crate',
+      featured.push({
+        id: `crate-${featured.length + 1}`,
         title: crate.name,
         reason: crate.ownerUsername
           ? `a crate by @${crate.ownerUsername}`
           : 'a crate from someone on IME',
         link: `/crates/${crate.id}`,
         items: await this.cards.releases(items),
-      };
+      });
     }
-    return null;
-  }
-
-  private async cook(recipe: Recipe, userId?: string): Promise<ShelfItem[]> {
-    if ('releases' in recipe) {
-      return this.cards.releases(await recipe.releases(userId));
-    }
-    return this.cards.products(await recipe.products());
+    return featured;
   }
 
   private daysAgo(days: number): Date {

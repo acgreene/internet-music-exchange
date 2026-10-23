@@ -28,21 +28,26 @@ The receipt's figures are computed from the card processor's actual rates, never
 
 ### Below the gatefold
 
-- **Shop by format**: a row of the formats IME sells, each with how much is on offer, leading to browsing by format.
-- **Shelves**: rows of records chosen by a recipe (see Shelves).
-- **Charts**: a preview of this week's charts (see Charts).
+In this order:
+
+- **Shelves**: up to ten rows of records chosen by recipes (see Shelves).
 - **Designed releases**: what designer-built release pages are, with a way into the public design gallery (see [Creative Pages](./creative-pages.md)).
-- **Dig mode**: a way into dig mode (see Dig mode).
+- **Charts**: this week's five best sellers, leading to the charts (see Charts).
+- **Crates**: a few public crates, with ways to browse them and make one (see Crates).
+- **Dig mode**: what digging is, with a way to dig today's featured crate or the genre of the day (see Dig mode).
+- **New releases**: every new release, newest first, a page at a time.
 
 ## Shelves
 
-A shelf is a row of records with a title and a reason it exists ("because you own Tiny Harbor", "out since Friday", "a crate by Mara Okafor"). Shelves are made by **recipes**, not by hand, so they stay fresh without upkeep.
+A shelf is a row of records with a title, and sometimes a short reason it exists ("from people who own what you own", "a crate by Mara Okafor"). Shelves are made by **recipes**, not by hand, so they stay fresh without upkeep. A shelf that leads somewhere, such as a chart or a crate, links there.
 
-- **Catalog recipes** draw on facts about the catalog: just landed, tapes under $10, free downloads, first releases from artists new to IME, designed releases, merch that ships to the listener's country.
-- **Personal recipes** draw on the listener's library: records owned by people who own what the listener owns, new releases from artists they follow.
-- **People recipes** feature a crate someone made (see Crates).
+- **Catalog recipes** draw on facts about the catalog: best selling and most downloaded this week, free releases, name your price, first releases from artists new to IME, a genre of the day, a city of the day ("Made in Glasgow"), and merch such as new vinyl and shirts.
+- **Personal recipes** draw on the listener's library: records owned by people who own what the listener owns, and releases from artists they follow.
+- **People recipes** feature crates people made, two a day, never the viewer's own (see Crates).
 
-The home page shows a handful of shelves at a time, chosen from all recipes and changing daily. A shelf that would come up nearly empty is skipped. Visitors who aren't signed in see only catalog and people recipes. New recipes can be added over time without changing how shelves work.
+The home page shows up to ten shelves, chosen from all recipes and changing daily. A shelf that would come up nearly empty is skipped. Visitors who aren't signed in see only catalog and people recipes. New recipes can be added over time without changing how shelves work.
+
+A shelf scrolls sideways: swiped on a phone, and dragged or paged with arrow buttons on a computer.
 
 ## Browsing by format
 

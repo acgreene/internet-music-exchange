@@ -58,10 +58,11 @@ Each is a property of `ImeServices`, named in brackets.
   tracks and sides, genres and tags, audio and artwork uploads, pricing,
   publishing, archiving, and gifting. Use it for every screen where an
   artist builds or edits a release.
-- **`ShelfService`** (`shelves`): the home page's shelves, rows picked by
-  recipes over the catalog and the listener's library, rotated daily, with
-  a public crate someone made featured among them, plus a few designed
-  releases and how much of each format is on offer. Use it for
+- **`ShelfService`** (`shelves`): the home page's shelves, up to ten rows
+  picked by recipes over the catalog and the listener's library (best
+  selling and most downloaded this week, a genre and a city of the day, and
+  more), rotated daily, with two public crates featured among them, plus a
+  few designed releases and how much of each format is on offer. Use it for
   the home page.
 - **`SearchService`** (`search`): searching the catalog: releases by words
   and filters (genre, format, price, year, kind, designed pages, where the
