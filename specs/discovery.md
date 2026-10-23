@@ -28,9 +28,8 @@ The receipt's figures are computed from the card processor's actual rates, never
 
 ### Below the gatefold
 
-In this order:
+Shelves (up to ten rows of records chosen by recipes, see Shelves) run between the sections, dividing them: three shelves, then each section after two more, and any left over before new releases. The sections, in order:
 
-- **Shelves**: up to ten rows of records chosen by recipes (see Shelves).
 - **Designed releases**: what designer-built release pages are, with a way into the public design gallery (see [Creative Pages](./creative-pages.md)).
 - **Charts**: this week's five best sellers, leading to the charts (see Charts).
 - **Crates**: a few public crates, with ways to browse them and make one (see Crates).

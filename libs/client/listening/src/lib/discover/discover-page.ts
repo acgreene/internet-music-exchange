@@ -47,8 +47,8 @@ const PAGE_SIZE = 24;
 
     <div class="mx-auto flex max-w-6xl flex-col gap-12 pt-10">
       <div id="shelves" class="flex scroll-mt-24 flex-col gap-10">
-        @if (home.hasValue() ? home.value() : null; as page) {
-          @for (shelf of page.shelves; track shelf.id) {
+        @if (home.hasValue()) {
+          @for (shelf of shelfGroups()[0]; track shelf.id) {
             <ime-shelf-row [shelf]="shelf" />
           }
         } @else if (home.error()) {
@@ -125,6 +125,10 @@ const PAGE_SIZE = 24;
         </section>
       }
 
+      @for (shelf of shelfGroups()[1]; track shelf.id) {
+        <ime-shelf-row [shelf]="shelf" />
+      }
+
       @if (topSellers().length) {
         <section
           class="grid gap-8 border-b border-line pb-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center"
@@ -192,6 +196,10 @@ const PAGE_SIZE = 24;
         </section>
       }
 
+      @for (shelf of shelfGroups()[2]; track shelf.id) {
+        <ime-shelf-row [shelf]="shelf" />
+      }
+
       @if (crates().length) {
         <section class="flex flex-col gap-6" aria-labelledby="crates-heading">
           <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
@@ -227,6 +235,10 @@ const PAGE_SIZE = 24;
             }
           </ul>
         </section>
+      }
+
+      @for (shelf of shelfGroups()[3]; track shelf.id) {
+        <ime-shelf-row [shelf]="shelf" />
       }
 
       @if (digLink(); as dig) {
@@ -271,6 +283,10 @@ const PAGE_SIZE = 24;
             </div>
           </div>
         </section>
+      }
+
+      @for (shelf of shelfGroups()[4]; track shelf.id) {
+        <ime-shelf-row [shelf]="shelf" />
       }
 
       <section class="flex flex-col gap-4" aria-labelledby="recent-heading">
@@ -330,6 +346,22 @@ export class DiscoverPage {
     params: () => this.session.user()?.id ?? 'anonymous',
     loader: async () => unwrap(await this.api.catalog.getHome()),
   });
+  /**
+   * Today's shelves in runs that divide the page's sections: three before
+   * designed releases, two before each of charts, crates, and dig mode, and
+   * the rest before new releases.
+   */
+  protected readonly shelfGroups = computed(() => {
+    const shelves = currentValue(this.home)?.shelves ?? [];
+    return [
+      shelves.slice(0, 3),
+      shelves.slice(3, 5),
+      shelves.slice(5, 7),
+      shelves.slice(7, 9),
+      shelves.slice(9),
+    ];
+  });
+
   protected readonly designed = computed(() =>
     (currentValue(this.home)?.designed ?? []).flatMap((item) =>
       item.kind === 'release' ? [item] : [],
