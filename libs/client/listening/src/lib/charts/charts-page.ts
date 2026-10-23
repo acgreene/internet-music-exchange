@@ -222,9 +222,10 @@ const SEGMENT =
             }
           </ol>
           <p class="text-xs text-ink-muted">
-            Each person counts once. New charts every Monday. Movement is
-            against last week's chart; peak and weeks are a release's run on the
-            weekly chart{{ genre() ? ' for this genre' : '' }}.
+            Movement is against last week's chart. Peak and weeks are a
+            release's run on the weekly chart{{
+              genre() ? ' for this genre' : ''
+            }}.
           </p>
         </section>
       } @else if (charts.error()) {
