@@ -2,12 +2,12 @@ import { DatabaseRepository } from '@ime/db';
 import type { CrateItem, DigRecord, DigSession } from '@ime/models';
 import { CrateService } from './crate-service';
 
-const DEFAULT_DEPTH = 20;
-const MAX_DEPTH = 30;
+/** As many records as a crate can hold, so a dig goes through all of it. */
+const MAX_DEPTH = 200;
 
 /**
- * Dig mode: a crate's records one at a time, as deep as the listener chose,
- * each with its whole tracklist and the tracks they may hear. The artist
+ * Dig mode: a crate's records one at a time, the whole crate, each with its
+ * whole tracklist and the tracks they may hear. The artist
  * chooses those tracks, and they play in full; IME never picks a highlight.
  */
 export class DigService {
@@ -61,7 +61,7 @@ export class DigService {
   }
 
   private depth(depth?: number): number {
-    return Math.min(Math.max(depth ?? DEFAULT_DEPTH, 1), MAX_DEPTH);
+    return Math.min(Math.max(depth ?? MAX_DEPTH, 1), MAX_DEPTH);
   }
 
   private async records(

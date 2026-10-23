@@ -95,14 +95,14 @@ A crate is a list of releases someone put together, like a box of records at a s
 
 Dig mode is a separate, focused space for flipping through a crate one record at a time, the way people dig in a record store.
 
-- A listener chooses a crate and how deep to go: 10, 20, or 30 records. A dig always ends; there is no endless feed.
-- Each record shows its cover, artist, why it is in the crate, and its full tracklist.
+- Digging a crate starts straight away and goes through the whole crate. A dig always ends at the bottom of the crate; there is no endless feed.
+- Each record shows its cover, what kind of release it is and when it came out, its artist and where they are based, its genres, why it is in the crate, its full tracklist, the artist's description, and any public extras such as a back cover or liner notes.
 - A listener hears the tracks the artist chose to share, in full, and can move anywhere within them. IME never picks a highlight or plays an excerpt on the artist's behalf.
 - On a phone, swiping up and down moves between records and swiping left and right moves between the shared tracks. On the web, the crate is listed alongside the record, with keyboard controls.
 - When the shared tracks run out, the listener is told how many more are on the record, with a way to buy it or keep it for later.
 - A release with a designed page is shown through its design while digging, with the dig controls docked over it.
 - A listener can **keep** records as they dig. Kept records go into a bag.
-- At the bottom of the crate the listener sees how many records they dug and kept and how long they listened, and can buy the bag (choosing a format for each record), save it as a crate, or leave it.
+- At the bottom of the crate the listener sees how many records they dug and kept and how long they listened, and can buy the bag (choosing a format for each record), make a crate of their own from it (naming it, private unless they make it public), or leave it.
 - Nothing plays automatically when a listener first opens dig mode; listening starts when they press play.
 
 ## Web & mobile

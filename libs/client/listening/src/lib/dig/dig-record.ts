@@ -2,18 +2,31 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   input,
   output,
+  resource,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ApiClient, unwrap } from '@ime/api-client';
+import { currentValue } from '@ime/client-data';
 import { ArtistPageHost } from '@ime/client-artist-pages';
-import type {
-  ArtistPageRenderResponse,
-  DigRecord,
-  TracklistItem,
+import {
+  type ArtistPageRenderResponse,
+  type DigRecord,
+  genreName,
+  placeLabel,
+  type TracklistItem,
 } from '@ime/models';
 import { CoverComponent, DurationPipe } from '@ime/ui';
-import { releasePriceLabel } from '../releases/release-labels';
+import {
+  assetKindLabel,
+  releaseKindLabel,
+  releasePriceLabel,
+} from '../releases/release-labels';
+
+/** Extras shown as pictures rather than links. */
+const PICTURES = new Set(['back_cover', 'photo']);
 
 /**
  * One record in the dig booth: its cover, or its designed page with the
@@ -62,18 +75,39 @@ import { releasePriceLabel } from '../releases/release-labels';
 
       <div class="flex min-w-0 flex-col gap-4">
         <div class="flex flex-col gap-1">
+          <p class="font-mono text-xs tracking-wider text-canvas/60 uppercase">
+            {{ kindAndYear() }}
+          </p>
           <h2
             class="text-3xl leading-[0.95] font-black tracking-[-0.04em] md:text-5xl"
           >
             {{ record().release.title }}
           </h2>
-          <p class="text-lg">{{ record().release.artistName }}</p>
-          <p class="font-mono text-xs text-canvas/70">
-            {{ price() }}
-            @if (record().owned) {
-              · in your library
+          <p class="text-lg">
+            <a
+              class="underline-offset-2 hover:underline"
+              target="_blank"
+              [routerLink]="['/artists', record().release.artistHandle]"
+              >{{ record().release.artistName }}</a
+            >
+            @if (place(); as place) {
+              <span class="text-base text-canvas/60">, {{ place }}</span>
             }
           </p>
+          <p class="font-mono text-xs text-canvas/70">
+            {{ price() }}{{ record().owned ? ', in your library' : '' }}
+          </p>
+          @if (genres().length) {
+            <ul class="mt-1 flex flex-wrap gap-1.5" aria-label="Genres">
+              @for (genre of genres(); track genre) {
+                <li
+                  class="rounded-full border border-canvas/30 px-2.5 py-0.5 text-xs"
+                >
+                  {{ genreName(genre) }}
+                </li>
+              }
+            </ul>
+          }
           @if (record().note; as note) {
             <p class="mt-2 max-w-prose text-lg italic">“{{ note }}”</p>
           }
@@ -96,14 +130,16 @@ import { releasePriceLabel } from '../releases/release-labels';
             >
           </button>
           <a
-            class="rounded-control border border-canvas/30 px-4 py-2 font-semibold hover:bg-canvas hover:text-ink"
+            class="flex size-10 items-center justify-center rounded-control border border-canvas/30 text-lg hover:bg-canvas hover:text-ink"
+            aria-label="Open its page in a new tab"
+            title="Open its page in a new tab"
             [routerLink]="[
               '/artists',
               record().release.artistHandle,
               record().release.slug,
             ]"
             target="_blank"
-            >Open its page</a
+            >↗</a
           >
         </div>
 
@@ -136,6 +172,49 @@ import { releasePriceLabel } from '../releases/release-labels';
         </ol>
         <p class="font-mono text-xs text-canvas/70">{{ sharing() }}</p>
 
+        @if (page()?.release?.description; as description) {
+          <p
+            class="max-w-prose leading-relaxed whitespace-pre-line text-canvas/85"
+          >
+            {{ description }}
+          </p>
+        }
+
+        @if (pictures().length || documents().length) {
+          <section class="flex flex-col gap-2" aria-label="Also inside">
+            @if (pictures().length) {
+              <ul class="flex flex-wrap gap-2">
+                @for (asset of pictures(); track asset.id) {
+                  <li>
+                    <a
+                      class="block w-24"
+                      target="_blank"
+                      rel="noopener"
+                      [href]="asset.url"
+                      [attr.aria-label]="asset.title || assetLabel(asset.kind)"
+                    >
+                      <ime-cover
+                        class="w-full"
+                        [src]="asset.url"
+                        [alt]="asset.title || assetLabel(asset.kind)"
+                      />
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+            @for (asset of documents(); track asset.id) {
+              <a
+                class="w-fit text-sm underline underline-offset-2"
+                target="_blank"
+                rel="noopener"
+                [href]="asset.url"
+                >{{ asset.title || assetLabel(asset.kind) }} ↗</a
+              >
+            }
+          </section>
+        }
+
         @if (ranOut()) {
           <div
             class="flex flex-col gap-2 rounded-card border border-marker p-4"
@@ -165,6 +244,8 @@ import { releasePriceLabel } from '../releases/release-labels';
   `,
 })
 export class DigRecordView {
+  private readonly api = inject(ApiClient);
+
   public readonly record = input.required<DigRecord>();
   public readonly kept = input(false);
   /** The track playing or paused from this record, if any. */
@@ -179,6 +260,49 @@ export class DigRecordView {
   public readonly playTrack = output<TracklistItem>();
   public readonly playPosition = output<number>();
   public readonly toggleDesign = output<void>();
+
+  protected readonly genreName = genreName;
+  protected readonly assetLabel = assetKindLabel;
+
+  /** The record's page and its artist, for the rest of what it is. */
+  private readonly pageResource = resource({
+    params: () => ({
+      handle: this.record().release.artistHandle,
+      slug: this.record().release.slug,
+    }),
+    loader: async ({ params }) =>
+      unwrap(await this.api.catalog.getReleasePage(params.handle, params.slug)),
+  });
+  protected readonly page = computed(() => currentValue(this.pageResource));
+  private readonly artistResource = resource({
+    params: () => this.record().release.artistHandle,
+    loader: async ({ params }) =>
+      unwrap(await this.api.artists.getProfile(params)),
+  });
+
+  protected readonly kindAndYear = computed(() => {
+    const release = this.record().release;
+    return [releaseKindLabel(release.kind), release.releasedAt?.slice(0, 4)]
+      .filter(Boolean)
+      .join(' / ');
+  });
+  protected readonly place = computed(() => {
+    const artist = currentValue(this.artistResource)?.artist;
+    return artist ? placeLabel(artist.city, artist.country) : '';
+  });
+  protected readonly genres = computed(() => this.page()?.release.genres ?? []);
+  /** What else comes with the record that anyone can open. */
+  private readonly extras = computed(() =>
+    (this.page()?.assets ?? []).filter(
+      (asset) => asset.kind !== 'cover' && asset.url,
+    ),
+  );
+  protected readonly pictures = computed(() =>
+    this.extras().filter((asset) => PICTURES.has(asset.kind)),
+  );
+  protected readonly documents = computed(() =>
+    this.extras().filter((asset) => !PICTURES.has(asset.kind)),
+  );
 
   /** The tracks the artist shares, or every track once the listener owns it. */
   protected readonly playable = computed(() =>

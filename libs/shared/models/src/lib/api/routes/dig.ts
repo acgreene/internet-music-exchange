@@ -5,11 +5,9 @@ import { releaseCardWithArtistSchema } from './catalog';
 import { currencySchema, pricingSchema, tracklistItemSchema } from './releases';
 import { ApiRoute } from './routes';
 
-/** How deep a dig goes. A dig always ends. */
-export const DIG_DEPTHS = [10, 20, 30] as const;
-
+/** A dig goes through the whole crate unless told to stop sooner. */
 export const digQuerySchema = z.object({
-  depth: z.coerce.number().int().min(1).max(30).optional(),
+  depth: z.coerce.number().int().min(1).max(200).optional(),
 });
 
 export const digSoundQuerySchema = digQuerySchema.extend({

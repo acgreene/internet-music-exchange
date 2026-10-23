@@ -123,24 +123,16 @@ export class CratesClient {
   }
 
   /** Dig a crate someone made, as deep as the listener chose. */
-  public digCrate(
-    crateId: string,
-    depth: number,
-  ): Promise<ApiResult<DigSession>> {
-    return this.transport.get(ApiRoute.DigCrate, {
-      params: { crateId },
-      query: { depth },
-    });
+  public digCrate(crateId: string): Promise<ApiResult<DigSession>> {
+    return this.transport.get(ApiRoute.DigCrate, { params: { crateId } });
   }
 
   /** Dig a crate IME builds from a genre or a tag. */
-  public digSound(
-    sound: { genre?: string; tag?: string },
-    depth: number,
-  ): Promise<ApiResult<DigSession>> {
-    return this.transport.get(ApiRoute.DigSound, {
-      query: { ...sound, depth },
-    });
+  public digSound(sound: {
+    genre?: string;
+    tag?: string;
+  }): Promise<ApiResult<DigSession>> {
+    return this.transport.get(ApiRoute.DigSound, { query: sound });
   }
 
   /** New public crates by the people the signed-in user follows. */

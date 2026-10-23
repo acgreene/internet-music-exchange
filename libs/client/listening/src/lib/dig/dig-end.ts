@@ -10,7 +10,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient } from '@ime/api-client';
 import { CartService, SessionService } from '@ime/client-data';
-import type { DigRecord } from '@ime/models';
+import type { DigEdition, DigRecord } from '@ime/models';
 import { AlertComponent, CoverComponent } from '@ime/ui';
 import { formatMoney } from '@ime/utils';
 import { releasePriceLabel } from '../releases/release-labels';
@@ -21,7 +21,7 @@ type Format = string;
 /**
  * The bottom of the crate: how many records were dug and kept and how long
  * the listener listened, and the bag, which they can buy (picking a format
- * for each record), save as a crate, or leave.
+ * for each record), start a crate of their own from, or leave.
  */
 @Component({
   selector: 'ime-dig-end',
@@ -47,10 +47,12 @@ type Format = string;
             <dt class="text-canvas/60">Kept</dt>
             <dd>{{ bag().length }}</dd>
           </div>
-          <div class="flex gap-2">
-            <dt class="text-canvas/60">Listened</dt>
-            <dd>{{ listened() }}</dd>
-          </div>
+          @if (listenedMs() > 0) {
+            <div class="flex gap-2">
+              <dt class="text-canvas/60">Listened</dt>
+              <dd>{{ listened() }}</dd>
+            </div>
+          }
         </dl>
       </div>
 
@@ -92,20 +94,14 @@ type Format = string;
                     value="digital"
                     [selected]="formatOf(record) === 'digital'"
                   >
-                    Digital · {{ price(record) }}
+                    Digital, {{ price(record) }}
                   </option>
                   @for (edition of record.editions; track edition.variantId) {
                     <option
                       [value]="edition.variantId"
                       [selected]="formatOf(record) === edition.variantId"
                     >
-                      {{ formatName(edition.format) }}
-                      {{
-                        edition.variantLabel
-                          ? '(' + edition.variantLabel + ')'
-                          : ''
-                      }}
-                      · {{ money(edition.price, edition.currency) }}
+                      {{ editionLabel(edition) }}
                     </option>
                   }
                 </select>
@@ -125,13 +121,12 @@ type Format = string;
               Put the bag in my cart
             </button>
           }
-          @if (session.isSignedIn()) {
+          @if (session.isSignedIn() && !naming()) {
             <button
               class="rounded-control border border-canvas/60 px-4 py-2.5 font-bold hover:bg-canvas hover:text-ink"
-              [disabled]="saving()"
-              (click)="save()"
+              (click)="startNaming()"
             >
-              Save the bag as a crate
+              Make a crate from these
             </button>
           }
           <a
@@ -140,15 +135,51 @@ type Format = string;
             >Leave it</a
           >
         </div>
+        @if (naming()) {
+          <form
+            class="flex flex-col gap-3 rounded-card border border-canvas/30 p-4"
+            (submit)="save($event)"
+          >
+            <label class="flex flex-col gap-1.5 text-sm font-semibold">
+              Name your crate
+              <input
+                class="h-10 rounded-control border border-canvas/40 bg-ink px-3 font-normal text-canvas"
+                maxlength="80"
+                [value]="name()"
+                (input)="name.set($any($event.target).value)"
+              />
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                [checked]="isPublic()"
+                (change)="isPublic.set($any($event.target).checked)"
+              />
+              Public, so anyone can see it, dig it, and save it
+            </label>
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                class="rounded-control bg-marker px-4 py-2 font-bold text-ink hover:bg-canvas disabled:opacity-50"
+                type="submit"
+                [disabled]="saving() || !name().trim()"
+              >
+                Make the crate
+              </button>
+              <button
+                class="text-sm underline underline-offset-2"
+                type="button"
+                (click)="naming.set(false)"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        }
         <p class="text-xs text-canvas/60">
           Prices start at what each artist asks. You can change what you pay in
           the cart.
         </p>
       } @else {
-        <p class="text-canvas/80">
-          Nothing in the bag this time. Every dig ends; there's always another
-          crate.
-        </p>
         <div>
           <a
             class="rounded-control border border-canvas/60 px-4 py-2.5 font-bold hover:bg-canvas hover:text-ink"
@@ -185,6 +216,10 @@ export class DigEnd {
       ),
   });
   protected readonly saving = signal(false);
+  /** Naming the crate the kept records will start. */
+  protected readonly naming = signal(false);
+  protected readonly name = signal('');
+  protected readonly isPublic = signal(false);
   protected readonly error = signal<string | null>(null);
 
   /** Something in the bag the listener does not own yet. */
@@ -214,6 +249,12 @@ export class DigEnd {
 
   protected money(amount: number, currency: string): string {
     return formatMoney(amount, currency);
+  }
+
+  protected editionLabel(edition: DigEdition): string {
+    const name = this.formatName(edition.format);
+    const variant = edition.variantLabel ? ` (${edition.variantLabel})` : '';
+    return `${name}${variant}, ${this.money(edition.price, edition.currency)}`;
   }
 
   protected formatName(format: string): string {
@@ -271,12 +312,18 @@ export class DigEnd {
     await this.router.navigateByUrl('/cart');
   }
 
-  protected async save(): Promise<void> {
+  protected startNaming(): void {
+    this.name.set(`Kept from ${this.crateName()}`.slice(0, 80));
+    this.naming.set(true);
+  }
+
+  protected async save(event: Event): Promise<void> {
+    event.preventDefault();
     this.saving.set(true);
     this.error.set(null);
     const result = await this.api.crates.create({
-      name: `Dug from ${this.crateName()}`.slice(0, 80),
-      visibility: 'private',
+      name: this.name().trim(),
+      visibility: this.isPublic() ? 'public' : 'private',
       releaseIds: this.bag().map((record) => record.release.id),
     });
     this.saving.set(false);

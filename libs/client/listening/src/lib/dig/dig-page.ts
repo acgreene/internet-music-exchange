@@ -14,7 +14,6 @@ import { ApiClient, unwrap } from '@ime/api-client';
 import { PlayerService, type QueueTrack, currentValue } from '@ime/client-data';
 import {
   type ArtistPageRenderResponse,
-  DIG_DEPTHS,
   type DigRecord,
   type TracklistItem,
 } from '@ime/models';
@@ -23,7 +22,7 @@ import { PageMetaService } from '../page-meta';
 import { DigEnd } from './dig-end';
 import { DigRecordView } from './dig-record';
 
-type Phase = 'start' | 'digging' | 'end';
+type Phase = 'digging' | 'end';
 
 /** How far a finger must travel to count as a swipe, in pixels. */
 const SWIPE_PX = 48;
@@ -31,8 +30,8 @@ const SWIPE_PX = 48;
 const END_SLACK_MS = 1500;
 
 /**
- * Dig mode, `/dig/crates/<id>` or `/dig/sound?genre=`: a crate one record at
- * a time, as deep as the listener chose, then the bottom of the crate.
+ * Dig mode, `/dig/crates/<id>` or `/dig/sound?genre=`: a whole crate one
+ * record at a time, starting at once, then the bottom of the crate.
  * Up and down move between records and left and right between the tracks
  * the artist shares, by keyboard or by swiping. Nothing plays until the
  * listener presses play.
@@ -68,77 +67,16 @@ const END_SLACK_MS = 1500;
           >{{ index() + 1 }} / {{ records().length }}</span
         >
         <button
-          class="rounded-control border border-canvas/30 px-2.5 py-1 font-mono text-xs hover:bg-canvas hover:text-ink"
+          class="rounded-control border border-canvas/30 px-2.5 py-1 text-xs font-semibold hover:bg-canvas hover:text-ink"
           (click)="finish()"
         >
-          Bag · {{ bag().length }}
+          Finish ({{ bag().length }} kept)
         </button>
       }
     </header>
 
     @if (dig(); as dig) {
       @switch (phase()) {
-        @case ('start') {
-          <div
-            class="flex flex-1 flex-col justify-center overflow-y-auto px-4 py-10 md:px-8"
-          >
-            <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
-              <span
-                class="font-mono text-xs tracking-wider text-canvas/60 uppercase"
-                >Dig mode · {{ dig.available }} records in the crate</span
-              >
-              <h1
-                class="text-5xl leading-[0.9] font-black tracking-[-0.05em] md:text-7xl"
-              >
-                {{ dig.name }}
-              </h1>
-              @if (dig.reason; as reason) {
-                <p class="max-w-prose text-lg text-canvas/80">{{ reason }}</p>
-              }
-              <div class="flex flex-col gap-2">
-                <span class="text-sm font-semibold">How deep?</span>
-                <div
-                  class="flex flex-wrap gap-2"
-                  role="group"
-                  aria-label="Depth"
-                >
-                  @for (option of depths(); track option) {
-                    <button
-                      class="rounded-control border px-4 py-2 font-mono"
-                      [class]="
-                        depth() === option
-                          ? 'border-marker bg-marker text-ink'
-                          : 'border-canvas/40 hover:border-canvas'
-                      "
-                      [attr.aria-pressed]="depth() === option"
-                      (click)="depth.set(option)"
-                    >
-                      {{
-                        option === dig.available && option < 10
-                          ? 'All ' + option
-                          : option
-                      }}
-                    </button>
-                  }
-                </div>
-              </div>
-              <div>
-                <button
-                  class="rounded-control bg-marker px-5 py-3 text-lg font-bold text-ink hover:bg-canvas disabled:opacity-50"
-                  [disabled]="!dig.records.length"
-                  (click)="start()"
-                >
-                  Start digging
-                </button>
-              </div>
-              <p class="font-mono text-xs text-canvas/60">
-                ↑ ↓ records · ← → tracks · space plays · K keeps. On a phone,
-                swipe. Nothing plays until you press play, and the dig ends at
-                the bottom of the crate.
-              </p>
-            </div>
-          </div>
-        }
         @case ('digging') {
           <div class="flex min-h-0 flex-1">
             <nav
@@ -308,7 +246,7 @@ export class DigPage {
   public readonly genre = input<string>();
   public readonly tag = input<string>();
 
-  /** Fetched at the deepest dig; the chosen depth slices it. */
+  /** The whole crate, to dig from the top. */
   protected readonly session = resource({
     params: () => ({
       crateId: this.crateId(),
@@ -318,37 +256,25 @@ export class DigPage {
     loader: async ({ params }) =>
       unwrap(
         params.crateId
-          ? await this.api.crates.digCrate(params.crateId, 30)
-          : await this.api.crates.digSound(
-              { genre: params.genre, tag: params.tag },
-              30,
-            ),
+          ? await this.api.crates.digCrate(params.crateId)
+          : await this.api.crates.digSound({
+              genre: params.genre,
+              tag: params.tag,
+            }),
       ),
   });
   protected readonly dig = computed(() => currentValue(this.session));
 
-  protected readonly phase = signal<Phase>('start');
-  protected readonly depth = signal(20);
+  protected readonly phase = signal<Phase>('digging');
   protected readonly index = signal(0);
   /** How far into the crate the listener got. */
-  protected readonly reached = signal(0);
+  protected readonly reached = signal(1);
   protected readonly bag = signal<DigRecord[]>([]);
   protected readonly listenedMs = signal(0);
   /** The listener chose the cover over a record's designed page. */
   protected readonly designOff = signal(false);
 
-  /** The depths offered: 10, 20, 30, or all of a smaller crate. */
-  protected readonly depths = computed(() => {
-    const available = this.dig()?.available ?? 0;
-    const fits = DIG_DEPTHS.filter((depth) => depth <= available);
-    return fits.length && fits[fits.length - 1] === available
-      ? [...fits]
-      : [...fits, available].filter((depth) => depth > 0);
-  });
-
-  protected readonly records = computed(() =>
-    (this.dig()?.records ?? []).slice(0, this.depth()),
-  );
+  protected readonly records = computed(() => this.dig()?.records ?? []);
   protected readonly current = computed(
     () => this.records()[this.index()] ?? null,
   );
@@ -409,7 +335,6 @@ export class DigPage {
         description:
           dig.reason ?? `Dig through ${dig.available} records on IME.`,
       });
-      untracked(() => this.depth.set(Math.min(20, dig.available) || 20));
     });
 
     // count only time actually spent listening in this dig
@@ -438,12 +363,6 @@ export class DigPage {
         }
       });
     });
-  }
-
-  protected start(): void {
-    this.index.set(0);
-    this.reached.set(1);
-    this.phase.set('digging');
   }
 
   protected finish(): void {
