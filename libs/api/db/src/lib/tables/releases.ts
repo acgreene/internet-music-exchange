@@ -145,10 +145,7 @@ export const releases = pgTable(
       'releases_description_max_length',
       sql`length(${table.description}) <= 5000`,
     ),
-    check(
-      'releases_credits_max_length',
-      sql`length(${table.credits}) <= 5000`,
-    ),
+    check('releases_credits_max_length', sql`length(${table.credits}) <= 5000`),
     // browsing and search find releases by any of their genres or tags
     index('releases_genres_idx').using('gin', table.genres),
     index('releases_tags_idx').using('gin', table.tags),

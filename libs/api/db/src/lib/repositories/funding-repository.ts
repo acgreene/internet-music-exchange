@@ -105,7 +105,8 @@ export interface IssueStatementParams {
 
 export interface RecordContributionParams {
   userId?: string | null;
-  isAnonymous?: boolean;
+  /** The name to thank them by publicly, or null to leave them off. */
+  thanksName?: string | null;
   destination: GivingDestination;
   cadence: GivingCadence;
   source: ContributionSource;
@@ -805,6 +806,29 @@ export class FundingRepository {
   }
 
   /**
+   * The names donors asked to be thanked by for gifts in a span of time,
+   * each once, alphabetically. Amounts and destinations stay private.
+   *
+   * @param from - The start, inclusive.
+   * @param to - The end, exclusive.
+   */
+  public async listThanksNames(from: Date, to: Date): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ name: contributions.thanksName })
+      .from(contributions)
+      .where(
+        and(
+          isNotNull(contributions.thanksName),
+          gte(contributions.createdAt, from),
+          lt(contributions.createdAt, to),
+        ),
+      );
+    return rows
+      .map((row) => row.name as string)
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  /**
    * Total what was given to one destination in a span of time.
    *
    * @param destination - The platform or the developers.
@@ -842,6 +866,27 @@ export class FundingRepository {
       .from(reserveEntries);
 
     return balance?.value ?? 0;
+  }
+
+  /**
+   * What moved through the reserve for one billing month, by kind. Donations
+   * are dated rather than tied to a month, so they are not counted here.
+   *
+   * @param month - The first day of the month.
+   * @returns Each kind's signed total, in cents.
+   */
+  public async sumReserveForMonth(
+    month: string,
+  ): Promise<Partial<Record<ReserveEntryKind, number>>> {
+    const rows = await this.db
+      .select({
+        kind: reserveEntries.kind,
+        total: sum(reserveEntries.amount).mapWith(Number),
+      })
+      .from(reserveEntries)
+      .where(eq(reserveEntries.month, month))
+      .groupBy(reserveEntries.kind);
+    return Object.fromEntries(rows.map((row) => [row.kind, row.total]));
   }
 
   /**

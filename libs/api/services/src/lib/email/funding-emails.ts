@@ -9,6 +9,36 @@ const dollars = (cents: number) => formatMoney(cents, 'usd');
  * means, and what to do.
  */
 export const fundingEmails = {
+  giftThanks(
+    to: string,
+    gift: {
+      parts: { platform: number; developers: number };
+      thanksName: string | null;
+      monthly: boolean;
+      costsUrl: string;
+    },
+  ): Email {
+    const { platform, developers } = gift.parts;
+    const every = gift.monthly ? ' a month' : '';
+    const lines = [
+      `Thank you for giving ${dollars(platform + developers)}${every} to IME.`,
+      platform && developers
+        ? `${dollars(platform)} goes to IME's hosting and ${dollars(developers)} to its developers, as you chose.`
+        : null,
+      platform
+        ? `What goes to hosting pays real bills and lowers every seller's share. You can see where it goes: ${gift.costsUrl}`
+        : null,
+      gift.thanksName
+        ? `You're on this month's thank-you list as ${gift.thanksName}.`
+        : null,
+    ];
+    return {
+      to,
+      subject: 'Thank you for supporting IME',
+      text: lines.filter(Boolean).join('\n\n'),
+    };
+  },
+
   lowBalance(to: string, balance: number, billingUrl: string): Email {
     return {
       to,

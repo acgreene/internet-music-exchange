@@ -1,6 +1,5 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean,
   check,
   index,
   integer,
@@ -8,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
@@ -59,8 +59,11 @@ export const contributions = pgTable(
     userId: uuid('user_id').references(() => users.id, {
       onDelete: 'set null',
     }),
-    /** The donor asked not to be named. */
-    isAnonymous: boolean('is_anonymous').notNull().default(false),
+    /**
+     * The name to thank them by on the public thank-you list. Null when they
+     * would rather not be listed.
+     */
+    thanksName: text('thanks_name'),
 
     destination: givingDestinationEnum('destination').notNull(),
     cadence: givingCadenceEnum('cadence').notNull(),
@@ -68,7 +71,8 @@ export const contributions = pgTable(
 
     amount: integer('amount').notNull(),
 
-    stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
+    /** Shared by both rows when one gift is split between destinations. */
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
     /** Set for every charge of a monthly gift. */
     stripeSubscriptionId: text('stripe_subscription_id'),
 
@@ -82,6 +86,14 @@ export const contributions = pgTable(
       table.createdAt,
     ),
     check('contributions_amount_positive', sql`${table.amount} > 0`),
+    check(
+      'contributions_thanks_name_max_length',
+      sql`length(${table.thanksName}) <= 60`,
+    ),
+    unique('contributions_payment_destination_unique').on(
+      table.stripePaymentIntentId,
+      table.destination,
+    ),
     check(
       'contributions_subscription_when_monthly',
       sql`(${table.cadence} = 'monthly') = (${table.stripeSubscriptionId} IS NOT NULL)`,

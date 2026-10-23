@@ -172,10 +172,13 @@ Each is a property of `ImeServices`, named in brackets.
   split between its managers: viewing the split, proposing a new one, and
   accepting a share. Use it for the cost-split screen.
 - **`DonationService`** (`donations`): gifts on the donation page, once or
-  monthly, to the platform or the developers. Use it to start a donation
-  checkout.
+  monthly, split however the giver likes between the platform and the
+  developers, with an optional name for the thank-you list and a thank-you
+  email. Use it to start a donation checkout.
 - **`PublicCostsService`** (`publicCosts`): the public costs page: what each
-  closed month cost, how it was shared, and the reserve. Use it for that page.
+  closed month cost and who paid it, the reserve against its target, the
+  month's thank-you names, the shared-cost cap, the smallest top-up, and the
+  latest rates for estimates. Use it for that page.
 - **`StripeWebhookService`** (`stripeWebhooks`): both Stripe webhooks. The
   platform one records top-ups, their card fees, and gifts. The Connect one
   keeps sellers' account status current and records sales, design purchases,

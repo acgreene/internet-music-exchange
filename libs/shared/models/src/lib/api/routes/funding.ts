@@ -195,13 +195,15 @@ export const acceptShareSchema = z.object({
   outcome: z.enum(['accepted', 'applied']),
 });
 
+/** One gift, split however the donor likes between hosting and developers. */
 export const donationRequestSchema = z.object({
-  destination: givingDestinationSchema,
   cadence: z.enum(['one_time', 'monthly']),
-  /** In USD cents. */
-  amount: z.number().int(),
-  /** Leave the donor's name off the gift. */
-  anonymous: z.boolean().optional(),
+  /** To the platform's hosting, in USD cents. */
+  platform: z.number().int().min(0),
+  /** To the developers, in USD cents. */
+  developers: z.number().int().min(0),
+  /** The name to thank them by on the public list, if they want to be. */
+  thanksName: z.string().max(60).optional(),
 });
 
 export type DonationRequest = z.infer<typeof donationRequestSchema>;
@@ -230,12 +232,31 @@ export const publicCostsSchema = z.object({
       ),
       totalCosts: z.number().int(),
       sellerCount: z.number().int(),
+      /** What every seller paid toward the shared bills, the same for all. */
+      sharedShare: z.number().int(),
+      /** The middle seller's whole share, before card fees. */
       medianShare: z.number().int(),
+      /** Every seller's shares together, before card fees. */
+      sellersPaid: z.number().int(),
+      /** What IME's founder paid so no shared part passed the cap. */
       subsidy: z.number().int(),
+      coveredFromReserve: z.number().int(),
+      creditedToSellers: z.number().int(),
       platformDonations: z.number().int(),
     }),
   ),
   reserveBalance: z.number().int(),
+  reserveTarget: z.number().int(),
+  /** Who asked to be thanked by name for gifts this month, alphabetically. */
+  thanks: z.object({ month: z.string(), names: z.array(z.string()) }),
+  sharedCostCap: z.number().int(),
+  minimumTopUp: z.number().int(),
+  rates: z
+    .object({
+      storageMicrodollarsPerGbMonth: z.number().int(),
+      requestMicrodollarsPerMillion: z.number().int(),
+    })
+    .nullable(),
 });
 
 export type PublicCosts = z.infer<typeof publicCostsSchema>;

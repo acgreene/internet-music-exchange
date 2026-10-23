@@ -28,10 +28,10 @@ create an empty migration and fill it in:
 pnpm db:generate --custom --name=some_function
 ```
 
-**Note**: Don't run `drizzle-kit push`! It reconciles the database directly against                                                                                               
-`schema.ts`, bypassing the migration files. So it creates RLS policies with                                                                                            
-empty expressions (denying everything) and skips the hand written grants,                                                                                               
-functions, and triggers. The result looks structurally correct and                                                                                             
+**Note**: Don't run `drizzle-kit push`! It reconciles the database directly against  
+`schema.ts`, bypassing the migration files. So it creates RLS policies with  
+empty expressions (denying everything) and skips the hand written grants,  
+functions, and triggers. The result looks structurally correct and  
 denies every query.
 
 ### Pointing at production instead of local

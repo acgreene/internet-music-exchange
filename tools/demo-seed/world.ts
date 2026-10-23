@@ -43,6 +43,10 @@ const SELLERS = 180;
 const DESIGNERS = 10;
 const ARTISTS = 200;
 const CLOSED_MONTHS = 6;
+/** As in the monthly close: the most a seller pays for shared bills, in cents. */
+const SHARED_COST_CAP = 100;
+/** As in the monthly close: the reserve is full at this many months of shared bills. */
+const RESERVE_TARGET_MONTHS = 3;
 
 const DAY = 24 * 60 * 60 * 1000;
 const iso = (date: Date) => date.toISOString().slice(0, 10);
@@ -1457,6 +1461,13 @@ export function buildWorld(options: WorldOptions) {
   };
 
   let statementCount = 0;
+  // each closed month's sellers and shared bills, for settling the reserve
+  const closings: {
+    month: Date;
+    closedAt: Date;
+    shared: number;
+    sellers: string[];
+  }[] = [];
   months.forEach((month, monthIndex) => {
     const monthEnd = monthStart(now, monthIndex - CLOSED_MONTHS + 1);
     const days = (monthEnd.getTime() - month.getTime()) / DAY;
@@ -1469,9 +1480,10 @@ export function buildWorld(options: WorldOptions) {
       ownership_guarantee:
         monthIndex >= 2 ? random.int(10, 60) * (monthIndex - 1) : 0,
     };
+    const costRows: Row<typeof schema.platformCosts>[] = [];
     for (const [category, amount] of Object.entries(costs)) {
       if (!amount) continue;
-      rows.platformCosts.push({
+      costRows.push({
         id: next('cost'),
         month: iso(month),
         category: category as keyof typeof costs,
@@ -1495,9 +1507,14 @@ export function buildWorld(options: WorldOptions) {
       costs.other_services +
       costs.ownership_guarantee;
     const sharedEach = Math.round(shared / Math.max(1, activeSellers.length));
-    const subsidyEach = Math.round(
-      sharedEach * Math.max(0.15, 0.6 - monthIndex * 0.08),
-    );
+    // IME's founder pays whatever would push the shared part past the cap
+    const subsidyEach = Math.max(0, sharedEach - SHARED_COST_CAP);
+    closings.push({
+      month,
+      closedAt: new Date(monthEnd.getTime() + 2 * DAY),
+      shared,
+      sellers: activeSellers,
+    });
     rows.billingPeriods.push({
       month: iso(month),
       storageMicrodollarsPerGbMonth: 15000,
@@ -1568,6 +1585,19 @@ export function buildWorld(options: WorldOptions) {
       balance.set(userId, (balance.get(userId) ?? 0) - total);
       statementCount++;
     }
+    // the storage bill is what sellers' files cost, so the books balance
+    const storage = costRows.find(
+      (row) => row.category === 'storage_and_delivery',
+    );
+    if (storage) {
+      storage.amount = Math.max(
+        1,
+        rows.statements
+          .filter((statement) => statement.month === iso(month))
+          .reduce((sum, statement) => sum + statement.usageAmount, 0),
+      );
+    }
+    rows.platformCosts.push(...costRows);
   });
   // this month, open and counting
   rows.billingPeriods.push({
@@ -1591,47 +1621,82 @@ export function buildWorld(options: WorldOptions) {
     });
   }
 
-  // gifts on the donation page, and the reserve they fill
-  let gift = 0;
-  for (let i = 0; i < 260; i++) {
-    const donor = random.pick(listeners);
-    const destination = random.chance(0.75) ? 'platform' : 'developers';
-    const monthly = random.chance(0.25);
-    const createdAt = random.dateBetween(months[0], now);
+  // gifts on the donation page, on their own sequence, sized for a young
+  // platform: a few a month, mostly small
+  const giving = new Random(3303);
+  const gifts: { amount: number; createdAt: Date; id: string }[] = [];
+  for (let i = 0; i < 70; i++) {
+    const donor = giving.pick(listeners);
+    const destination = giving.chance(0.75) ? 'platform' : 'developers';
+    const monthly = giving.chance(0.2);
+    const createdAt = giving.dateBetween(months[0], now);
     const id = next('contribution');
+    const amount = giving.pick([300, 500, 500, 500, 1000, 1000, 2000]);
     rows.contributions.push({
       id,
-      userId: random.chance(0.15) ? null : donor.id,
-      isAnonymous: random.chance(0.3),
+      userId: giving.chance(0.15) ? null : donor.id,
+      thanksName: giving.chance(0.6)
+        ? (donor.name ?? donor.username).split(' ')[0]
+        : null,
       destination,
       cadence: monthly ? 'monthly' : 'one_time',
       source: 'donation_page',
-      amount: random.pick([300, 500, 500, 1000, 1000, 2000, 2500, 5000]),
-      stripePaymentIntentId: `pi_demo_gift_${gift}`,
-      stripeSubscriptionId: monthly ? `sub_demo_${gift}` : null,
+      amount,
+      stripePaymentIntentId: `pi_demo_gift_${i}`,
+      stripeSubscriptionId: monthly ? `sub_demo_${i}` : null,
       createdAt,
     });
-    gift++;
-    if (destination === 'platform') {
+    if (destination === 'platform') gifts.push({ amount, createdAt, id });
+  }
+
+  // gifts fill the reserve up to three months of shared bills; at each close
+  // anything past that goes back to the month's sellers, as the real close does
+  let reserve = 0;
+  const settle = (until: Date) => {
+    for (const gift of gifts.splice(0).filter((g) => {
+      if (g.createdAt < until) return true;
+      gifts.push(g);
+      return false;
+    })) {
+      reserve += gift.amount;
       rows.reserveEntries.push({
         id: next('reserve'),
         kind: 'donation',
-        amount: rows.contributions[rows.contributions.length - 1].amount,
-        contributionId: id,
-        createdAt,
+        amount: gift.amount,
+        contributionId: gift.id,
+        createdAt: gift.createdAt,
       });
     }
-  }
-  for (const month of months.slice(2)) {
+  };
+  for (const close of closings) {
+    settle(close.closedAt);
+    const target = RESERVE_TARGET_MONTHS * close.shared;
+    const each = Math.floor(
+      (reserve - target) / Math.max(1, close.sellers.length),
+    );
+    if (each <= 0) continue;
+    const credited = each * close.sellers.length;
+    reserve -= credited;
     rows.reserveEntries.push({
       id: next('reserve'),
-      kind: 'covered_costs',
-      amount: -random.int(200, 900),
-      month: iso(month),
-      note: 'Steadied shares in a month with higher costs',
-      createdAt: month,
+      kind: 'credited_to_sellers',
+      amount: -credited,
+      month: iso(close.month),
+      createdAt: close.closedAt,
     });
+    for (const userId of close.sellers) {
+      rows.balanceEntries.push({
+        id: next('balance'),
+        userId,
+        kind: 'credit',
+        amount: each,
+        note: `Reserve surplus for ${iso(close.month).slice(0, 7)}`,
+        createdAt: close.closedAt,
+      });
+      balance.set(userId, (balance.get(userId) ?? 0) + each);
+    }
   }
+  settle(now);
 
   // ------------------------------------------------------------ moderation
   const adminId = owner?.id ?? null;

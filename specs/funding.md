@@ -43,7 +43,7 @@ Each month, a seller's share is the sum of:
 2. **Shared costs**: the month's platform-wide costs that belong to no one seller, divided evenly by the number of sellers. These include servers, database, email, domain, monitoring, and the ownership guarantee (see below).
 3. **Card fees** on that seller's own top-ups.
 
-Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. While there are few sellers, IME's creators cover part of the shared costs so that shares stay small, and each statement shows that subsidy.
+Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. No seller pays more than $1 a month toward shared costs. While there are too few sellers to keep shares at cents, IME's founder pays the rest out of pocket, and each statement shows that subsidy. It fades on its own as sellers join.
 
 ## Paying
 
@@ -76,12 +76,13 @@ Beyond their share, anyone can give extra to one of two places, and always choos
 How people can give:
 
 - A seller can add an optional extra amount to any top-up or to their auto top-up, and choose where it goes. The extra amount always defaults to zero.
-- Anyone, with or without an account, can give on the donation page, once or monthly, to either destination.
+- Anyone, with or without an account, can give on the donation page, once or monthly, and split one gift between the two destinations however they like.
+- A giver can ask to be thanked by a name of their choosing on the public thank-you list for that month. The list shows names only, alphabetically, never amounts or destinations. Everyone who gives gets a thank-you email.
 
 ### The reserve
 
-- The platform keeps a small reserve that covers months when costs spike, so sellers' shares stay steady.
-- Surplus contributions and platform donations go into it. When it is full, surplus is credited to sellers' next statements.
+- The platform keeps a reserve of three months of shared costs, which covers months when costs spike, so sellers' shares stay steady.
+- Surplus contributions and platform donations go into it. When it is full, anything past that is credited evenly to the month's sellers.
 
 ## Web app
 
@@ -93,16 +94,21 @@ How people can give:
 
 ### Public costs page
 
-- The platform's monthly costs, grouped by category (storage and delivery, hosting, database, other services, ownership guarantee).
-- How many sellers shared them, and the typical (median) monthly share.
-- The creators' subsidy, platform donations received, and the reserve balance.
-- A plain statement that none of the platform's money goes to its developers.
-- Developer support is personal and is not shown.
+- Leads with what every seller paid toward shared costs last month, the same for all, and the typical seller's whole share.
+- The promises: never more than $1 a month toward shared costs, how long the smallest top-up lasts the typical seller, and no cut of sales.
+- The month in full: what it cost, by category (storage and delivery, hosting, database, other services, ownership guarantee), and who paid it (sellers, the founder's subsidy, the reserve). The two balance, apart from rounding.
+- The reserve against its target, gifts to hosting that month, and what was given back to sellers.
+- This month's thank-you list.
+- A rough estimate of what a seller would pay, from how many songs, releases, and plays they have, at the latest rates.
+- Earlier months in a table.
+- Why there is no catch: no cut, no ads, no paid placement, every bill shown, and the code is public.
+- A plain statement that none of the platform's money goes to the platform, its developers, or its founder as profit. Developer support is personal and is not shown.
+- Ways in: selling on IME, and chipping in.
 
 ### Donation page
 
-- Anyone can give once or monthly, to the platform, the developers, or both. Givers can stay anonymous.
-- The developer option is presented quietly and plainly as optional, never pre-selected.
+- Anyone can give once or monthly, choosing one amount and how it splits between the platform and the developers. Givers are only named if they ask to be.
+- The developer option is presented quietly and plainly as optional, never pre-selected: a gift starts all to hosting.
 
 ## Mobile app
 
@@ -119,7 +125,7 @@ How people can give:
 
 ## How we talk about it
 
-Public copy describes IME as **built for, funded by, and hosted by the community**, at cost. It explains that sellers chip in for what they use, that no one profits from those contributions, and that the creators cannot cover the bills alone.
+Public copy describes IME as **built for, funded by, and hosted by the community**, at cost. It explains that sellers chip in for what they use and that nobody behind IME profits from those contributions, while artists and designers keep what they earn. It says "IME's founder" or "IME's developers", never "creators", which on a music platform means the artists.
 
 IME's voice can be bold about what it stands for and against: the culture of music and the people who make it, who should be paid what their work is worth, and against a platform cut, shareholders, and AI-generated music ("A music platform for the culture."). It makes that case with plain facts, such as a receipt showing where a sale's money goes, rather than slogans or party-political labels, and without guilt or a fundraising tone. Comparisons with other platforms name them and use their own published figures (for example, Bandcamp's published average share for artists).
 
@@ -134,3 +140,4 @@ IME launches as an LLC run at cost, with the aim of becoming a nonprofit as it g
 - Named support tiers.
 - Giving to charities through IME.
 - Becoming a nonprofit.
+- Reading the month's bills straight from the providers instead of entering them at the monthly close: Cloudflare R2's usage for storage and delivery, DigitalOcean's billing API for hosting, and fixed amounts for the database, email, and domain. To build once IME is deployed on DigitalOcean with its production bucket.
