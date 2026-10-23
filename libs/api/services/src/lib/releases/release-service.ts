@@ -42,6 +42,8 @@ import {
 } from '../storage/media-types';
 
 const TITLE_MAX_LENGTH = 200;
+const ABOUT_MAX_LENGTH = 5000;
+const LYRICS_MAX_LENGTH = 20000;
 
 export interface CreateReleaseInput {
   title: string;
@@ -57,6 +59,8 @@ export interface UpdateReleaseInput {
   genres?: string[];
   tags?: string[];
   sideStarts?: number[];
+  description?: string | null;
+  credits?: string | null;
 }
 
 export interface PricingInput {
@@ -68,6 +72,7 @@ export interface PricingInput {
 export interface TrackInput {
   title?: string;
   durationMs?: number | null;
+  lyrics?: string | null;
 }
 
 export interface AssetInput {
@@ -224,6 +229,12 @@ export class ReleaseService {
           input.sideStarts === undefined
             ? undefined
             : await this.validSideStarts(releaseId, input.sideStarts),
+        description: this.validText(
+          input.description,
+          ABOUT_MAX_LENGTH,
+          'A description',
+        ),
+        credits: this.validText(input.credits, ABOUT_MAX_LENGTH, 'Credits'),
       });
     } catch (error) {
       if (getPostgresErrorCode(error) === PostgresErrorCode.UniqueViolation) {
@@ -433,6 +444,7 @@ export class ReleaseService {
       title:
         input.title === undefined ? undefined : this.validTitle(input.title),
       durationMs: input.durationMs,
+      lyrics: this.validText(input.lyrics, LYRICS_MAX_LENGTH, 'Lyrics'),
     });
   }
 
@@ -783,6 +795,20 @@ export class ReleaseService {
       );
     }
     return trimmed;
+  }
+
+  /** Optional text, trimmed, with nothing left meaning none. */
+  private validText(
+    text: string | null | undefined,
+    maxLength: number,
+    what: string,
+  ): string | null | undefined {
+    if (text === undefined || text === null) return text;
+    const trimmed = text.trim();
+    if (trimmed.length > maxLength) {
+      throw this.badRequest(`${what} can be up to ${maxLength} characters.`);
+    }
+    return trimmed || null;
   }
 
   private validGenres(genres: string[]): string[] {

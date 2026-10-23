@@ -7,7 +7,13 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { form, FormField, required, submit } from '@angular/forms/signals';
+import {
+  form,
+  FormField,
+  maxLength,
+  required,
+  submit,
+} from '@angular/forms/signals';
 import { ApiClient } from '@ime/api-client';
 import type { ManagedReleaseResponse, ReleaseKind } from '@ime/models';
 import {
@@ -18,8 +24,11 @@ import {
 } from '@ime/ui';
 import { RELEASE_KINDS } from '../release-options';
 
+const ABOUT_MAX_LENGTH = 5000;
+
 /**
- * A release's title, kind, release date, and address.
+ * A release's title, kind, release date, address, and what the artist says
+ * about it and who made it.
  */
 @Component({
   selector: 'ime-details-section',
@@ -69,6 +78,30 @@ import { RELEASE_KINDS } from '../release-options';
             <input imeInput spellcheck="false" [formField]="detailsForm.slug" />
           </ime-field>
         </div>
+        <ime-field
+          label="About this release"
+          hint="Optional. The story behind it, in your words."
+          [errors]="detailsForm.description().errors()"
+          [touched]="detailsForm.description().touched()"
+        >
+          <textarea
+            imeInput
+            rows="5"
+            [formField]="detailsForm.description"
+          ></textarea>
+        </ime-field>
+        <ime-field
+          label="Credits"
+          hint="Optional. Who played, wrote, recorded, mixed, and made the art. One per line reads best."
+          [errors]="detailsForm.credits().errors()"
+          [touched]="detailsForm.credits().touched()"
+        >
+          <textarea
+            imeInput
+            rows="5"
+            [formField]="detailsForm.credits"
+          ></textarea>
+        </ime-field>
         @if (saved()) {
           <ime-alert tone="success">Saved.</ime-alert>
         }
@@ -106,10 +139,18 @@ export class DetailsSection {
       kind: release.kind as ReleaseKind,
       releasedAt: release.releasedAt ?? '',
       slug: release.slug,
+      description: release.description ?? '',
+      credits: release.credits ?? '',
     };
   });
   protected readonly detailsForm = form(this.model, (path) => {
     required(path.title, { message: 'Give it a title.' });
+    maxLength(path.description, ABOUT_MAX_LENGTH, {
+      message: `Keep it under ${ABOUT_MAX_LENGTH} characters.`,
+    });
+    maxLength(path.credits, ABOUT_MAX_LENGTH, {
+      message: `Keep it under ${ABOUT_MAX_LENGTH} characters.`,
+    });
   });
 
   protected async save(event: Event): Promise<void> {
@@ -117,12 +158,15 @@ export class DetailsSection {
     this.saved.set(false);
     this.error.set(null);
     await submit(this.detailsForm, async () => {
-      const { title, kind, releasedAt, slug } = this.model();
+      const { title, kind, releasedAt, slug, description, credits } =
+        this.model();
       const result = await this.api.releases.update(this.managed().release.id, {
         title: title.trim(),
         kind,
         releasedAt: releasedAt || null,
         slug: slug.trim(),
+        description: description.trim() || null,
+        credits: credits.trim() || null,
       });
       if (result.ok) {
         this.saved.set(true);

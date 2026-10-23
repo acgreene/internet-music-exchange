@@ -73,6 +73,10 @@ export const releaseSchema = z.object({
   tags: z.array(z.string()),
   /** The track positions where sides B, C, and so on begin. */
   sideStarts: z.array(z.number().int()),
+  /** What the artist says about the release. */
+  description: z.string().nullable(),
+  /** Who played, wrote, recorded, and made it. */
+  credits: z.string().nullable(),
 });
 
 export type ReleaseResponse = z.infer<typeof releaseSchema>;
@@ -85,6 +89,7 @@ export const tracklistItemSchema = z.object({
   position: z.number().int(),
   title: z.string(),
   durationMs: z.number().int().nullable(),
+  lyrics: z.string().nullable(),
   /** Anyone can stream it while the release is on sale. */
   isPreview: z.boolean(),
 });
@@ -96,6 +101,7 @@ export const trackSchema = z.object({
   artistId: z.guid(),
   title: z.string(),
   durationMs: z.number().int().nullable(),
+  lyrics: z.string().nullable(),
   createdAt: timestampSchema,
 });
 
@@ -192,6 +198,8 @@ export const updateReleaseRequestSchema = z.object({
   genres: z.array(z.enum(GENRE_IDS)).optional(),
   tags: z.array(z.string()).optional(),
   sideStarts: z.array(z.number().int()).optional(),
+  description: z.string().max(5000).nullable().optional(),
+  credits: z.string().max(5000).nullable().optional(),
 });
 
 export type UpdateReleaseRequest = z.infer<typeof updateReleaseRequestSchema>;
@@ -207,6 +215,7 @@ export type SetPricingRequest = z.infer<typeof setPricingRequestSchema>;
 export const trackRequestSchema = z.object({
   title: z.string(),
   durationMs: z.number().int().nullable().optional(),
+  lyrics: z.string().max(20000).nullable().optional(),
 });
 
 export type TrackRequest = z.infer<typeof trackRequestSchema>;

@@ -37,6 +37,7 @@ export interface ReleaseTracklistItem {
   position: number;
   title: string;
   durationMs: number | null;
+  lyrics: string | null;
   isPreview: boolean;
 }
 
@@ -56,6 +57,8 @@ export interface UpdateReleaseParams {
   genres?: string[];
   tags?: string[];
   sideStarts?: number[];
+  description?: string | null;
+  credits?: string | null;
 }
 
 export interface CreateTrackParams {
@@ -67,6 +70,7 @@ export interface CreateTrackParams {
 export interface UpdateTrackParams {
   title?: string;
   durationMs?: number | null;
+  lyrics?: string | null;
 }
 
 export interface TrackPosition {
@@ -97,6 +101,8 @@ const releaseWithArtistColumns = {
   genres: releases.genres,
   tags: releases.tags,
   sideStarts: releases.sideStarts,
+  description: releases.description,
+  credits: releases.credits,
   artistName: artists.name,
   artistHandle: artists.handle,
 };
@@ -266,6 +272,7 @@ export class ReleaseRepository {
         position: releaseTracks.position,
         title: tracks.title,
         durationMs: tracks.durationMs,
+        lyrics: tracks.lyrics,
         isPreview: releaseTracks.isPreview,
       })
       .from(releaseTracks)
@@ -301,6 +308,7 @@ export class ReleaseRepository {
         position: releaseTracks.position,
         title: tracks.title,
         durationMs: tracks.durationMs,
+        lyrics: tracks.lyrics,
         isPreview: releaseTracks.isPreview,
       })
       .from(releaseTracks)

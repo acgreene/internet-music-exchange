@@ -90,6 +90,7 @@ export class DigService {
             position: track.position,
             title: track.title,
             durationMs: track.durationMs,
+            lyrics: track.lyrics,
             isPreview: track.isPreview,
           })),
         owned: owned.includes(id),

@@ -161,6 +161,23 @@ const MB = 1024 * 1024;
                 ></progress>
               }
             </div>
+            <details class="pl-9 text-sm">
+              <summary class="cursor-pointer text-ink-muted">
+                {{ track.lyrics ? 'Lyrics' : 'Add lyrics' }}
+              </summary>
+              <textarea
+                imeInput
+                class="mt-2 w-full"
+                rows="8"
+                maxlength="20000"
+                [attr.aria-label]="'Lyrics of ' + track.title"
+                [value]="track.lyrics ?? ''"
+                (change)="setLyrics(track, $event)"
+              ></textarea>
+              <p class="mt-1 text-xs text-ink-subtle">
+                Saved when you leave the box.
+              </p>
+            </details>
           </li>
         } @empty {
           <li class="p-4 text-sm text-ink-muted">
@@ -281,6 +298,14 @@ export class TracksSection {
     if (!title || title === track.title) return;
     await this.run(() =>
       this.api.releases.updateTrack(track.trackId, { title }),
+    );
+  }
+
+  protected async setLyrics(track: TracklistItem, event: Event): Promise<void> {
+    const lyrics = (event.target as HTMLTextAreaElement).value.trim() || null;
+    if (lyrics === track.lyrics) return;
+    await this.run(() =>
+      this.api.releases.updateTrack(track.trackId, { lyrics }),
     );
   }
 
