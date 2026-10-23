@@ -49,6 +49,29 @@
     </form>
   </section>
 
+  <section class="flex flex-col gap-3" aria-labelledby="privacy-heading">
+    <h2 id="privacy-heading" class="text-lg font-semibold">Privacy</h2>
+    <label class="flex items-start gap-3">
+      <input
+        class="mt-1"
+        type="checkbox"
+        [checked]="hidePurchases()"
+        [disabled]="savingPrivacy()"
+        (change)="setHidePurchases($any($event.target).checked)"
+      />
+      <span class="flex flex-col">
+        <span class="font-medium">Keep my purchases private</span>
+        <span class="text-sm text-ink-muted"
+          >Leave me off the "supported by" list on the releases I buy. Notes
+          I leave still show.</span
+        >
+      </span>
+    </label>
+    @if (privacyError(); as message) {
+    <ime-alert tone="error">{{ message }}</ime-alert>
+    }
+  </section>
+
   <section class="flex flex-col gap-4" aria-labelledby="password-heading">
     <h2 id="password-heading" class="text-lg font-semibold">Password</h2>
     @if (passwordSaved()) {

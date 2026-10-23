@@ -265,6 +265,16 @@ export class CrateService {
     return this.cardsFor(await this.db.crates.listPublic(limit, offset));
   }
 
+  /** Public crates holding a release. */
+  public async listHolding(
+    releaseId: string,
+    limit?: number,
+  ): Promise<CrateCard[]> {
+    return this.cardsFor(
+      await this.db.crates.listPublicHolding(releaseId, limit),
+    );
+  }
+
   /** Someone's public crates, by username. */
   public async listByUsername(username: string): Promise<CrateCard[]> {
     const user = await this.db.users.getByUsername(username);

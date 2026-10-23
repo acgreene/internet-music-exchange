@@ -298,6 +298,9 @@ export enum ApiRoute {
   /** A release's comments. */
   CatalogComments = '/api/catalog/releases/:releaseId/comments',
 
+  /** The people who bought or claimed a release and let it show. */
+  CatalogSupporters = '/api/catalog/releases/:releaseId/supporters',
+
   /** Comment on a release. */
   ReleaseComments = '/api/releases/:releaseId/comments',
 

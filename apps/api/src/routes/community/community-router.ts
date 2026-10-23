@@ -78,6 +78,13 @@ export class CommunityRouter extends AbstractRouter {
     );
 
     this.handle(
+      HttpMethod.Get,
+      ApiRoute.CatalogSupporters,
+      'public',
+      ({ params }) => this.comments.listSupporters(params.releaseId),
+    );
+
+    this.handle(
       HttpMethod.Post,
       ApiRoute.ReleaseComments,
       'user',

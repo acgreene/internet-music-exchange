@@ -32,10 +32,12 @@ Social features connect listeners to the artists and releases they care about. T
 - A listener's profile can show facts about their support that IME can verify: how many releases they own, how many artists they have supported, how many records they have gifted, and the releases they were among the first buyers of.
 - Listeners choose whether these appear on their profile. There are no leaderboards, and nothing about listening time or listening habits is ever shown.
 
-### Comments
+### Supporters and notes
 
-- A listener can comment on a release.
-- A release's comments are shown newest first, each with its author and whether it has been edited.
+- A release page lists who supported it: the people who bought or claimed it, the most recent first, with how many there are in all. Gifts from the artist do not count.
+- A listener can keep their purchases private, which leaves them off every "supported by" list.
+- Someone who owns a release can leave a note on it, which is how comments work on IME: a word from a supporter, not an open thread.
+- A release's notes are shown newest first, each with its author and whether it has been edited. Only notes from people who own the release are shown.
 - A listener can edit and delete their own comments.
 - A comment cannot be empty and has a maximum length.
 - A manager can delete comments on their own artist's releases (moderation).

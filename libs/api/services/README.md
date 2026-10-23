@@ -83,7 +83,8 @@ Each is a property of `ImeServices`, named in brackets.
   together with a line about each, public or private; following the people
   who make them; and the crates IME builds by fixed rules: by genre or tag,
   from a few records someone loves, and a crate of the day from a
-  listener's library. Use it for `/crates` and adding a release to a crate.
+  listener's library; and the public crates holding a release. Use it for
+  `/crates`, adding a release to a crate, and a release page's crates.
 - **`DigService`** (`dig`): dig mode: a crate's records, as deep as the
   listener chose, each with its whole tracklist, the tracks they may hear,
   whether it has a designed page, and its editions ready for a cart. Use it
@@ -125,9 +126,11 @@ Each is a property of `ImeServices`, named in brackets.
 - **`FollowService`** (`follows`): following and unfollowing artists, which
   ones a listener follows, follower counts, and a manager's list of followers
   with removal. Use it for follow buttons and the followers screen.
-- **`CommentService`** (`comments`): comments on releases: reading, posting,
-  editing your own, and deleting your own or, as a manager, any on your
-  artist's releases. Use it for a release page's comments.
+- **`CommentService`** (`comments`): a release's supporters, the people who
+  bought or claimed it unless they keep purchases private, and the notes
+  owners leave on it: reading, posting (owners only), editing your own, and
+  deleting your own or, as a manager, any on your artist's releases. Use it
+  for a release page's "supported by" section.
 
 ### Creative pages
 

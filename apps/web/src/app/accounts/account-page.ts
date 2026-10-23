@@ -75,6 +75,12 @@ export class AccountPage {
       this.session.status() === 'signed-in' && !this.session.user()?.username,
   );
 
+  protected readonly hidePurchases = computed(
+    () => this.session.user()?.hidePurchases ?? false,
+  );
+  protected readonly savingPrivacy = signal(false);
+  protected readonly privacyError = signal<string | null>(null);
+
   protected readonly confirmingDelete = signal(false);
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<string | null>(null);
@@ -143,6 +149,15 @@ export class AccountPage {
       }
       return undefined;
     });
+  }
+
+  protected async setHidePurchases(hide: boolean): Promise<void> {
+    this.savingPrivacy.set(true);
+    this.privacyError.set(null);
+    const result = await this.api.user.updateProfile({ hidePurchases: hide });
+    if (result.ok) await this.session.refresh();
+    else this.privacyError.set(result.error.message);
+    this.savingPrivacy.set(false);
   }
 
   protected async savePassword(event: Event): Promise<void> {

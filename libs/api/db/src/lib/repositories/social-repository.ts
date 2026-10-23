@@ -3,12 +3,19 @@ import type { Db } from '../database-service';
 import {
   artistFollowers,
   artists,
+  entitlements,
   type ReleaseComment,
   releaseComments,
   type ReleaseKind,
   releases,
   users,
 } from '../tables';
+
+/** Someone who bought or claimed a release, as its page lists them. */
+export interface Supporter {
+  username: string | null;
+  name: string | null;
+}
 
 /**
  * An artist a user follows, with the fields a following list renders.
@@ -292,7 +299,7 @@ export class SocialRepository {
       })
       .from(releaseComments)
       .innerJoin(users, eq(users.id, releaseComments.userId))
-      .where(eq(releaseComments.releaseId, releaseId))
+      .where(this.byOwners(releaseId))
       .orderBy(desc(releaseComments.createdAt))
       .limit(limit)
       .offset(offset);
@@ -308,9 +315,54 @@ export class SocialRepository {
     const [comments] = await this.db
       .select({ value: count() })
       .from(releaseComments)
-      .where(eq(releaseComments.releaseId, releaseId));
+      .where(this.byOwners(releaseId));
 
     return comments?.value ?? 0;
+  }
+
+  /**
+   * The people who bought or claimed a release and let it show, the most
+   * recent first, with how many there are in all.
+   */
+  public async listSupporters(
+    releaseId: string,
+    limit: number,
+  ): Promise<{ supporters: Supporter[]; total: number }> {
+    const where = and(
+      eq(entitlements.releaseId, releaseId),
+      inArray(entitlements.source, ['purchase', 'free']),
+      eq(users.hidePurchases, false),
+      isNull(users.suspendedAt),
+    );
+    const [supporters, [counted]] = await Promise.all([
+      this.db
+        .select({ username: users.username, name: users.name })
+        .from(entitlements)
+        .innerJoin(users, eq(users.id, entitlements.userId))
+        .where(where)
+        .orderBy(desc(entitlements.createdAt))
+        .limit(limit),
+      this.db
+        .select({ value: count() })
+        .from(entitlements)
+        .innerJoin(users, eq(users.id, entitlements.userId))
+        .where(where),
+    ]);
+    return { supporters, total: counted?.value ?? 0 };
+  }
+
+  /** A release's comments left by people who own it. */
+  private byOwners(releaseId: string) {
+    return and(
+      eq(releaseComments.releaseId, releaseId),
+      inArray(
+        releaseComments.userId,
+        this.db
+          .select({ id: entitlements.userId })
+          .from(entitlements)
+          .where(eq(entitlements.releaseId, releaseId)),
+      ),
+    );
   }
 
   /**

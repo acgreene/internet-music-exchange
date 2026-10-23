@@ -21,7 +21,7 @@ export class CratesClient {
 
   /** Public crates, the most recently changed first, or by name with `q`. */
   public listPublic(
-    page?: PageQuery & { q?: string },
+    page?: PageQuery & { q?: string; releaseId?: string },
   ): Promise<ApiResult<CrateCard[]>> {
     return this.transport.get(ApiRoute.Crates, { query: page });
   }

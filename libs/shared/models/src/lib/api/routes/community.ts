@@ -59,6 +59,18 @@ export const commentPageSchema = z.object({
 export type CommentPage = z.infer<typeof commentPageSchema>;
 
 /**
+ * The most recent people to buy or claim a release, and how many there are.
+ */
+export const supportersSchema = z.object({
+  supporters: z.array(
+    z.object({ username: z.string().nullable(), name: z.string().nullable() }),
+  ),
+  total: z.number().int(),
+});
+
+export type Supporters = z.infer<typeof supportersSchema>;
+
+/**
  * A comment just posted.
  */
 export const postedCommentSchema = z.object({
@@ -101,6 +113,9 @@ export const communityContracts = {
   },
   [ApiRoute.CatalogComments]: {
     [HttpMethod.Get]: { query: pageQuerySchema, response: commentPageSchema },
+  },
+  [ApiRoute.CatalogSupporters]: {
+    [HttpMethod.Get]: { response: supportersSchema },
   },
   [ApiRoute.ReleaseComments]: {
     [HttpMethod.Post]: {

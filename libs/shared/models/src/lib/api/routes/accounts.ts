@@ -25,6 +25,8 @@ export const ownUserSchema = publicUserSchema.extend({
   suspendedAt: timestampSchema.nullable(),
   /** Platform admins see the admin tools. */
   isAdmin: z.boolean(),
+  /** Kept off the "supported by" lists of what they buy. */
+  hidePurchases: z.boolean(),
 });
 
 export type OwnUser = z.infer<typeof ownUserSchema>;
@@ -33,6 +35,7 @@ export const updateProfileRequestSchema = z.object({
   username: z.string().optional(),
   name: z.string().nullable().optional(),
   openToCommissions: z.boolean().optional(),
+  hidePurchases: z.boolean().optional(),
 });
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>;

@@ -14,6 +14,8 @@ export interface UpdateProfileParams {
   name?: string | null;
   /** Whether the user, as a designer, welcomes custom design requests. */
   openToCommissions?: boolean;
+  /** Whether to keep off the "supported by" lists of what they buy. */
+  hidePurchases?: boolean;
 }
 
 /**
@@ -112,6 +114,7 @@ export class UserService {
         username: params.username,
         name,
         openToCommissions: params.openToCommissions,
+        hidePurchases: params.hidePurchases,
       });
     } catch (error) {
       if (getPostgresErrorCode(error) === PostgresErrorCode.UniqueViolation) {

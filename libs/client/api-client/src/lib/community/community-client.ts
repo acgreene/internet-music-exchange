@@ -2,6 +2,7 @@ import {
   type AckResponse,
   ApiRoute,
   type CommentPage,
+  type Supporters,
   type FollowedArtist,
   type Follower,
   type PageQuery,
@@ -78,6 +79,12 @@ export class CommunityClient {
     return this.transport.get(ApiRoute.CatalogComments, {
       params: { releaseId },
       query: page,
+    });
+  }
+
+  public listSupporters(releaseId: string): Promise<ApiResult<Supporters>> {
+    return this.transport.get(ApiRoute.CatalogSupporters, {
+      params: { releaseId },
     });
   }
 

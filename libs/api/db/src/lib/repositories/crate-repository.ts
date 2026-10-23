@@ -113,6 +113,27 @@ export class CrateRepository {
       .offset(offset);
   }
 
+  /** Public crates holding a release, the most recently changed first. */
+  public async listPublicHolding(
+    releaseId: string,
+    limit = DEFAULT_LIST_LIMIT,
+  ): Promise<CrateSummary[]> {
+    return this.summaries(
+      and(
+        this.publicWithRecords(),
+        inArray(
+          crates.id,
+          this.db
+            .select({ id: crateReleases.crateId })
+            .from(crateReleases)
+            .where(eq(crateReleases.releaseId, releaseId)),
+        ),
+      ),
+    )
+      .orderBy(desc(crates.updatedAt))
+      .limit(limit);
+  }
+
   /** Public crates by the people a listener follows, newest first. */
   public async listPublicFromFollowed(
     userId: string,

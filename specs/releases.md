@@ -38,6 +38,7 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 ### Artwork & assets
 
 - A release has cover art. It may also carry back cover art, liner notes, photos, videos, and documents.
+- A release can have a description and credits, and each track can have lyrics, all optional and written by the artist.
 - Cover art is always public: it is how the release is shown in the catalog.
 - Other assets can be either public or **gated** (available only to owners), such as high-resolution liner notes or bonus material that ships with a purchase.
 

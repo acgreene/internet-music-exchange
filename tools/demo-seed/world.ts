@@ -1192,6 +1192,20 @@ export function buildWorld(options: WorldOptions) {
     }
   }
 
+  // only people who own a release leave notes on it, so each comment goes to
+  // one of its owners, from its own source to leave the rest as it was
+  const noting = new Random(4404);
+  const ownersOf = new Map<string, string[]>();
+  for (const { userId, releaseId } of rows.entitlements) {
+    ownersOf.set(releaseId, [...(ownersOf.get(releaseId) ?? []), userId]);
+  }
+  for (const comment of rows.releaseComments) {
+    const owners = ownersOf.get(comment.releaseId) ?? [];
+    if (owners.length && !owners.includes(comment.userId)) {
+      comment.userId = noting.pick(owners);
+    }
+  }
+
   // ----------------------------------------------------------------- crates
   // their own source, so adding crates leaves the rest of the world as it was
   const crating = new Random(9001);

@@ -7,6 +7,7 @@ export interface UpdateUserParams {
   username?: string | null;
   name?: string | null;
   openToCommissions?: boolean;
+  hidePurchases?: boolean;
 }
 
 const DEFAULT_SEARCH_LIMIT = 20;

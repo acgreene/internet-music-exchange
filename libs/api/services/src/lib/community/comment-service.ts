@@ -2,6 +2,7 @@ import {
   DatabaseRepository,
   type ReleaseComment,
   type ReleaseCommentWithAuthor,
+  type Supporter,
 } from '@ime/db';
 import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
 import { AccessService } from '../access/access-service';
@@ -9,10 +10,14 @@ import { AccessService } from '../access/access-service';
 /** Matches the database's limit on a comment. */
 export const COMMENT_MAX_LENGTH = 2000;
 
+/** How many supporters a release page lists. */
+const SUPPORTERS_SHOWN = 48;
+
 /**
- * Comments on releases. Anyone can read them; signed-in users in good
- * standing can post, and edit or delete their own. An artist's managers can
- * delete any comment on the artist's releases.
+ * A release's supporters and the notes they leave. Anyone can read them;
+ * people in good standing who own the release can leave a note, and edit or
+ * delete their own. An artist's managers can delete any note on the artist's
+ * releases.
  */
 export class CommentService {
   constructor(
@@ -21,8 +26,8 @@ export class CommentService {
   ) {}
 
   /**
-   * A release's comments, newest first, each with its author and whether it
-   * was edited.
+   * A release's notes from the people who own it, newest first, each with
+   * its author and whether it was edited.
    *
    * @throws ApiError 404 when the release is not out.
    */
@@ -40,10 +45,27 @@ export class CommentService {
   }
 
   /**
-   * Comment on a release.
+   * The people who bought or claimed a release and let it show, the most
+   * recent first.
+   *
+   * @throws ApiError 404 when the release is not out.
+   */
+  public async listSupporters(
+    releaseId: string,
+    limit = SUPPORTERS_SHOWN,
+  ): Promise<{ supporters: Supporter[]; total: number }> {
+    await this.requireOpenRelease(releaseId);
+    return this.db.social.listSupporters(
+      releaseId,
+      Math.min(limit, SUPPORTERS_SHOWN),
+    );
+  }
+
+  /**
+   * Leave a note on a release you own.
    *
    * @throws ApiError 400 for an empty or overlong comment, 403 when the user
-   * is suspended, 404 when the release is not out.
+   * is suspended or does not own it, 404 when the release is not out.
    */
   public async addComment(
     userId: string,
@@ -52,6 +74,13 @@ export class CommentService {
   ): Promise<ReleaseComment> {
     await this.access.requireActiveUser(userId);
     await this.requireOpenRelease(releaseId);
+    if (!(await this.db.entitlements.owns(userId, releaseId))) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.Forbidden,
+        'Only people who own this release can leave a note.',
+      );
+    }
     return this.db.social.addComment({
       userId,
       releaseId,
