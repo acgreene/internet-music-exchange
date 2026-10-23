@@ -1,47 +1,102 @@
 <div class="flex min-h-dvh flex-col">
-  <header
-    class="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-line bg-surface px-4 md:gap-6 md:px-6"
-  >
-    <a routerLink="/" class="shrink-0" aria-label="IME, home">
-      <ime-wordmark />
-    </a>
+  <header class="sticky top-0 z-30 border-b border-line bg-surface">
+    <div class="flex h-16 items-center gap-2 px-4 sm:gap-3 md:gap-6 md:px-6">
+      <a routerLink="/" class="shrink-0" aria-label="IME, home">
+        <ime-wordmark />
+      </a>
 
-    <ime-search-box class="hidden max-w-xl flex-1 md:block" shortcut />
+      <ime-search-box class="hidden max-w-xl flex-1 md:block" shortcut />
 
-    <div class="flex-1"></div>
+      <div class="flex-1"></div>
 
-    <nav class="hidden items-center gap-4 lg:flex xl:gap-5" aria-label="Main">
-      @for (item of navigation(); track item.path) {
+      <nav class="hidden items-center gap-5 xl:flex" aria-label="Main">
+        @for (item of navigation(); track item.path) {
+        <a
+          class="link text-[15px]"
+          routerLinkActive="!text-ink font-semibold !no-underline"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+          [routerLink]="item.path"
+          >{{ item.label }}</a
+        >
+        }
+      </nav>
+
+      <a
+        class="hidden rounded-control border border-ink px-3 py-1.5 text-sm font-semibold hover:bg-wash lg:inline-flex"
+        routerLink="/studio"
+        >For artists</a
+      >
+
       <a
         class="link text-[15px]"
+        routerLink="/cart"
         routerLinkActive="!text-ink font-semibold !no-underline"
-        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-        [routerLink]="item.path"
-        >{{ item.label }}</a
+        [attr.aria-label]="cartLabel()"
+        >Cart@if (cart.count()) { ({{ cart.count() }})}</a
       >
+
+      @switch (session.status()) { @case ('signed-in') {
+      <button
+        class="flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-wash text-sm font-semibold uppercase hover:bg-marker"
+        [cdkMenuTriggerFor]="accountMenu"
+        aria-label="Account menu"
+      >
+        {{ initial() }}
+      </button>
+      } @case ('signed-out') {
+      <a class="link hidden text-[15px] sm:inline" routerLink="/sign-in"
+        >Sign in</a
+      >
+      <a imeButton size="sm" class="whitespace-nowrap" routerLink="/sign-up"
+        >Sign up</a
+      >
+      } }
+
+      <button
+        class="rounded-control border border-line px-2.5 py-1.5 text-sm font-semibold hover:bg-wash sm:px-3 xl:hidden"
+        aria-controls="site-menu"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        {{ menuOpen() ? 'Close' : 'Menu' }}
+      </button>
+    </div>
+
+    @if (menuOpen()) {
+    <nav
+      id="site-menu"
+      class="max-h-[calc(100svh-4rem)] overflow-y-auto border-t border-line px-4 pt-4 pb-6 md:px-6 xl:hidden"
+      aria-label="Main"
+    >
+      <ime-search-box class="mb-4 md:hidden" />
+      <ul class="flex flex-col">
+        @for (item of navigation(); track item.path) {
+        <li>
+          <a
+            class="block border-b border-hairline py-3 text-lg font-semibold"
+            routerLinkActive="text-accent"
+            [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+            [routerLink]="item.path"
+            >{{ item.label }}</a
+          >
+        </li>
+        }
+        <li>
+          <a class="flex flex-col py-3" routerLink="/studio">
+            <span class="text-lg font-semibold">For artists</span>
+            <span class="text-sm text-ink-muted"
+              >Sell your music and merch, and keep what you earn.</span
+            >
+          </a>
+        </li>
+      </ul>
+      @if (session.status() === 'signed-out') {
+      <div class="mt-4 sm:hidden">
+        <a imeButton variant="secondary" routerLink="/sign-in">Sign in</a>
+      </div>
       }
     </nav>
-
-    <a
-      class="link text-[15px]"
-      routerLink="/cart"
-      routerLinkActive="!text-ink font-semibold !no-underline"
-      [attr.aria-label]="cartLabel()"
-      >Cart@if (cart.count()) { ({{ cart.count() }})}</a
-    >
-
-    @switch (session.status()) { @case ('signed-in') {
-    <button
-      class="flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-wash text-sm font-semibold uppercase hover:bg-marker"
-      [cdkMenuTriggerFor]="accountMenu"
-      aria-label="Account menu"
-    >
-      {{ initial() }}
-    </button>
-    } @case ('signed-out') {
-    <a class="link text-[15px]" routerLink="/sign-in">Sign in</a>
-    <a imeButton size="sm" routerLink="/sign-up">Sign up</a>
-    } }
+    }
   </header>
 
   @if (session.user(); as user) { @if (user.suspendedAt) {
@@ -63,32 +118,25 @@
     class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line px-4 py-6 text-sm md:px-8"
   >
     <span class="text-ink-muted"
-      >Built for, funded by, and hosted by the community, at cost.</span
+      >A music platform for the culture. Built by the community, run at
+      cost.</span
     >
+    <a class="link" routerLink="/studio">For artists</a>
     <a class="link" routerLink="/costs">What it costs</a>
     <a class="link" routerLink="/donate">Chip in</a>
+    <a
+      class="link"
+      href="https://github.com/acgreene/internet-music-exchange"
+      target="_blank"
+      rel="noopener"
+      >Source code</a
+    >
     <a class="link" routerLink="/terms">Terms</a>
     <a class="link" routerLink="/privacy">Privacy</a>
   </footer>
 
   <div class="sticky bottom-0 z-20">
     <ime-player-bar class="border-t border-line bg-wash empty:hidden" />
-
-    <nav
-      class="flex border-t border-line bg-surface lg:hidden"
-      aria-label="Main"
-    >
-      @for (item of mobileNavigation(); track item.path) {
-      <a
-        class="flex-1 py-3 text-center text-xs text-ink-muted"
-        routerLinkActive="!text-ink font-semibold"
-        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
-        [routerLink]="item.path"
-      >
-        {{ item.label }}
-      </a>
-      }
-    </nav>
   </div>
 </div>
 

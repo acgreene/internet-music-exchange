@@ -3,10 +3,13 @@ import {
   Component,
   computed,
   inject,
+  signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import {
+  NavigationEnd,
   Router,
   RouterLink,
   RouterLinkActive,
@@ -15,10 +18,13 @@ import {
 import { CartService, SessionService } from '@ime/client-data';
 import { PlayerBar, SearchBox } from '@ime/client-listening';
 import { ButtonDirective, WordmarkComponent } from '@ime/ui';
+import { filter } from 'rxjs';
 
 /**
  * The frame around every listening page: the header with the wordmark,
- * search, navigation, cart and account menu, and the player at the bottom.
+ * search, navigation, a way in for artists, cart and account menu, and the
+ * player at the bottom. Below the desktop layout the links move into a menu,
+ * so on a phone the site still feels like a website.
  */
 @Component({
   selector: 'ime-app-shell',
@@ -35,7 +41,10 @@ import { ButtonDirective, WordmarkComponent } from '@ime/ui';
     SearchBox,
     WordmarkComponent,
   ],
-  host: { '(document:keydown)': 'focusSearch($event)' },
+  host: {
+    '(document:keydown)': 'focusSearch($event)',
+    '(document:keydown.escape)': 'menuOpen.set(false)',
+  },
   templateUrl: './app-shell.html',
 })
 export class AppShell {
@@ -44,6 +53,16 @@ export class AppShell {
   private readonly router = inject(Router);
 
   private readonly searchBox = viewChild(SearchBox);
+
+  constructor() {
+    // following a link from the menu closes it
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.menuOpen.set(false));
+  }
 
   protected readonly navigation = computed(() => [
     { label: 'Discover', path: '/' },
@@ -58,19 +77,8 @@ export class AppShell {
       : []),
   ]);
 
-  /**
-   * Below the desktop layout the main links move to a tab bar of four, so
-   * each stays easy to hit. Phones also search from a tab, since their
-   * header has no room for the box.
-   */
-  protected readonly mobileNavigation = computed(() => [
-    { label: 'Discover', path: '/' },
-    { label: 'Search', path: '/search' },
-    { label: 'Crates', path: '/crates' },
-    ...(this.session.isSignedIn()
-      ? [{ label: 'Library', path: '/library' }]
-      : [{ label: 'Designs', path: '/designs' }]),
-  ]);
+  /** The menu below the desktop layout, which holds the main links. */
+  protected readonly menuOpen = signal(false);
 
   protected readonly initial = computed(() =>
     (this.session.user()?.username ?? '?').charAt(0),

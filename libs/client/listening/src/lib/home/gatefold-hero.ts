@@ -41,12 +41,11 @@ const NOT_TAKEN = [
 
 /**
  * Every panel's box. Below the desktop layout, each panel is as tall as the
- * screen between the header and the bottom nav, so the whole sleeve is in
- * view; on the desktop, the grid stretches all three to the tallest, and on
+ * screen below the header, so the whole sleeve is in view; on the desktop, the grid stretches all three to the tallest, and on
  * wide screens they are square like a record sleeve.
  */
 const PANEL =
-  'flex w-[min(86%,26rem)] shrink-0 snap-center flex-col justify-between gap-5 overflow-y-auto p-6 [scrollbar-width:none] h-[calc(100svh-8.5rem)] max-h-[38rem] short:gap-3 short:p-4 lg:order-none lg:h-auto lg:max-h-none lg:min-h-[30rem] lg:w-auto lg:overflow-visible lg:p-7 xl:aspect-square xl:min-h-0';
+  'flex w-[min(86%,26rem)] shrink-0 snap-center flex-col justify-between gap-5 overflow-y-auto p-6 [scrollbar-width:none] h-[calc(100svh-6rem)] max-h-[38rem] short:gap-3 short:p-4 lg:order-none lg:h-auto lg:max-h-none lg:min-h-[30rem] lg:w-auto lg:overflow-visible lg:p-7 xl:aspect-square xl:min-h-0';
 
 /**
  * The top of the home page: an opened gatefold sleeve. The front says what
