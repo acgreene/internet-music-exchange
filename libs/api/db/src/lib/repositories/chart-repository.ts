@@ -5,16 +5,23 @@ import { chartEntries, entitlements } from '../tables';
 /** Formats a chart can be narrowed to. */
 export type ChartFormat = 'digital' | 'vinyl' | 'cassette' | 'cd';
 
+/**
+ * `selling` counts the people who paid for a release, as a download or a
+ * record, tape, or CD. `downloads` counts the people who got its download,
+ * paid or free.
+ */
+export type ChartKind = 'selling' | 'downloads';
+
 export interface ChartCount {
   releaseId: string;
   people: number;
 }
 
 /**
- * Queries behind the charts: how many people bought or claimed each release
- * in a window, and the weekly charts kept for each release's peak and its
- * weeks on the chart. A gift is not counted; a free download counts the same
- * as a purchase.
+ * Queries behind the charts: how many people bought, or got the download of,
+ * each release in a window, and the weekly charts kept for each release's
+ * peak and its weeks on the chart. Each person counts once per release, and
+ * a gift is never counted.
  */
 export class ChartRepository {
   constructor(private readonly db: Db) {}
@@ -27,12 +34,13 @@ export class ChartRepository {
    * @param to - Exclusive.
    */
   public async countPeople(
+    chart: ChartKind,
     from: Date | null,
     to: Date,
     options: { genre?: string; format?: ChartFormat; limit: number },
   ): Promise<ChartCount[]> {
     const rows = await this.db.execute<{ release_id: string; people: number }>(
-      sql`with got as (${this.acquisitions(from, to)})
+      sql`with got as (${this.acquisitions(chart, from, to)})
           select got.release_id, count(distinct got.user_id)::int as people
           from got
           join releases r on r.id = got.release_id
@@ -55,6 +63,7 @@ export class ChartRepository {
    * keeping that week's charts.
    */
   public async countWeek(
+    chart: ChartKind,
     from: Date,
     to: Date,
   ): Promise<(ChartCount & { genres: string[] })[]> {
@@ -63,7 +72,7 @@ export class ChartRepository {
       genres: string[];
       people: number;
     }>(
-      sql`with got as (${this.acquisitions(from, to)})
+      sql`with got as (${this.acquisitions(chart, from, to)})
           select got.release_id, r.genres, count(distinct got.user_id)::int as people
           from got
           join releases r on r.id = got.release_id
@@ -87,15 +96,17 @@ export class ChartRepository {
     return row?.first ?? null;
   }
 
-  /** The newest week with charts kept, as `YYYY-MM-DD`. */
-  public async latestWeek(): Promise<string | null> {
+  /** The newest week with a chart kept, as `YYYY-MM-DD`. */
+  public async latestWeek(chart: ChartKind): Promise<string | null> {
     const [row] = await this.db
       .select({ week: max(chartEntries.weekStart) })
-      .from(chartEntries);
+      .from(chartEntries)
+      .where(eq(chartEntries.chart, chart));
     return row?.week ?? null;
   }
 
   public async addWeek(
+    chart: ChartKind,
     weekStart: string,
     entries: {
       scope: string;
@@ -109,7 +120,9 @@ export class ChartRepository {
       await this.db
         .insert(chartEntries)
         .values(
-          entries.slice(i, i + 1000).map((entry) => ({ ...entry, weekStart })),
+          entries
+            .slice(i, i + 1000)
+            .map((entry) => ({ ...entry, chart, weekStart })),
         )
         .onConflictDoNothing();
     }
@@ -120,6 +133,7 @@ export class ChartRepository {
    * chart, up to a week.
    */
   public async listHistory(
+    chart: ChartKind,
     scope: string,
     releaseIds: string[],
     upTo: string,
@@ -134,6 +148,7 @@ export class ChartRepository {
       .from(chartEntries)
       .where(
         and(
+          eq(chartEntries.chart, chart),
           eq(chartEntries.scope, scope),
           inArray(chartEntries.releaseId, releaseIds),
           lte(chartEntries.weekStart, upTo),
@@ -149,18 +164,22 @@ export class ChartRepository {
   }
 
   /**
-   * Everyone who bought or claimed a release, and when and in what format:
-   * downloads from the library, and records, tapes, and CDs from completed
-   * orders.
+   * Everyone a chart counts for a release, with when and in what format.
+   * Selling counts paid downloads and records, tapes, and CDs from completed
+   * orders; downloads counts every download from the library, paid or free.
    */
-  private acquisitions(from: Date | null, to: Date) {
+  private acquisitions(chart: ChartKind, from: Date | null, to: Date) {
     const after = (column: string) =>
       from ? sql`and ${sql.raw(column)} >= ${from.toISOString()}` : sql``;
-    return sql`
+    const sources =
+      chart === 'selling' ? sql`('purchase')` : sql`('purchase', 'free')`;
+    const downloads = sql`
       select e.release_id, e.user_id, 'digital' as format, e.created_at as at
       from entitlements e
-      where e.source in ('purchase', 'free')
-        and e.created_at < ${to.toISOString()} ${after('e.created_at')}
+      where e.source in ${sources}
+        and e.created_at < ${to.toISOString()} ${after('e.created_at')}`;
+    if (chart === 'downloads') return downloads;
+    return sql`${downloads}
       union all
       select p.release_id, o.user_id, p.type::text as format, oi.created_at as at
       from order_items oi

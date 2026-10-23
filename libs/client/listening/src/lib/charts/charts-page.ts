@@ -16,8 +16,10 @@ import {
 import { ApiClient, unwrap } from '@ime/api-client';
 import { currentValue } from '@ime/client-data';
 import {
+  CHART_KINDS,
   CHART_PERIODS,
   type ChartEntry,
+  type ChartKind,
   type ChartPeriod,
   FORMATS,
   GENRES,
@@ -31,9 +33,10 @@ const SEGMENT =
   'rounded-control px-3 py-1.5 text-sm font-medium hover:bg-wash aria-pressed:bg-ink aria-pressed:text-canvas aria-pressed:hover:bg-ink';
 
 /**
- * The charts, `/charts`: releases by how many people bought or claimed them,
- * never by money, for a week, four weeks, a year, or all time, for all of
- * IME or one genre, and for one format if chosen.
+ * The charts, `/charts`: best selling, by how many people paid for each
+ * release, and most downloaded, by how many people got its download, paid
+ * or free. For a week, four weeks, a year, or all time, for all of IME or one
+ * genre, and best selling for one format if chosen. No money is shown.
  */
 @Component({
   selector: 'ime-charts-page',
@@ -54,16 +57,32 @@ const SEGMENT =
         <h1
           class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-6xl"
         >
-          What people are taking home.
+          {{ kind() === 'selling' ? 'Best selling' : 'Most downloaded' }}
         </h1>
         <p class="max-w-prose leading-relaxed">
-          Ranked by how many people bought or claimed each release, never by
-          money. A free download counts the same as a purchase. New charts every
-          Monday.
+          @if (kind() === 'selling') {
+            Ranked by how many people paid for each release, as a download or a
+            record, tape, or CD. Each buyer counts once.
+          } @else {
+            Ranked by how many people got each release's download, paid or free.
+            Each person counts once.
+          }
+          New charts every Monday.
         </p>
       </header>
 
       <div class="flex flex-col gap-3">
+        <div class="flex flex-wrap gap-1" role="group" aria-label="Chart">
+          @for (option of kinds; track option.id) {
+            <a
+              [class]="segment"
+              routerLink="/charts"
+              [queryParams]="with({ chart: option.id })"
+              [attr.aria-pressed]="kind() === option.id"
+              >{{ option.name }}</a
+            >
+          }
+        </div>
         <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div class="flex flex-wrap gap-1" role="group" aria-label="Period">
             @for (option of periods; track option.id) {
@@ -91,24 +110,26 @@ const SEGMENT =
             </select>
           </label>
         </div>
-        <div class="flex flex-wrap gap-1" role="group" aria-label="Format">
-          <a
-            [class]="segment"
-            routerLink="/charts"
-            [queryParams]="with({ format: undefined })"
-            [attr.aria-pressed]="!format()"
-            >All formats</a
-          >
-          @for (option of formats; track option.id) {
+        @if (kind() === 'selling') {
+          <div class="flex flex-wrap gap-1" role="group" aria-label="Format">
             <a
               [class]="segment"
               routerLink="/charts"
-              [queryParams]="with({ format: option.id })"
-              [attr.aria-pressed]="format() === option.id"
-              >{{ option.name }}</a
+              [queryParams]="with({ format: undefined })"
+              [attr.aria-pressed]="!format()"
+              >All formats</a
             >
-          }
-        </div>
+            @for (option of formats; track option.id) {
+              <a
+                [class]="segment"
+                routerLink="/charts"
+                [queryParams]="with({ format: option.id })"
+                [attr.aria-pressed]="format() === option.id"
+                >{{ option.name }}</a
+              >
+            }
+          </div>
+        }
       </div>
 
       @if (chart(); as chart) {
@@ -175,7 +196,9 @@ const SEGMENT =
                   class="hidden grid-cols-3 gap-4 text-right font-mono text-xs sm:grid"
                 >
                   <div>
-                    <dt class="text-ink-muted">People</dt>
+                    <dt class="text-ink-muted">
+                      {{ kind() === 'selling' ? 'Buyers' : 'People' }}
+                    </dt>
                     <dd>{{ entry.people }}</dd>
                   </div>
                   <div>
@@ -219,9 +242,13 @@ export class ChartsPage {
 
   protected readonly segment = SEGMENT;
   protected readonly periods = CHART_PERIODS;
+  protected readonly kinds = CHART_KINDS;
   protected readonly genres = GENRES;
   protected readonly formats = FORMATS;
 
+  protected readonly kind = computed<ChartKind>(() =>
+    this.params()['chart'] === 'downloads' ? 'downloads' : 'selling',
+  );
   protected readonly period = computed<ChartPeriod>(() => {
     const value = this.params()['period'];
     return CHART_PERIODS.some((p) => p.id === value) ? value : 'week';
@@ -238,6 +265,7 @@ export class ChartsPage {
   protected readonly charts = resource({
     id: 'chart',
     params: () => ({
+      chart: this.kind(),
       period: this.period(),
       genre: this.genre(),
       format: this.format(),
@@ -248,20 +276,23 @@ export class ChartsPage {
   protected readonly chart = computed(() => currentValue(this.charts));
 
   protected with(change: {
+    chart?: ChartKind;
     period?: ChartPeriod;
     genre?: string;
     format?: Format;
   }): Params {
     const next = {
+      chart: this.kind(),
       period: this.period(),
       genre: this.genre(),
       format: this.format(),
       ...change,
     };
     return {
+      chart: next.chart === 'selling' ? undefined : next.chart,
       period: next.period === 'week' ? undefined : next.period,
       genre: next.genre,
-      format: next.format,
+      format: next.chart === 'selling' ? next.format : undefined,
     };
   }
 
@@ -293,6 +324,9 @@ export class ChartsPage {
   }
 
   protected people(entry: ChartEntry): string {
+    if (this.kind() === 'selling') {
+      return `${entry.people} ${entry.people === 1 ? 'buyer' : 'buyers'}`;
+    }
     return `${entry.people} ${entry.people === 1 ? 'person' : 'people'}`;
   }
 }

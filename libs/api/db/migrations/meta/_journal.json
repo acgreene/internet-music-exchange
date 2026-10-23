@@ -169,6 +169,13 @@
       "when": 1792707047940,
       "tag": "0023_chart_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792715729465,
+      "tag": "0024_chart_kinds",
+      "breakpoints": true
     }
   ]
 }

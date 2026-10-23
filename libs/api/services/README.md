@@ -70,12 +70,13 @@ Each is a property of `ImeServices`, named in brackets.
   artists are based for reading them out of a search, and suggestions while
   someone types.
   Use it for the search box and the results page.
-- **`ChartService`** (`charts`): charts that rank releases by how many
-  people bought or claimed them, never by money, for all of IME or a genre,
-  over a week, four weeks, a year, or all time, by format if asked, with
-  each release's movement, peak, and weeks on the chart. Charts end where
-  the week began, and each finished week's charts are kept. Use it for
-  `/charts`.
+- **`ChartService`** (`charts`): best selling, by the people who paid for
+  a release, and most downloaded, by the people who got its download, paid
+  or free; each person counts once and no money is shown. For all of IME or
+  a genre, over a week, four weeks, a year, or all time, best selling by
+  format if asked, with each release's movement, peak, and weeks on the
+  chart. Charts end where the week began, and each finished week's charts
+  are kept. Use it for `/charts`.
 - **`CrateService`** (`crates`): crates, lists of releases people put
   together with a line about each, public or private; following the people
   who make them; and the crates IME builds by fixed rules: by genre or tag,

@@ -61,13 +61,13 @@ The home page shows a handful of shelves at a time, chosen from all recipes and 
 
 ## Charts
 
-Charts help people find what others are taking home, without treating music as a race for money.
+Charts show what people are buying and downloading, counted in people, never in money.
 
-- Charts rank releases by **people**, never by money: how many listeners bought or claimed a release in the period. A free download counts the same as a purchase. Dollar amounts are never shown.
-- A second chart ranks releases by how many listeners **heard them front to back** in the period.
-- Charts exist for all of IME and for each genre, for this week, this month, this year, and all time, and can be narrowed by format.
-- Charts show each release's position, its movement since the last period, its peak, and its weeks on the chart, and refresh weekly. Every chart ends where the current week began; this month is the last four weeks and this year the last 52.
-- A gift does not count toward a chart; a free download counts the same as a purchase, and buying a record, tape, or CD counts for that format.
+- **Best selling** ranks releases by how many people paid for them in the period, as a download or as a record, tape, or CD. Each buyer counts once per release.
+- **Most downloaded** ranks releases by how many people got their download in the period, paid or free. Each person counts once per release.
+- A gift never counts toward a chart, and no chart shows an amount of money.
+- Charts exist for all of IME and for each genre, for this week, this month, this year, and all time. Best selling can be narrowed by format.
+- Charts show each release's position, its movement since the last chart, its peak, and its weeks on the chart, and refresh weekly. Every chart ends where the current week began; this month is the last four weeks and this year the last 52.
 
 ## Crates
 
@@ -107,7 +107,6 @@ Dig mode is a separate, focused space for flipping through a crate one record at
 - A listener can always see why something was put in front of them.
 - No discovery surface ranks or describes music using AI, and none sells placement: what appears comes from recipes, charts, and people.
 - Charts and shelves never show sales revenue.
-- Listening counted for the front-to-back chart is the listener's own and is never shown as their personal history to anyone else (see [Library & Ownership](./library.md)).
 
 ## Out of scope / future
 

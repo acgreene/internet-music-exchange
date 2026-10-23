@@ -32,11 +32,6 @@ All three produce the same thing: permanent ownership.
 - **Downloading**: an owner can download the original audio files of a release, exactly as the artist uploaded them (see [Releases & Music](./releases.md)).
 - **Gated assets**: an owner can access assets attached to the release that are reserved for buyers (e.g. hi-res liner notes, bonus material).
 
-### Listening history
-
-- IME keeps each owner's history of listening to their releases, including which they heard front to back, so it can show them their own history with a record ("played front to back 3 times") and count the front-to-back chart (see [Discovery](./discovery.md)).
-- A listener's listening history is private to them. It is never shown on their profile or to artists.
-
 ### Gifting
 
 - A manager can grant a listener ownership of one of their artist's releases directly, without a sale.

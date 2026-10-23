@@ -1,4 +1,4 @@
-import { type ChartFormat, DatabaseRepository } from '@ime/db';
+import { type ChartFormat, type ChartKind, DatabaseRepository } from '@ime/db';
 import {
   CHART_PERIODS,
   type Chart,
@@ -20,9 +20,11 @@ const KEPT_SIZE = 40;
 const JOB = 'chart_week';
 
 /**
- * Charts: releases ranked by how many people bought or claimed them, never by
- * money, for all of IME or one genre, over a week, four weeks, a year, or all
- * time, narrowed by format if asked. Every chart ends where this week began,
+ * Charts: best selling, by the people who paid for a release, and most
+ * downloaded, by the people who got its download, paid or free. Each person
+ * counts once per release, and no money is shown. A chart covers all of IME
+ * or one genre, over a week, four weeks, a year, or all time, and best
+ * selling can be narrowed by format. Every chart ends where this week began,
  * so charts change once a week. Each week's charts are kept, to show a
  * release's peak and its weeks on the chart.
  */
@@ -37,18 +39,30 @@ export class ChartService {
   }
 
   public async get(query: ChartQuery, now: Date = new Date()): Promise<Chart> {
+    const chart: ChartKind = query.chart ?? 'selling';
     const period: ChartPeriod = query.period ?? 'week';
     const genre = query.genre && isGenreId(query.genre) ? query.genre : null;
-    const format = (query.format ?? null) as ChartFormat | null;
+    // every download is digital, so only best selling has formats
+    const format =
+      chart === 'selling'
+        ? ((query.format ?? null) as ChartFormat | null)
+        : null;
     const end = weekStart(now);
-    await this.keepWeeks(end);
+    await Promise.all([
+      this.keepWeeks('selling', end),
+      this.keepWeeks('downloads', end),
+    ]);
 
     const weeks = CHART_PERIODS.find((p) => p.id === period)?.weeks ?? null;
     const from = weeks ? new Date(end.getTime() - weeks * WEEK_MS) : null;
     const options = { genre: genre ?? undefined, format: format ?? undefined };
     const [counts, before] = await Promise.all([
-      this.db.charts.countPeople(from, end, { ...options, limit: CHART_SIZE }),
+      this.db.charts.countPeople(chart, from, end, {
+        ...options,
+        limit: CHART_SIZE,
+      }),
       this.db.charts.countPeople(
+        chart,
         from && new Date(from.getTime() - WEEK_MS),
         new Date(end.getTime() - WEEK_MS),
         { ...options, limit: PREVIOUS_DEPTH },
@@ -59,7 +73,7 @@ export class ChartService {
     const lastWeek = isoDate(new Date(end.getTime() - WEEK_MS));
     const [rows, history] = await Promise.all([
       this.db.shelves.listOnSaleByIds(ids),
-      this.db.charts.listHistory(genre ?? 'all', ids, lastWeek),
+      this.db.charts.listHistory(chart, genre ?? 'all', ids, lastWeek),
     ]);
     const cards = new Map(
       (await this.cards.releases(rows)).map((card) => [card.release.id, card]),
@@ -70,6 +84,7 @@ export class ChartService {
     const kept = new Map(history.map((entry) => [entry.releaseId, entry]));
 
     return {
+      chart,
       period,
       genre,
       format,
@@ -98,8 +113,8 @@ export class ChartService {
    * release anyone got. Each week is claimed first, so two requests never
    * count the same week twice.
    */
-  private async keepWeeks(end: Date): Promise<void> {
-    const latest = await this.db.charts.latestWeek();
+  private async keepWeeks(chart: ChartKind, end: Date): Promise<void> {
+    const latest = await this.db.charts.latestWeek(chart);
     const first = latest
       ? new Date(new Date(`${latest}T00:00:00Z`).getTime() + WEEK_MS)
       : await this.db.charts.firstAcquisition().then((d) => d && weekStart(d));
@@ -109,14 +124,16 @@ export class ChartService {
       week < end;
       week = new Date(week.getTime() + WEEK_MS)
     ) {
-      const key = isoDate(week);
+      const day = isoDate(week);
+      const key = `${chart}:${day}`;
       if (!(await this.db.jobRuns.claim(JOB, key))) continue;
       try {
         const counts = await this.db.charts.countWeek(
+          chart,
           week,
           new Date(week.getTime() + WEEK_MS),
         );
-        await this.db.charts.addWeek(key, rankings(counts));
+        await this.db.charts.addWeek(chart, day, rankings(counts));
       } catch (error) {
         await this.db.jobRuns.release(JOB, key);
         throw error;

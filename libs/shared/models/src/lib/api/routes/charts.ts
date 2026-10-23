@@ -5,6 +5,20 @@ import { releaseCardWithArtistSchema } from './catalog';
 import { pricingSchema } from './releases';
 import { ApiRoute } from './routes';
 
+/**
+ * The charts. Best selling counts the people who paid, for a download or a
+ * record, tape, or CD; most downloaded counts the people who got the
+ * download, paid or free. Each person counts once per release.
+ */
+export const CHART_KINDS = [
+  { id: 'selling', name: 'Best selling' },
+  { id: 'downloads', name: 'Most downloaded' },
+] as const;
+
+export type ChartKind = (typeof CHART_KINDS)[number]['id'];
+
+const chartKindSchema = z.enum(['selling', 'downloads']);
+
 /** The periods a chart covers, each ending at the start of this week. */
 export const CHART_PERIODS = [
   { id: 'week', name: 'This week', weeks: 1 },
@@ -18,6 +32,7 @@ export type ChartPeriod = (typeof CHART_PERIODS)[number]['id'];
 export const chartFormatSchema = z.enum(['digital', 'vinyl', 'cassette', 'cd']);
 
 export const chartQuerySchema = z.object({
+  chart: chartKindSchema.optional(),
   period: z.enum(['week', 'month', 'year', 'all']).optional(),
   genre: z.string().optional(),
   format: chartFormatSchema.optional(),
@@ -26,14 +41,14 @@ export const chartQuerySchema = z.object({
 export type ChartQuery = z.infer<typeof chartQuerySchema>;
 
 /**
- * A release's place on a chart, ranked by how many people bought or claimed
- * it, never by money.
+ * A release's place on a chart, ranked by how many people bought it or got
+ * its download, never by money.
  */
 export const chartEntrySchema = z.object({
   position: z.number().int(),
   release: releaseCardWithArtistSchema,
   pricing: pricingSchema.nullable(),
-  /** How many people bought or claimed it in the period. */
+  /** How many people bought it, or got its download, in the period. */
   people: z.number().int(),
   /** Its place on last week's chart, or null when it is new. */
   previous: z.number().int().nullable(),
@@ -46,6 +61,7 @@ export const chartEntrySchema = z.object({
 export type ChartEntry = z.infer<typeof chartEntrySchema>;
 
 export const chartSchema = z.object({
+  chart: chartKindSchema,
   period: z.enum(['week', 'month', 'year', 'all']),
   genre: z.string().nullable(),
   format: chartFormatSchema.nullable(),
