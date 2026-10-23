@@ -4,6 +4,7 @@ import {
   computed,
   effect,
   inject,
+  Injector,
   input,
   linkedSignal,
   resource,
@@ -12,21 +13,26 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, type ApiResult, unwrap } from '@ime/api-client';
 import { SessionService, currentValue } from '@ime/client-data';
-import { ApiError, HttpStatus, type CrateItem } from '@ime/models';
+import { ApiError, type CrateItem, genreName, HttpStatus } from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
   InputDirective,
   SpinnerComponent,
 } from '@ime/ui';
+import { type MenuAction, MoreMenu } from '../more-menu';
 import { PageMetaService } from '../page-meta';
-import { ReportButton } from '../reporting/report-button';
+import { openReport } from '../reporting/report-button';
+import { CrateCard } from './crate-card';
 import { CrateList } from './crate-list';
+import { CrateMosaic } from './crate-mosaic';
 
 /**
- * A crate, `/crates/<id>`: its records in order with why each is there, who
- * made it, and following them. Its maker can rename it, make it public or
- * private, reorder it, and take records out.
+ * A crate, `/crates/<id>`, like a playlist of whole records: its covers,
+ * name, note, who made it, and how many saved it, then its records in order
+ * with why each is there, then more crates by its maker and others with its
+ * records. Its maker can rename it, make it public or private, reorder it,
+ * and take records out; anyone else can save it.
  */
 @Component({
   selector: 'ime-crate-page',
@@ -34,141 +40,177 @@ import { CrateList } from './crate-list';
   imports: [
     AlertComponent,
     ButtonDirective,
+    CrateCard,
     CrateList,
+    CrateMosaic,
     InputDirective,
-    ReportButton,
+    MoreMenu,
     RouterLink,
     SpinnerComponent,
   ],
   template: `
     @if (page(); as page) {
       <div class="mx-auto flex max-w-4xl flex-col gap-8">
-        <header class="flex flex-col gap-3">
+        <header class="flex flex-col gap-4">
           <a class="link w-fit text-sm" routerLink="/crates">All crates</a>
-          @if (editing()) {
-            <div
-              class="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
-            >
-              <input
-                imeInput
-                maxlength="80"
-                aria-label="Crate name"
-                [value]="draftName()"
-                (input)="draftName.set($any($event.target).value)"
-              />
-              <textarea
-                imeInput
-                rows="3"
-                maxlength="500"
-                aria-label="Note"
-                placeholder="What is this crate? (optional)"
-                [value]="draftNote()"
-                (input)="draftNote.set($any($event.target).value)"
-              ></textarea>
-              <label class="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  [checked]="draftPublic()"
-                  (change)="draftPublic.set($any($event.target).checked)"
-                />
-                Public: anyone can see it, dig it, and follow you for more
-              </label>
-              <div class="flex flex-wrap gap-2">
-                <button imeButton [busy]="busy()" (click)="save()">Save</button>
-                <button imeButton variant="ghost" (click)="editing.set(false)">
-                  Cancel
-                </button>
-                <button
-                  imeButton
-                  variant="ghost"
-                  class="ml-auto"
-                  (click)="remove()"
+          <div
+            class="grid gap-6 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-end md:grid-cols-[14rem_minmax(0,1fr)]"
+          >
+            <ime-crate-mosaic
+              class="w-48 sm:w-full"
+              [coverUrls]="page.crate.coverUrls"
+            />
+            <div class="flex min-w-0 flex-col gap-3">
+              @if (editing()) {
+                <div
+                  class="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
+                >
+                  <input
+                    imeInput
+                    maxlength="80"
+                    aria-label="Crate name"
+                    [value]="draftName()"
+                    (input)="draftName.set($any($event.target).value)"
+                  />
+                  <textarea
+                    imeInput
+                    rows="3"
+                    maxlength="500"
+                    aria-label="Note"
+                    placeholder="What is this crate? (optional)"
+                    [value]="draftNote()"
+                    (input)="draftNote.set($any($event.target).value)"
+                  ></textarea>
+                  <label class="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      [checked]="draftPublic()"
+                      (change)="draftPublic.set($any($event.target).checked)"
+                    />
+                    Public: anyone can see it, dig it, and save it
+                  </label>
+                  <div class="flex flex-wrap gap-2">
+                    <button imeButton [busy]="busy()" (click)="save()">
+                      Save
+                    </button>
+                    <button
+                      imeButton
+                      variant="ghost"
+                      (click)="editing.set(false)"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      imeButton
+                      variant="ghost"
+                      class="ml-auto"
+                      (click)="remove()"
+                    >
+                      {{
+                        confirmingDelete()
+                          ? 'Delete it for good'
+                          : 'Delete crate'
+                      }}
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <span
+                  class="font-mono text-xs tracking-wider text-ink-muted uppercase"
                 >
                   {{
-                    confirmingDelete() ? 'Delete it for good' : 'Delete crate'
+                    page.crate.visibility === 'public'
+                      ? 'Crate'
+                      : 'Private crate'
                   }}
-                </button>
-              </div>
-            </div>
-          } @else {
-            <span
-              class="font-mono text-xs tracking-wider text-ink-muted uppercase"
-            >
-              {{
-                page.crate.visibility === 'public' ? 'Crate' : 'Private crate'
-              }}
-              · {{ page.crate.itemCount }}
-              {{ page.crate.itemCount === 1 ? 'record' : 'records' }}
-            </span>
-            <h1
-              class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-5xl"
-            >
-              {{ page.crate.name }}
-            </h1>
-            @if (page.crate.note; as note) {
-              <p class="max-w-prose leading-relaxed whitespace-pre-line">
-                {{ note }}
+                  · {{ page.crate.itemCount }}
+                  {{ page.crate.itemCount === 1 ? 'record' : 'records' }}
+                  @for (genre of page.genres; track genre) {
+                    · {{ genreName(genre) }}
+                  }
+                </span>
+                <h1
+                  class="text-4xl leading-[0.95] font-black tracking-[-0.05em] text-balance md:text-6xl"
+                >
+                  {{ page.crate.name }}
+                </h1>
+                @if (page.crate.note; as note) {
+                  <p class="max-w-prose leading-relaxed whitespace-pre-line">
+                    {{ note }}
+                  </p>
+                }
+              }
+              <p class="text-sm">
+                by
+                @if (page.maker.username; as username) {
+                  <a
+                    class="link font-semibold"
+                    [routerLink]="['/users', username]"
+                    >&#64;{{ username }}</a
+                  >
+                } @else {
+                  someone on IME
+                }
+                <span class="text-ink-muted"
+                  >· {{ makerRole() }}
+                  @if (page.crate.visibility === 'public') {
+                    · {{ saves() }} {{ saves() === 1 ? 'save' : 'saves' }}
+                  }
+                </span>
               </p>
-            }
-          }
-
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-            <span>
-              by
-              @if (page.maker.username; as username) {
-                <a
-                  class="link font-semibold"
-                  [routerLink]="['/users', username]"
-                  >&#64;{{ username }}</a
-                >
-              } @else {
-                someone on IME
+              <div class="flex flex-wrap items-center gap-2">
+                @if (page.items.length) {
+                  <a
+                    imeButton
+                    size="sm"
+                    [routerLink]="['/dig/crates', page.crate.id]"
+                    >Dig this crate</a
+                  >
+                }
+                @if (page.isMine) {
+                  @if (!editing()) {
+                    <button
+                      imeButton
+                      variant="secondary"
+                      size="sm"
+                      (click)="edit()"
+                    >
+                      Edit crate
+                    </button>
+                  }
+                } @else if (session.status() === 'signed-out') {
+                  <a
+                    imeButton
+                    variant="secondary"
+                    size="sm"
+                    routerLink="/sign-in"
+                    [queryParams]="{ returnUrl: router.url }"
+                    >Save</a
+                  >
+                } @else {
+                  <button
+                    imeButton
+                    variant="secondary"
+                    size="sm"
+                    [attr.aria-pressed]="saved()"
+                    [busy]="busy()"
+                    (click)="toggleSave()"
+                  >
+                    {{ saved() ? 'Saved' : 'Save' }}
+                  </button>
+                }
+                @if (!page.isMine) {
+                  <ime-more-menu
+                    label="More for this crate"
+                    [actions]="crateActions()"
+                  />
+                }
+              </div>
+              @if (error(); as error) {
+                <ime-alert tone="error">{{ error }}</ime-alert>
               }
-              <span class="text-ink-muted">· {{ makerRole() }}</span>
-            </span>
-            <span class="text-ink-muted"
-              >{{ page.maker.followers }}
-              {{ page.maker.followers === 1 ? 'follower' : 'followers' }}</span
-            >
-            @if (page.items.length) {
-              <a
-                imeButton
-                size="sm"
-                [routerLink]="['/dig/crates', page.crate.id]"
-                >Dig this crate</a
-              >
-            }
-            @if (page.isMine) {
-              @if (!editing()) {
-                <button
-                  imeButton
-                  variant="secondary"
-                  size="sm"
-                  (click)="edit()"
-                >
-                  Edit crate
-                </button>
-              }
-            } @else if (session.isSignedIn()) {
-              <button
-                imeButton
-                [variant]="following() ? 'secondary' : 'primary'"
-                size="sm"
-                [busy]="busy()"
-                (click)="toggleFollow()"
-              >
-                {{ following() ? 'Following' : 'Follow' }}
-              </button>
-              <ime-report-button
-                targetType="user"
-                [targetId]="page.maker.id"
-                [label]="'@' + (page.maker.username ?? 'this person')"
-              />
-            }
+            </div>
           </div>
-          @if (error(); as error) {
-            <ime-alert tone="error">{{ error }}</ime-alert>
-          }
         </header>
 
         <ime-crate-list
@@ -183,6 +225,45 @@ import { CrateList } from './crate-list';
           (remove)="takeOut($event)"
           (noteChange)="setNote($event.releaseId, $event.note)"
         />
+
+        @if (related(); as related) {
+          @if (related.byMaker.length) {
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="by-maker-heading"
+            >
+              <h2
+                id="by-maker-heading"
+                class="text-2xl font-extrabold tracking-[-0.035em]"
+              >
+                More crates by &#64;{{ page.maker.username }}
+              </h2>
+              <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+                @for (other of related.byMaker; track other.id) {
+                  <li><ime-crate-card [crate]="other" [byLine]="false" /></li>
+                }
+              </ul>
+            </section>
+          }
+          @if (related.withRecords.length) {
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="with-records-heading"
+            >
+              <h2
+                id="with-records-heading"
+                class="text-2xl font-extrabold tracking-[-0.035em]"
+              >
+                Crates with these records
+              </h2>
+              <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+                @for (other of related.withRecords; track other.id) {
+                  <li><ime-crate-card [crate]="other" /></li>
+                }
+              </ul>
+            </section>
+          }
+        }
       </div>
     } @else if (crate.error()) {
       <div class="mx-auto flex max-w-4xl flex-col gap-2">
@@ -204,7 +285,8 @@ import { CrateList } from './crate-list';
 })
 export class CratePage {
   private readonly api = inject(ApiClient);
-  private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
+  protected readonly router = inject(Router);
   private readonly meta = inject(PageMetaService);
   protected readonly session = inject(SessionService);
 
@@ -229,9 +311,22 @@ export class CratePage {
   protected readonly items = linkedSignal<CrateItem[]>(
     () => this.page()?.items ?? [],
   );
-  protected readonly following = linkedSignal(
-    () => this.page()?.followingMaker ?? false,
+  protected readonly saved = linkedSignal(() => this.page()?.saved ?? false);
+  protected readonly saves = linkedSignal(() => this.page()?.crate.saves ?? 0);
+  protected readonly genreName = genreName;
+
+  private readonly relatedResource = resource({
+    params: () =>
+      this.page()?.crate.visibility === 'public' ? this.crateId() : undefined,
+    loader: async ({ params }) => unwrap(await this.api.crates.related(params)),
+  });
+  protected readonly related = computed(() =>
+    currentValue(this.relatedResource),
   );
+
+  protected readonly crateActions = computed<MenuAction[]>(() => [
+    { label: 'Report', run: () => this.report() },
+  ]);
 
   protected readonly editing = signal(false);
   protected readonly confirmingDelete = signal(false);
@@ -301,17 +396,36 @@ export class CratePage {
     }
   }
 
-  protected async toggleFollow(): Promise<void> {
-    const maker = this.page()?.maker;
-    if (!maker) return;
-    const follow = !this.following();
-    this.following.set(follow);
+  protected async toggleSave(): Promise<void> {
+    const save = !this.saved();
+    this.saved.set(save);
+    this.saves.update((count) => count + (save ? 1 : -1));
     const ok = await this.run(() =>
-      follow
-        ? this.api.crates.followMaker(maker.id)
-        : this.api.crates.unfollowMaker(maker.id),
+      save
+        ? this.api.crates.save(this.crateId())
+        : this.api.crates.unsave(this.crateId()),
     );
-    if (!ok) this.following.set(!follow);
+    if (!ok) {
+      this.saved.set(!save);
+      this.saves.update((count) => count + (save ? -1 : 1));
+    }
+  }
+
+  /** A crate's words are reported through the person who wrote them. */
+  private async report(): Promise<void> {
+    const page = this.page();
+    if (!page) return;
+    if (this.session.status() === 'signed-out') {
+      await this.router.navigate(['/sign-in'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+    await openReport(this.injector, {
+      targetType: 'user',
+      targetId: page.maker.id,
+      label: `the crate “${page.crate.name}”`,
+    });
   }
 
   protected async move(index: number, by: -1 | 1): Promise<void> {

@@ -80,7 +80,11 @@ Charts show what people are buying and downloading, counted in people, never in 
 A crate is a list of releases someone put together, like a box of records at a store.
 
 - Any signed-in listener, artist, or designer can make a crate, give it a name and a short note, and add releases to it, each with an optional line about why.
-- A crate is private or public. Public crates show who made it (and whether they are a listener, an artist, or a designer) and can be dug, followed, and featured.
+- A crate is private or public. Public crates show who made it (and whether they are a listener, an artist, or a designer) and can be dug, saved, and featured.
+- A crate works like a playlist of whole records: its page shows its covers, name, note, maker, genres, and how many people saved it, then its records, then more crates by its maker and other crates with its records. Reporting it is offered quietly, in a menu.
+- Anyone signed in can save someone else's public crate. Where saved and made crates live for a listener is part of the [Library](./library.md).
+- A crate's genres are read from its records: it is in a genre when at least a third of its records are. Crates by sound list the public crates in a genre, the most saved first, with a crate IME pulls by sound beside them.
+- The crates page shows the most saved crates, up to the hundredth, rather than every crate.
 - A listener can follow people whose crates they like and see their new public crates.
 - IME offers **crates by sound**, built from genres and tags, and **crates built from records you love**: a listener picks a few records and IME fills a crate from what their buyers also kept, the crates they appear in, and their artists' tags.
 - A signed-in listener can get a **crate of the day** built from their own library the same way.

@@ -53,6 +53,12 @@ export const listeningRoutes: Route[] = [
       import('./crates/built-crate-page').then((m) => m.BuiltCratePage),
   },
   {
+    path: 'crates/genre/:genre',
+    title: 'Crates by genre · IME',
+    loadComponent: () =>
+      import('./crates/genre-crates-page').then((m) => m.GenreCratesPage),
+  },
+  {
     path: 'crates/day',
     title: 'Your crate of the day · IME',
     data: { kind: 'day' },

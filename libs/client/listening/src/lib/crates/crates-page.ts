@@ -19,11 +19,13 @@ import {
 import { CrateCard } from './crate-card';
 
 const PAGE_SIZE = 24;
+/** The most saved list ends here. */
+const MOST_SAVED = 100;
 
 /**
  * Crates, `/crates`: the listener's own and today's crate built from their
- * library, crates by sound, building one from records they love, new crates
- * from the people they follow, and everyone's public crates.
+ * library, building one from records they love, new crates from the people
+ * they follow, the most saved crates, and crates by genre.
  */
 @Component({
   selector: 'ime-crates-page',
@@ -150,33 +152,12 @@ const PAGE_SIZE = 24;
         }
       }
 
-      <section class="flex flex-col gap-4" aria-labelledby="sound-heading">
-        <h2
-          id="sound-heading"
-          class="text-2xl font-extrabold tracking-[-0.035em]"
-        >
-          Crates by sound
-        </h2>
-        <ul class="flex flex-wrap gap-2">
-          @for (genre of genres; track genre.id) {
-            <li>
-              <a
-                class="block rounded-full border border-line px-3 py-1 text-sm hover:border-ink hover:bg-wash"
-                routerLink="/crates/sound"
-                [queryParams]="{ genre: genre.id }"
-                >{{ genre.name }}</a
-              >
-            </li>
-          }
-        </ul>
-      </section>
-
       <section class="flex flex-col gap-4" aria-labelledby="public-heading">
         <h2
           id="public-heading"
           class="text-2xl font-extrabold tracking-[-0.035em]"
         >
-          Everyone's crates
+          Most saved
         </h2>
         @if (publicCrates.error()) {
           <ime-alert tone="error">Crates could not be loaded.</ime-alert>
@@ -189,7 +170,7 @@ const PAGE_SIZE = 24;
           } @empty {
             @if (publicCrates.hasValue()) {
               <li class="col-span-full text-sm text-ink-muted">
-                No public crates yet.
+                No crates saved yet.
               </li>
             }
           }
@@ -208,6 +189,28 @@ const PAGE_SIZE = 24;
             </button>
           </div>
         }
+      </section>
+
+      <section class="flex flex-col gap-4" aria-labelledby="sound-heading">
+        <h2
+          id="sound-heading"
+          class="text-2xl font-extrabold tracking-[-0.035em]"
+        >
+          Crates by sound
+        </h2>
+        <ul
+          class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+        >
+          @for (genre of genres; track genre.id) {
+            <li>
+              <a
+                class="block rounded-full border border-line px-3 py-1 text-sm whitespace-nowrap hover:border-ink hover:bg-wash"
+                [routerLink]="['/crates/genre', genre.id]"
+                >{{ genre.name }}</a
+              >
+            </li>
+          }
+        </ul>
       </section>
     </div>
   `,
@@ -236,7 +239,9 @@ export class CratesPage {
   protected readonly publicCrates = resource({
     id: 'public-crates',
     loader: async () =>
-      unwrap(await this.api.crates.listPublic({ limit: PAGE_SIZE })),
+      unwrap(
+        await this.api.crates.listPublic({ sort: 'saved', limit: PAGE_SIZE }),
+      ),
   });
   private readonly more = signal<Crate[]>([]);
   private readonly lastPageSize = signal(PAGE_SIZE);
@@ -248,7 +253,8 @@ export class CratesPage {
   protected readonly hasMore = computed(
     () =>
       (currentValue(this.publicCrates)?.length ?? 0) === PAGE_SIZE &&
-      this.lastPageSize() === PAGE_SIZE,
+      this.lastPageSize() === PAGE_SIZE &&
+      this.everyone().length < MOST_SAVED,
   );
 
   protected readonly creating = signal(false);
@@ -270,6 +276,7 @@ export class CratesPage {
   protected async loadMore(): Promise<void> {
     this.loadingMore.set(true);
     const result = await this.api.crates.listPublic({
+      sort: 'saved',
       limit: PAGE_SIZE,
       offset: this.everyone().length,
     });
