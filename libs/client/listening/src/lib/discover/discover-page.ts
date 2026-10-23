@@ -9,7 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import { SessionService, currentValue } from '@ime/client-data';
-import type { ReleaseCardWithArtist } from '@ime/models';
+import { genreName, type ReleaseCardWithArtist } from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
@@ -17,6 +17,7 @@ import {
   ReleaseCardComponent,
   SpinnerComponent,
 } from '@ime/ui';
+import { CrateCard } from '../crates/crate-card';
 import { GatefoldHero } from '../home/gatefold-hero';
 import { ShelfRow } from '../home/shelf-row';
 
@@ -24,7 +25,8 @@ const PAGE_SIZE = 24;
 
 /**
  * The home page: the gatefold that says what IME is, today's shelves,
- * designed releases, and everything new.
+ * designed releases, this week's best sellers, crates, dig mode, and new
+ * releases.
  */
 @Component({
   selector: 'ime-discover-page',
@@ -33,6 +35,7 @@ const PAGE_SIZE = 24;
     AlertComponent,
     ButtonDirective,
     CoverComponent,
+    CrateCard,
     GatefoldHero,
     ReleaseCardComponent,
     RouterLink,
@@ -122,12 +125,160 @@ const PAGE_SIZE = 24;
         </section>
       }
 
+      @if (topSellers().length) {
+        <section
+          class="grid gap-8 border-b border-line pb-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center"
+          aria-labelledby="charts-heading"
+        >
+          <div class="flex flex-col gap-3">
+            <span
+              class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+              >Charts</span
+            >
+            <h2
+              id="charts-heading"
+              class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-5xl"
+            >
+              What people are buying this week.
+            </h2>
+            <p class="max-w-prose leading-relaxed">
+              Charts rank releases by how many people bought them, or downloaded
+              them, never by money. Every genre has its own, from this week back
+              to all time.
+            </p>
+            <div>
+              <a imeButton variant="secondary" routerLink="/charts"
+                >See the charts</a
+              >
+            </div>
+          </div>
+          <ol
+            class="flex flex-col divide-y divide-hairline border-y border-line"
+          >
+            @for (entry of topSellers(); track entry.release.id) {
+              <li>
+                <a
+                  class="group grid grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+                  [routerLink]="[
+                    '/artists',
+                    entry.release.artistHandle,
+                    entry.release.slug,
+                  ]"
+                >
+                  <span class="text-right font-mono text-xl font-bold">{{
+                    entry.position
+                  }}</span>
+                  <ime-cover
+                    class="w-full border border-line"
+                    [src]="entry.release.coverUrl"
+                    alt=""
+                  />
+                  <span class="flex min-w-0 flex-col">
+                    <span class="truncate font-bold group-hover:underline">{{
+                      entry.release.title
+                    }}</span>
+                    <span class="truncate text-sm text-ink-muted">{{
+                      entry.release.artistName
+                    }}</span>
+                  </span>
+                  <span class="font-mono text-xs text-ink-muted"
+                    >{{ entry.people }}
+                    {{ entry.people === 1 ? 'buyer' : 'buyers' }}</span
+                  >
+                </a>
+              </li>
+            }
+          </ol>
+        </section>
+      }
+
+      @if (crates().length) {
+        <section class="flex flex-col gap-6" aria-labelledby="crates-heading">
+          <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+            <div class="flex max-w-2xl flex-col gap-3">
+              <span
+                class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+                >Crates</span
+              >
+              <h2
+                id="crates-heading"
+                class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-5xl"
+              >
+                Boxes of records, put together by people.
+              </h2>
+              <p class="leading-relaxed">
+                Anyone can make a crate and say why each record is in it. Follow
+                the people whose taste you trust, or let IME build one from
+                records you love.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <a imeButton variant="secondary" routerLink="/crates"
+                >Browse crates</a
+              >
+              <a class="link self-center font-semibold" routerLink="/crates"
+                >Make a crate</a
+              >
+            </div>
+          </div>
+          <ul class="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4">
+            @for (crate of crates(); track crate.id) {
+              <li><ime-crate-card [crate]="crate" /></li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (digLink(); as dig) {
+        <section
+          class="rounded-card bg-ink px-6 py-12 text-canvas md:px-10 md:py-14"
+          aria-labelledby="dig-heading"
+        >
+          <div
+            class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-12"
+          >
+            <div class="flex max-w-2xl flex-col gap-3">
+              <span
+                class="font-mono text-xs tracking-wider text-canvas/60 uppercase"
+                >Dig mode</span
+              >
+              <h2
+                id="dig-heading"
+                class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-6xl"
+              >
+                Flip through a crate, one record at a time.
+              </h2>
+              <p class="leading-relaxed text-canvas/80">
+                Hear the tracks each artist shares, in full, and move anywhere
+                in them. Keep what you love, then buy the bag at the bottom of
+                the crate. Every dig ends; nothing plays until you press play.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <a
+                class="rounded-control bg-marker px-5 py-3 font-bold text-ink hover:bg-canvas"
+                [routerLink]="dig"
+                >Start digging</a
+              >
+              @if (genreOfTheDay(); as genre) {
+                <a
+                  class="rounded-control border border-canvas/60 px-5 py-3 font-bold hover:bg-canvas hover:text-ink"
+                  routerLink="/dig/sound"
+                  [queryParams]="{ genre: genre.id }"
+                  >Dig {{ genre.name }}</a
+                >
+              }
+            </div>
+          </div>
+        </section>
+      }
+
       <section class="flex flex-col gap-4" aria-labelledby="recent-heading">
         <h2
           id="recent-heading"
           class="text-2xl font-extrabold tracking-[-0.035em]"
         >
-          Everything new
+          New releases
         </h2>
         @if (recent.error()) {
           <ime-alert tone="error">New releases could not be loaded.</ime-alert>
@@ -184,6 +335,39 @@ export class DiscoverPage {
       item.kind === 'release' ? [item] : [],
     ),
   );
+
+  private readonly chart = resource({
+    id: 'home-chart',
+    loader: async () =>
+      unwrap(await this.api.catalog.getChart({ chart: 'selling' })),
+  });
+  protected readonly topSellers = computed(() =>
+    (currentValue(this.chart)?.entries ?? []).slice(0, 5),
+  );
+
+  private readonly publicCrates = resource({
+    id: 'home-crates',
+    loader: async () => unwrap(await this.api.crates.listPublic({ limit: 4 })),
+  });
+  protected readonly crates = computed(
+    () => currentValue(this.publicCrates) ?? [],
+  );
+
+  /** Dig today's featured crate, from its shelf. */
+  protected readonly digLink = computed(() => {
+    const crate = currentValue(this.home)?.shelves.find((shelf) =>
+      shelf.link?.startsWith('/crates/'),
+    );
+    return crate?.link ? `/dig${crate.link}` : null;
+  });
+  /** The genre of the day, also offered as a dig. */
+  protected readonly genreOfTheDay = computed(() => {
+    const shelf = currentValue(this.home)?.shelves.find(
+      (s) => s.id === 'genre-of-the-day',
+    );
+    const id = shelf?.link?.split('genres=')[1];
+    return id ? { id, name: genreName(id) } : null;
+  });
 
   protected readonly recent = resource({
     id: 'catalog-recent',
