@@ -12,6 +12,7 @@ import {
   isNull,
   max,
   ne,
+  or,
   sql,
 } from 'drizzle-orm';
 import type { Db } from '../database-service';
@@ -34,6 +35,7 @@ import {
   releaseDesignImages,
   releaseDesigns,
   releases,
+  users,
 } from '../tables';
 
 /**
@@ -117,6 +119,66 @@ export interface AddReleaseDesignImageParams {
   byteSize: number;
 }
 
+/** The orders the gallery can list designs and designers in. */
+export type GalleryOrder =
+  'shuffle' | 'newest' | 'most-used' | 'rarely-used' | 'recently-used';
+
+export interface GalleryFilter {
+  surface: DesignSurface;
+  /** Words in the name, description, or designer's name or username. */
+  words?: string;
+  style?: string;
+  /** Free designs, or designs at most this many minor units. */
+  price?: 'free' | number;
+  /** Only designers taking custom requests. */
+  requests?: boolean;
+  /** Only this designer, by username. */
+  designer?: string;
+  /** Only designs some release on sale uses. */
+  inUse?: boolean;
+  order: GalleryOrder;
+  /** Seeds the shuffle, so one day gives one order. */
+  day: string;
+  limit: number;
+  offset: number;
+}
+
+/** A listed design with its designer and how releases use it. */
+export interface GalleryDesignRow {
+  design: Design;
+  releaseCount: number;
+  designer: {
+    username: string | null;
+    name: string | null;
+    openToCommissions: boolean;
+  } | null;
+}
+
+export interface GalleryDesignerFilter {
+  surface: DesignSurface;
+  words?: string;
+  style?: string;
+  requests?: boolean;
+  order: 'shuffle' | 'newest' | 'most-used';
+  day: string;
+  limit: number;
+  offset: number;
+}
+
+/** A designer with listed designs, and their designs most used first. */
+export interface GalleryDesignerRow {
+  username: string;
+  name: string | null;
+  openToCommissions: boolean;
+  releaseCount: number;
+  designs: {
+    id: string;
+    name: string;
+    styles: string[];
+    releaseCount: number;
+  }[];
+}
+
 const DEFAULT_LIST_LIMIT = 24;
 const DEFAULT_SEARCH_LIMIT = 20;
 
@@ -169,6 +231,180 @@ export class DesignRepository {
       .orderBy(desc(designs.publishedAt))
       .limit(limit)
       .offset(offset);
+  }
+
+  /**
+   * Listed designs for the gallery, narrowed, ordered, and paged in the
+   * database. The shuffle orders by a hash of each design and the day, so
+   * everyone sees the same order for a day and every design leads on some.
+   */
+  public async listGallery(filter: GalleryFilter): Promise<GalleryDesignRow[]> {
+    const usage = this.usage();
+    const releaseCount =
+      sql<number>`coalesce(${usage.releaseCount}, 0)`.mapWith(Number);
+    const words = filter.words && `%${filter.words}%`;
+    const order = {
+      shuffle: [sql`md5(${designs.id}::text || ${filter.day})`],
+      newest: [desc(designs.publishedAt)],
+      'most-used': [desc(releaseCount), desc(designs.publishedAt)],
+      'rarely-used': [releaseCount, desc(designs.publishedAt)],
+      'recently-used': [
+        sql`${usage.lastUsedAt} desc nulls last`,
+        desc(designs.publishedAt),
+      ],
+    }[filter.order];
+    const rows = await this.db
+      .select({
+        design: getTableColumns(designs),
+        releaseCount,
+        username: users.username,
+        name: users.name,
+        openToCommissions: users.openToCommissions,
+      })
+      .from(designs)
+      .leftJoin(usage, eq(usage.designId, designs.id))
+      .leftJoin(users, eq(users.id, designs.designerUserId))
+      .where(
+        and(
+          isListed,
+          eq(designs.surface, filter.surface),
+          words
+            ? or(
+                ilike(designs.name, words),
+                ilike(designs.description, words),
+                ilike(users.username, words),
+                ilike(users.name, words),
+              )
+            : undefined,
+          filter.style
+            ? sql`${filter.style} = any(${designs.styles})`
+            : undefined,
+          filter.price === 'free'
+            ? eq(designs.pricingMode, 'free')
+            : filter.price !== undefined
+              ? or(
+                  eq(designs.pricingMode, 'free'),
+                  sql`${designs.minimumPrice} <= ${filter.price}`,
+                )
+              : undefined,
+          filter.requests ? eq(users.openToCommissions, true) : undefined,
+          filter.designer
+            ? sql`lower(${users.username}) = ${filter.designer.toLowerCase()}`
+            : undefined,
+          filter.inUse ? sql`${releaseCount} > 0` : undefined,
+        ),
+      )
+      .orderBy(...order, designs.id)
+      .limit(filter.limit)
+      .offset(filter.offset);
+    return rows.map((row) => ({
+      design: row.design,
+      releaseCount: row.releaseCount,
+      designer:
+        row.design.designerUserId && row.openToCommissions !== null
+          ? {
+              username: row.username,
+              name: row.name,
+              openToCommissions: row.openToCommissions,
+            }
+          : null,
+    }));
+  }
+
+  /**
+   * Designers with listed designs, narrowed, ordered, and paged, each with
+   * their designs most used first.
+   */
+  public async listGalleryDesigners(
+    filter: GalleryDesignerFilter,
+  ): Promise<GalleryDesignerRow[]> {
+    const usage = this.usage();
+    const designCount = sql<number>`coalesce(${usage.releaseCount}, 0)`;
+    const releaseCount = sql<number>`sum(${designCount})`.mapWith(Number);
+    const words = filter.words && `%${filter.words}%`;
+    const order = {
+      shuffle: [sql`md5(${users.id}::text || ${filter.day})`],
+      newest: [sql`max(${designs.publishedAt}) desc`],
+      'most-used': [desc(releaseCount)],
+    }[filter.order];
+    const rows = await this.db
+      .select({
+        username: users.username,
+        name: users.name,
+        openToCommissions: users.openToCommissions,
+        releaseCount,
+        designs: sql<
+          GalleryDesignerRow['designs']
+        >`jsonb_agg(jsonb_build_object(
+          'id', ${designs.id}, 'name', ${designs.name},
+          'styles', ${designs.styles}, 'releaseCount', ${designCount}
+        ) order by ${designCount} desc, ${designs.publishedAt} desc)`,
+      })
+      .from(designs)
+      .innerJoin(users, eq(users.id, designs.designerUserId))
+      .leftJoin(usage, eq(usage.designId, designs.id))
+      .where(
+        and(
+          isListed,
+          eq(designs.surface, filter.surface),
+          isNotNull(users.username),
+          words
+            ? or(ilike(users.username, words), ilike(users.name, words))
+            : undefined,
+          filter.requests ? eq(users.openToCommissions, true) : undefined,
+        ),
+      )
+      .groupBy(users.id)
+      .having(
+        filter.style
+          ? sql`bool_or(${filter.style} = any(${designs.styles}))`
+          : undefined,
+      )
+      .orderBy(...order, users.id)
+      .limit(filter.limit)
+      .offset(filter.offset);
+    return rows.map((row) => ({ ...row, username: row.username as string }));
+  }
+
+  /**
+   * How many listed designs carry each style.
+   */
+  public async countListedStyles(
+    surface: DesignSurface,
+  ): Promise<Map<string, number>> {
+    const style = sql<string>`unnest(${designs.styles})`;
+    const rows = await this.db
+      .select({ style, count: count() })
+      .from(designs)
+      .where(and(isListed, eq(designs.surface, surface)))
+      .groupBy(style);
+    return new Map(rows.map((row) => [row.style, row.count]));
+  }
+
+  /** Each design's releases on sale, and when the latest came out. */
+  private usage() {
+    return this.db
+      .select({
+        designId: designVersions.designId,
+        releaseCount: count().as('release_count'),
+        lastUsedAt: max(releases.publishedAt).as('last_used_at'),
+      })
+      .from(releaseDesigns)
+      .innerJoin(
+        designVersions,
+        eq(designVersions.id, releaseDesigns.designVersionId),
+      )
+      .innerJoin(releases, eq(releases.id, releaseDesigns.releaseId))
+      .innerJoin(artists, eq(artists.id, releases.artistId))
+      .where(
+        and(
+          eq(releases.status, 'published'),
+          isNull(artists.suspendedAt),
+          isNull(artists.offSaleAt),
+        ),
+      )
+      .groupBy(designVersions.designId)
+      .as('usage');
   }
 
   /**

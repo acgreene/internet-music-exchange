@@ -85,6 +85,12 @@ export const listeningRoutes: Route[] = [
       import('./designs/gallery-page').then((m) => m.GalleryPage),
   },
   {
+    path: 'designs/designers',
+    title: 'Designers | IME',
+    loadComponent: () =>
+      import('./designs/designers-page').then((m) => m.DesignersPage),
+  },
+  {
     path: 'designs/:designId',
     title: 'Design | IME',
     loadComponent: () =>

@@ -51,8 +51,11 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 ## Design gallery
 
 - The gallery is the marketplace for how a record looks. Public designs are on show to everyone, signed in or not, under a short explanation of what designed releases are.
-- Visitors search designs and designers by name, narrow designs by style, by price (free or under $10), and by whether the designer takes custom requests, and sort them by most used, newest, or rarely used.
-- Designers are sellers in their own right. The gallery shows designers who take requests, or the designers matching a search, and each designer's profile shows their designs.
+- The gallery's order is fair by rule, not by taste or money. Designs and designers come in a daily shuffle that is the same for everyone and changes every day, so every design leads on some days. Nobody can pay for placement, and IME does not pick favorites.
+- With nothing chosen, the gallery shows short shelves: the newest designs, designs on recent releases, a different style each day, and designers taking requests. A shelf shows at most one design per designer, so no one fills a row. Below the shelves are all designs, a page at a time.
+- Visitors search designs and designers by name, narrow designs by style, by price (free or under $10), and by whether the designer takes custom requests, and sort them by the daily shuffle, newest, on recent releases, most used, or rarely used. Choosing any of these replaces the shelves with the matching designs.
+- Designers are sellers in their own right. A designers directory lists everyone with designs in the gallery, searched by name, narrowed by style or to those taking requests, and sorted by the daily shuffle, newest work, or most used. Each designer's profile shows their designs.
+- Previews in the gallery are the live designs, started only as they come into view. Still pictures captured when a design is published are planned.
 - The plain release page keeps everything a design may leave out, like supporters, notes, and the full credits, and a designed release links to it.
 - Each design is shown as a template, with placeholders that say what goes where ("Cover art goes here", "Release title", "Artist name") and the design's own colors, so artists see the design rather than someone else's record.
 - Each design can be tried with placeholder content: a stand-in cover, title, tracklist, and music, on a desktop or phone frame and for an album, EP, or single, so anyone can see what a release would look like in it. A visitor can try their own cover image in the preview; it stays on their device.
@@ -78,7 +81,8 @@ Creative pages are IME's core differentiator. Instead of every artist's music si
 ## Out of scope / future
 
 - Designs for artist home pages, music pages, and merch pages.
-- Featured designs and editorial picks in the gallery.
+- Still preview pictures of each design, captured when it is published.
+- Letting people save designs, and showing how quickly designers reply to requests.
 - Commissions paid through IME, and messaging designers inside IME instead of by email.
 - A designer studio with guides and documentation for building designs.
 - Serving release images to designs with cross-origin headers, so designs can use them as WebGL textures.

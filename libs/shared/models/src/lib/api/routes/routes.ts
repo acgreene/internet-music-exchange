@@ -354,10 +354,13 @@ export enum ApiRoute {
   /** A public design's marketplace page. */
   MarketplaceDesign = '/api/marketplace/designs/:designId',
 
-  /** Public designs on show to everyone, ready to preview. */
+  /** The gallery's front: new designs, designs on recent releases, a style, and designers. */
+  GalleryHome = '/api/gallery',
+
+  /** Public designs on show to everyone, ready to preview, a page at a time. */
   GalleryDesigns = '/api/gallery/designs',
 
-  /** Designers with listed designs, `?requests=1` for those taking requests. */
+  /** Designers with listed designs, a page at a time. */
   GalleryDesigners = '/api/gallery/designers',
 
   /** One design in the gallery, with releases that use it. */

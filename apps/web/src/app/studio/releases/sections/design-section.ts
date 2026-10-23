@@ -94,7 +94,7 @@ import {
                   <input
                     class="h-10 w-12 cursor-pointer rounded-control border border-line bg-canvas"
                     type="color"
-                    [value]="values()[slot.name] ?? slot.default ?? '#000000'"
+                    [value]="values()[slot.name] || slot.default || '#000000'"
                     (input)="setValue(slot, $event)"
                   />
                   {{ slot.label }}

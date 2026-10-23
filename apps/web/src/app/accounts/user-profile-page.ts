@@ -136,8 +136,11 @@ export class UserProfilePage {
   protected readonly designs = resource({
     params: () => this.username(),
     loader: async ({ params }) => {
-      const result = await this.api.designs.listGallery({ designer: params });
-      return result.ok ? result.data : [];
+      const result = await this.api.designs.listGallery({
+        designer: params,
+        sort: 'most-used',
+      });
+      return result.ok ? result.data.designs : [];
     },
   });
 

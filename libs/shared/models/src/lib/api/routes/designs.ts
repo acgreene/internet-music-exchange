@@ -157,9 +157,15 @@ export const galleryDesignPageSchema = galleryDesignSchema.extend({
 
 export type GalleryDesignPage = z.infer<typeof galleryDesignPageSchema>;
 
+/**
+ * How the gallery orders designs. The shuffle comes first: one order for
+ * everyone each day, a new one the next, so every design gets its turn.
+ */
 export const GALLERY_SORTS = [
-  { id: 'most-used', name: 'Most used' },
+  { id: 'shuffle', name: 'Shuffled daily' },
   { id: 'newest', name: 'Newest' },
+  { id: 'recently-used', name: 'On recent releases' },
+  { id: 'most-used', name: 'Most used' },
   { id: 'rarely-used', name: 'Rarely used' },
 ] as const;
 
@@ -177,9 +183,19 @@ export const galleryQuerySchema = z.object({
   sort: z
     .enum(GALLERY_SORTS.map((sort) => sort.id) as [GallerySort])
     .optional(),
+  /** Which page of results, from 1. */
+  page: z.coerce.number().int().min(1).max(500).optional(),
 });
 
 export type GalleryQuery = z.infer<typeof galleryQuerySchema>;
+
+/** One page of the gallery's designs. */
+export const galleryDesignsPageSchema = z.object({
+  designs: z.array(galleryDesignSchema),
+  hasMore: z.boolean(),
+});
+
+export type GalleryDesignsPage = z.infer<typeof galleryDesignsPageSchema>;
 
 /** A designer with listed designs, as the gallery shows them. */
 export const galleryDesignerSchema = z.object({
@@ -191,14 +207,55 @@ export const galleryDesignerSchema = z.object({
   releaseCount: z.number().int(),
   /** Their styles, most used first. */
   styles: z.array(z.string()),
+  /** A few of their designs, most used first. */
+  designs: z.array(z.object({ id: z.guid(), name: z.string() })),
 });
 
 export type GalleryDesigner = z.infer<typeof galleryDesignerSchema>;
 
+export const DESIGNER_SORTS = [
+  { id: 'shuffle', name: 'Shuffled daily' },
+  { id: 'newest', name: 'Newest work' },
+  { id: 'most-used', name: 'Most used' },
+] as const;
+
+export type DesignerSort = (typeof DESIGNER_SORTS)[number]['id'];
+
 export const galleryDesignersQuerySchema = z.object({
   q: z.string().max(100).optional(),
+  style: z.string().optional(),
   requests: z.enum(['1']).optional(),
+  sort: z
+    .enum(DESIGNER_SORTS.map((sort) => sort.id) as [DesignerSort])
+    .optional(),
+  page: z.coerce.number().int().min(1).max(500).optional(),
 });
+
+export type GalleryDesignersQuery = z.infer<typeof galleryDesignersQuerySchema>;
+
+/** One page of designers. */
+export const galleryDesignersPageSchema = z.object({
+  designers: z.array(galleryDesignerSchema),
+  hasMore: z.boolean(),
+});
+
+export type GalleryDesignersPage = z.infer<typeof galleryDesignersPageSchema>;
+
+/**
+ * The gallery's front: the newest designs, designs on the latest releases,
+ * one style a day, and designers taking requests, each in today's shuffle.
+ * A designer appears at most once on each shelf.
+ */
+export const galleryHomeSchema = z.object({
+  newest: z.array(galleryDesignSchema),
+  inUse: z.array(galleryDesignSchema),
+  style: z
+    .object({ id: z.string(), designs: z.array(galleryDesignSchema) })
+    .nullable(),
+  designers: z.array(galleryDesignerSchema),
+});
+
+export type GalleryHome = z.infer<typeof galleryHomeSchema>;
 
 export const commissionRequestSchema = z.object({ message: z.string() });
 
@@ -356,16 +413,19 @@ export const designContracts = {
   [ApiRoute.MarketplaceDesign]: {
     [HttpMethod.Get]: { response: marketplaceDesignSchema },
   },
+  [ApiRoute.GalleryHome]: {
+    [HttpMethod.Get]: { response: galleryHomeSchema },
+  },
   [ApiRoute.GalleryDesigns]: {
     [HttpMethod.Get]: {
       query: galleryQuerySchema,
-      response: z.array(galleryDesignSchema),
+      response: galleryDesignsPageSchema,
     },
   },
   [ApiRoute.GalleryDesigners]: {
     [HttpMethod.Get]: {
       query: galleryDesignersQuerySchema,
-      response: z.array(galleryDesignerSchema),
+      response: galleryDesignersPageSchema,
     },
   },
   [ApiRoute.GalleryDesign]: {

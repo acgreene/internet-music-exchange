@@ -1,10 +1,22 @@
-import { DatabaseRepository, type Design, type DesignVersion } from '@ime/db';
+import {
+  DatabaseRepository,
+  type Design,
+  type DesignVersion,
+  type GalleryDesignerRow,
+  type GalleryDesignRow,
+  type GalleryFilter,
+} from '@ime/db';
 import {
   ApiError,
   ApiErrorKind,
+  DESIGN_STYLES,
   type GalleryDesign,
   type GalleryDesigner,
+  type GalleryDesignersPage,
+  type GalleryDesignersQuery,
   type GalleryDesignPage,
+  type GalleryDesignsPage,
+  type GalleryHome,
   type GalleryQuery,
   HttpStatus,
 } from '@ime/models';
@@ -13,10 +25,18 @@ import { designEmails, EmailService } from '../email';
 import { CloudStorageService } from '../storage';
 
 const BUNDLE_URL_EXPIRY_SECONDS = 3600;
-/** How many listed designs the gallery reads before narrowing them. */
-const LISTED = 500;
-/** How many designs one gallery view shows. */
-const GALLERY_SIZE = 96;
+/** How many designs or designers one page of the gallery shows. */
+const PAGE_SIZE = 24;
+/** How many designs a shelf on the gallery's front shows. */
+const SHELF_SIZE = 4;
+/** How many designs a shelf reads, to keep one per designer. */
+const SHELF_READ = 24;
+/** How many designers taking requests the front shows. */
+const DESIGNERS_SHOWN = 6;
+/** A style needs this many designs to get a day on the front. */
+const STYLE_SHELF_MIN = 3;
+/** How many of a designer's designs their card names. */
+const DESIGNS_NAMED = 3;
 /** A design this cheap or cheaper counts as under $10. */
 const UNDER_TEN = 1000;
 const RELEASES_SHOWN = 8;
@@ -43,104 +63,136 @@ export class DesignGalleryService {
   }
 
   /**
-   * Listed release designs, narrowed by words (in the name, description, or
-   * designer), a style, a price, a designer, or designers taking requests,
-   * the most used first unless asked otherwise.
+   * A page of listed release designs, narrowed by words (in the name,
+   * description, or designer), a style, a price, a designer, or designers
+   * taking requests, in today's shuffle unless asked otherwise.
    */
-  public async list(query: GalleryQuery = {}): Promise<GalleryDesign[]> {
-    const words = (query.q ?? '').trim().toLowerCase();
-    const designer = query.designer?.trim().toLowerCase();
-    const matches = (await this.listAll()).filter((item) => {
-      const { design } = item;
-      const text = [
-        design.name,
-        design.description ?? '',
-        item.designer?.username ?? '',
-        item.designer?.name ?? '',
-      ]
-        .join(' ')
-        .toLowerCase();
-      return (
-        (!words || text.includes(words)) &&
-        (!query.style || design.styles.includes(query.style)) &&
-        (!query.price ||
-          (query.price === 'free'
-            ? design.pricingMode === 'free'
-            : design.pricingMode === 'free' ||
-              design.minimumPrice <= UNDER_TEN)) &&
-        (!query.requests || !!item.designer?.openToCommissions) &&
-        (!designer || item.designer?.username?.toLowerCase() === designer)
-      );
+  public async list(query: GalleryQuery = {}): Promise<GalleryDesignsPage> {
+    const page = query.page ?? 1;
+    const rows = await this.db.designs.listGallery({
+      ...this.base(),
+      words: query.q?.trim() || undefined,
+      style: query.style,
+      price:
+        query.price === 'free'
+          ? 'free'
+          : query.price === 'under-10'
+            ? UNDER_TEN
+            : undefined,
+      requests: !!query.requests,
+      designer: query.designer?.trim() || undefined,
+      order: query.sort ?? 'shuffle',
+      limit: PAGE_SIZE + 1,
+      offset: (page - 1) * PAGE_SIZE,
     });
-    const newest = (a: GalleryDesign, b: GalleryDesign) =>
-      (b.design.publishedAt?.getTime() ?? 0) -
-      (a.design.publishedAt?.getTime() ?? 0);
-    const sorted = matches.sort((a, b) => {
-      if (query.sort === 'newest') return newest(a, b);
-      const used = b.releaseCount - a.releaseCount;
-      return (query.sort === 'rarely-used' ? -used : used) || newest(a, b);
-    });
-    return sorted.slice(0, GALLERY_SIZE);
+    return {
+      designs: await this.toGalleryRows(rows.slice(0, PAGE_SIZE)),
+      hasMore: rows.length > PAGE_SIZE,
+    };
   }
 
   /**
-   * The designers behind listed designs, the most used first, narrowed by
-   * words in their name or to those taking custom requests.
+   * A page of the designers behind listed designs, narrowed by words in
+   * their name, a style they work in, or to those taking custom requests,
+   * in today's shuffle unless asked otherwise.
    */
   public async listDesigners(
-    query: { q?: string; requests?: '1' } = {},
-  ): Promise<GalleryDesigner[]> {
-    const words = (query.q ?? '').trim().toLowerCase();
-    const byDesigner = new Map<string, GalleryDesigner>();
-    const styleCounts = new Map<string, Map<string, number>>();
-    for (const item of await this.listAll()) {
-      const username = item.designer?.username;
-      if (!item.designer || !username) continue;
-      const known = byDesigner.get(username) ?? {
-        username,
-        name: item.designer.name,
-        openToCommissions: item.designer.openToCommissions,
-        designCount: 0,
-        releaseCount: 0,
-        styles: [],
-      };
-      known.designCount += 1;
-      known.releaseCount += item.releaseCount;
-      byDesigner.set(username, known);
-      const counts = styleCounts.get(username) ?? new Map<string, number>();
-      for (const style of item.design.styles) {
-        counts.set(style, (counts.get(style) ?? 0) + 1);
-      }
-      styleCounts.set(username, counts);
-    }
-    return [...byDesigner.values()]
-      .map((designer) => ({
-        ...designer,
-        styles: [...(styleCounts.get(designer.username) ?? new Map())]
-          .sort((a, b) => b[1] - a[1])
-          .map(([style]) => style),
-      }))
-      .filter(
-        (designer) =>
-          (!query.requests || designer.openToCommissions) &&
-          (!words ||
-            `${designer.username} ${designer.name ?? ''}`
-              .toLowerCase()
-              .includes(words)),
-      )
-      .sort((a, b) => b.releaseCount - a.releaseCount);
+    query: GalleryDesignersQuery = {},
+  ): Promise<GalleryDesignersPage> {
+    const page = query.page ?? 1;
+    const rows = await this.db.designs.listGalleryDesigners({
+      surface: 'release',
+      day: today(),
+      words: query.q?.trim() || undefined,
+      style: query.style,
+      requests: !!query.requests,
+      order: query.sort ?? 'shuffle',
+      limit: PAGE_SIZE + 1,
+      offset: (page - 1) * PAGE_SIZE,
+    });
+    return {
+      designers: rows.slice(0, PAGE_SIZE).map(toDesigner),
+      hasMore: rows.length > PAGE_SIZE,
+    };
   }
 
-  /** Every listed release design, as the gallery shows it. */
-  private async listAll(): Promise<GalleryDesign[]> {
-    const designs = await this.db.designs.listMarketplace('release', LISTED);
-    const counts = await this.db.designs.countReleasesUsing(
-      designs.map((design) => design.id),
+  /**
+   * The gallery's front: the newest designs, designs on the latest
+   * releases, a style of the day, and designers taking requests. Shelves
+   * keep one design per designer, so no one fills a row.
+   */
+  public async home(): Promise<GalleryHome> {
+    const read = (filter: Partial<GalleryFilter>) =>
+      this.db.designs.listGallery({
+        ...this.base(),
+        limit: SHELF_READ,
+        offset: 0,
+        ...filter,
+      });
+    const [newestRows, inUseRows, style, designers] = await Promise.all([
+      read({ order: 'newest' }),
+      read({ order: 'recently-used', inUse: true }),
+      this.styleOfTheDay(read),
+      this.db.designs.listGalleryDesigners({
+        surface: 'release',
+        day: today(),
+        requests: true,
+        order: 'shuffle',
+        limit: DESIGNERS_SHOWN,
+        offset: 0,
+      }),
+    ]);
+    const newest = onePerDesigner(newestRows);
+    // a design already on the first shelf leaves room on the second
+    const shown = new Set(newest.map((row) => row.design.id));
+    const inUse = onePerDesigner(
+      inUseRows.filter((row) => !shown.has(row.design.id)),
     );
+    const [newestDesigns, inUseDesigns, styleDesigns] = await Promise.all([
+      this.toGalleryRows(newest),
+      this.toGalleryRows(inUse),
+      style ? this.toGalleryRows(style.rows) : [],
+    ]);
+    return {
+      newest: newestDesigns,
+      inUse: inUseDesigns,
+      style: style && { id: style.id, designs: styleDesigns },
+      designers: designers.map(toDesigner),
+    };
+  }
+
+  /**
+   * A different style each day, starting from the day's turn and moving on
+   * until one fills a shelf with a design from each of several designers.
+   */
+  private async styleOfTheDay(
+    read: (filter: Partial<GalleryFilter>) => Promise<GalleryDesignRow[]>,
+  ): Promise<{ id: string; rows: GalleryDesignRow[] } | null> {
+    const counts = await this.db.designs.countListedStyles('release');
+    const candidates = DESIGN_STYLES.filter(
+      (style) => (counts.get(style.id) ?? 0) >= STYLE_SHELF_MIN,
+    );
+    const day = Math.floor(Date.now() / DAY_MS);
+    for (let turn = 0; turn < candidates.length; turn++) {
+      const { id } = candidates[(day + turn) % candidates.length];
+      const rows = onePerDesigner(await read({ style: id }));
+      if (rows.length >= STYLE_SHELF_MIN) return { id, rows };
+    }
+    return null;
+  }
+
+  private base(): Pick<GalleryFilter, 'surface' | 'day' | 'order'> {
+    return { surface: 'release', day: today(), order: 'shuffle' };
+  }
+
+  /** Gallery designs from listed rows, each with a link to its latest version. */
+  private async toGalleryRows(
+    rows: GalleryDesignRow[],
+  ): Promise<GalleryDesign[]> {
     const shown = await Promise.all(
-      designs.map(async (design) => {
-        const latest = await this.db.designs.getLatestVersion(design.id);
-        return latest && this.toGallery(design, latest, counts);
+      rows.map(async (row) => {
+        const latest = await this.db.designs.getLatestVersion(row.design.id);
+        return latest && this.present(row, latest);
       }),
     );
     return shown.filter((design): design is GalleryDesign => !!design);
@@ -157,8 +209,20 @@ export class DesignGalleryService {
       this.db.designs.countReleasesUsing([designId]),
       this.db.shelves.listUsingDesign(designId, RELEASES_SHOWN),
     ]);
+    const designer = design.designerUserId
+      ? await this.db.users.getById(design.designerUserId)
+      : null;
+    const row: GalleryDesignRow = {
+      design,
+      releaseCount: counts.get(designId) ?? 0,
+      designer: designer && {
+        username: designer.username,
+        name: designer.name,
+        openToCommissions: designer.openToCommissions,
+      },
+    };
     return {
-      ...(await this.toGallery(design, latest, counts)),
+      ...(await this.present(row, latest)),
       releases: await this.cards.releases(releases),
     };
   }
@@ -261,14 +325,10 @@ export class DesignGalleryService {
     return { design, latest };
   }
 
-  private async toGallery(
-    design: Design,
+  private async present(
+    { design, designer, releaseCount }: GalleryDesignRow,
     latest: DesignVersion,
-    counts: Map<string, number>,
   ): Promise<GalleryDesign> {
-    const designer = design.designerUserId
-      ? await this.db.users.getById(design.designerUserId)
-      : null;
     return {
       design: {
         id: design.id,
@@ -282,21 +342,55 @@ export class DesignGalleryService {
         styles: design.styles,
         publishedAt: design.publishedAt,
       },
-      designer: designer && {
-        username: designer.username,
-        name: designer.name,
-        openToCommissions: designer.openToCommissions,
-      },
+      designer,
       slots: latest.slots,
       bundleUrl: await this.storage.getObjectSignedUrl(
         latest.objectKey,
         BUNDLE_URL_EXPIRY_SECONDS,
       ),
-      releaseCount: counts.get(design.id) ?? 0,
+      releaseCount,
     };
   }
 
   private error(status: HttpStatus, message: string): ApiError {
     return new ApiError(ApiErrorKind.Http, status, message);
   }
+}
+
+/** Today in UTC, which seeds the gallery's shuffle. */
+const today = () => new Date().toISOString().slice(0, 10);
+
+/** The first design from each designer, up to a shelf's worth. */
+function onePerDesigner(rows: GalleryDesignRow[]): GalleryDesignRow[] {
+  const seen = new Set<string>();
+  const kept: GalleryDesignRow[] = [];
+  for (const row of rows) {
+    const key = row.design.designerUserId ?? row.design.id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    kept.push(row);
+    if (kept.length === SHELF_SIZE) break;
+  }
+  return kept;
+}
+
+/** A designer card: their styles by how many designs carry them, and a few designs. */
+function toDesigner(row: GalleryDesignerRow): GalleryDesigner {
+  const counts = new Map<string, number>();
+  for (const design of row.designs) {
+    for (const style of design.styles) {
+      counts.set(style, (counts.get(style) ?? 0) + 1);
+    }
+  }
+  return {
+    username: row.username,
+    name: row.name,
+    openToCommissions: row.openToCommissions,
+    designCount: row.designs.length,
+    releaseCount: row.releaseCount,
+    styles: [...counts].sort((a, b) => b[1] - a[1]).map(([style]) => style),
+    designs: row.designs
+      .slice(0, DESIGNS_NAMED)
+      .map(({ id, name }) => ({ id, name })),
+  };
 }

@@ -9,8 +9,10 @@ import {
   type DesignSale,
   type DesignSummary,
   type DesignVersionResponse,
-  type GalleryDesign,
-  type GalleryDesigner,
+  type GalleryDesignersPage,
+  type GalleryDesignersQuery,
+  type GalleryDesignsPage,
+  type GalleryHome,
   type GalleryQuery,
   type GalleryDesignPage,
   type ManagedDesignResponse,
@@ -31,19 +33,24 @@ import type { ApiTransport } from '../api-transport';
 export class DesignsClient {
   constructor(private readonly transport: ApiTransport) {}
 
+  /** The gallery's front: its shelves and designers taking requests. */
+  public getGalleryHome(): Promise<ApiResult<GalleryHome>> {
+    return this.transport.get(ApiRoute.GalleryHome);
+  }
+
   /**
-   * Every design in the public gallery, with links to preview each.
+   * A page of designs in the public gallery, with links to preview each.
    */
   public listGallery(
     query: GalleryQuery = {},
-  ): Promise<ApiResult<GalleryDesign[]>> {
+  ): Promise<ApiResult<GalleryDesignsPage>> {
     return this.transport.get(ApiRoute.GalleryDesigns, { query });
   }
 
-  /** Designers with listed designs. */
+  /** A page of designers with listed designs. */
   public listDesigners(
-    query: { q?: string; requests?: '1' } = {},
-  ): Promise<ApiResult<GalleryDesigner[]>> {
+    query: GalleryDesignersQuery = {},
+  ): Promise<ApiResult<GalleryDesignersPage>> {
     return this.transport.get(ApiRoute.GalleryDesigners, { query });
   }
 

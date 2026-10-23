@@ -3,9 +3,10 @@ import {
   Component,
   computed,
   inject,
+  linkedSignal,
   resource,
+  signal,
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   ActivatedRoute,
@@ -24,8 +25,8 @@ import {
   type GallerySort,
 } from '@ime/models';
 import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
-import { releasePriceLabel } from '../releases/release-labels';
-import { DesignThumbnail } from './design-thumbnail';
+import { DesignCard } from './design-card';
+import { DesignerCard } from './designer-card';
 
 const PILL =
   'shrink-0 rounded-full border px-3 py-1 text-sm whitespace-nowrap aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-canvas border-line hover:border-ink';
@@ -33,11 +34,15 @@ const PILL =
 /** How long typing pauses before the search runs. */
 const TYPING_PAUSE_MS = 250;
 
+/** How many designers a search shows before linking to the rest. */
+const DESIGNERS_FOUND = 6;
+
 /**
  * The design gallery, `/designs`: the marketplace for how a record looks.
- * Artists search designs and designers, narrow them by style, price, and
- * whether the designer takes requests, sort them, and open any design to
- * try it with a stand-in record.
+ * With nothing chosen it shows shelves (new designs, designs on recent
+ * releases, a style of the day, designers taking requests) above every
+ * design in today's shuffle. Searching, narrowing, or sorting swaps the
+ * shelves for the matching designs, a page at a time.
  */
 @Component({
   selector: 'ime-gallery-page',
@@ -45,12 +50,13 @@ const TYPING_PAUSE_MS = 250;
   imports: [
     AlertComponent,
     ButtonDirective,
-    DesignThumbnail,
+    DesignCard,
+    DesignerCard,
     RouterLink,
     SpinnerComponent,
   ],
   template: `
-    <div class="mx-auto flex max-w-6xl flex-col gap-10">
+    <div class="mx-auto flex max-w-6xl flex-col gap-12">
       <header
         class="grid gap-6 border-b border-line pb-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-end"
       >
@@ -74,9 +80,7 @@ const TYPING_PAUSE_MS = 250;
           </p>
         </div>
         <div class="flex flex-wrap gap-3">
-          <button imeButton type="button" (click)="toDesigners()">
-            Find a designer
-          </button>
+          <a imeButton routerLink="/designs/designers">Find a designer</a>
           <a imeButton variant="secondary" routerLink="/studio/designs"
             >Build a design</a
           >
@@ -161,7 +165,7 @@ const TYPING_PAUSE_MS = 250;
             Sort by
             <select
               class="rounded-control border border-line bg-canvas px-2 py-1.5"
-              (change)="go({ sort: $any($event.target).value })"
+              (change)="go({ sort: sortParam($any($event.target).value) })"
             >
               @for (option of sorts; track option.id) {
                 <option [value]="option.id" [selected]="sort() === option.id">
@@ -173,44 +177,116 @@ const TYPING_PAUSE_MS = 250;
         </div>
       </section>
 
-      @if (designers().length) {
+      @if (!browsing()) {
+        @if (home(); as home) {
+          @if (home.newest.length) {
+            <section class="flex flex-col gap-4" aria-labelledby="new-heading">
+              <div class="flex items-baseline justify-between gap-4">
+                <h2 id="new-heading" [class]="heading">New</h2>
+                <a
+                  class="link text-sm"
+                  routerLink="/designs"
+                  [queryParams]="{ sort: 'newest' }"
+                  >See all</a
+                >
+              </div>
+              <ul [class]="shelf">
+                @for (item of home.newest; track item.design.id) {
+                  <li [class]="shelfItem"><ime-design-card [item]="item" /></li>
+                }
+              </ul>
+            </section>
+          }
+          @if (home.inUse.length) {
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="in-use-heading"
+            >
+              <div class="flex items-baseline justify-between gap-4">
+                <h2 id="in-use-heading" [class]="heading">
+                  On recent releases
+                </h2>
+                <a
+                  class="link text-sm"
+                  routerLink="/designs"
+                  [queryParams]="{ sort: 'recently-used' }"
+                  >See all</a
+                >
+              </div>
+              <ul [class]="shelf">
+                @for (item of home.inUse; track item.design.id) {
+                  <li [class]="shelfItem"><ime-design-card [item]="item" /></li>
+                }
+              </ul>
+            </section>
+          }
+          @if (home.style; as style) {
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="style-heading"
+            >
+              <div class="flex items-baseline justify-between gap-4">
+                <h2 id="style-heading" [class]="heading">
+                  {{ styleName(style.id) }}
+                </h2>
+                <a
+                  class="link text-sm"
+                  routerLink="/designs"
+                  [queryParams]="{ style: style.id }"
+                  >See all</a
+                >
+              </div>
+              <ul [class]="shelf">
+                @for (item of style.designs; track item.design.id) {
+                  <li [class]="shelfItem"><ime-design-card [item]="item" /></li>
+                }
+              </ul>
+            </section>
+          }
+          @if (home.designers.length) {
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="designers-heading"
+            >
+              <div class="flex items-baseline justify-between gap-4">
+                <h2 id="designers-heading" [class]="heading">
+                  Designers taking requests
+                </h2>
+                <a
+                  class="link text-sm"
+                  routerLink="/designs/designers"
+                  [queryParams]="{ requests: '1' }"
+                  >All designers</a
+                >
+              </div>
+              <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                @for (designer of home.designers; track designer.username) {
+                  <li class="flex">
+                    <ime-designer-card class="flex-1" [designer]="designer" />
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        }
+      } @else if (query().q && designers().length) {
         <section
-          id="designers"
-          class="flex scroll-mt-24 flex-col gap-4"
-          aria-labelledby="designers-heading"
+          class="flex flex-col gap-4"
+          aria-labelledby="found-designers-heading"
         >
-          <h2
-            id="designers-heading"
-            class="text-2xl font-extrabold tracking-[-0.035em]"
-          >
-            {{ query().q ? 'Designers' : 'Designers taking requests' }}
-          </h2>
+          <div class="flex items-baseline justify-between gap-4">
+            <h2 id="found-designers-heading" [class]="heading">Designers</h2>
+            <a
+              class="link text-sm"
+              routerLink="/designs/designers"
+              [queryParams]="{ q: query().q }"
+              >All matching designers</a
+            >
+          </div>
           <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             @for (designer of designers(); track designer.username) {
-              <li>
-                <a
-                  class="flex items-center gap-3 rounded-card border border-line bg-surface p-3 hover:bg-wash"
-                  [routerLink]="['/users', designer.username]"
-                >
-                  <span
-                    class="flex size-12 shrink-0 items-center justify-center rounded-full bg-ink text-lg font-black text-canvas uppercase"
-                    aria-hidden="true"
-                    >{{ (designer.name || designer.username).charAt(0) }}</span
-                  >
-                  <span class="flex min-w-0 flex-col">
-                    <span class="truncate font-bold">{{
-                      designer.name || '@' + designer.username
-                    }}</span>
-                    <span class="truncate text-sm text-ink-muted">{{
-                      designerLine(designer)
-                    }}</span>
-                    @if (designer.styles.length) {
-                      <span class="truncate font-mono text-xs text-ink-muted">{{
-                        styleNames(designer.styles)
-                      }}</span>
-                    }
-                  </span>
-                </a>
+              <li class="flex">
+                <ime-designer-card class="flex-1" [designer]="designer" />
               </li>
             }
           </ul>
@@ -218,54 +294,29 @@ const TYPING_PAUSE_MS = 250;
       }
 
       <section class="flex flex-col gap-4" aria-labelledby="designs-heading">
-        <h2
-          id="designs-heading"
-          class="text-2xl font-extrabold tracking-[-0.035em]"
-        >
-          Designs
-          @if (designs(); as designs) {
-            <span class="font-mono text-sm font-normal text-ink-muted">{{
-              designs.length
-            }}</span>
-          }
+        <h2 id="designs-heading" [class]="heading">
+          {{ browsing() ? 'Designs' : 'All designs' }}
         </h2>
         @if (designs(); as designs) {
           <ul class="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             @for (item of designs; track item.design.id) {
-              <li>
-                <a
-                  class="group flex flex-col gap-3"
-                  [routerLink]="['/designs', item.design.id]"
-                >
-                  <ime-design-thumbnail
-                    class="transition-transform group-hover:-translate-y-1"
-                    [design]="item"
-                  />
-                  <span class="flex flex-col gap-0.5">
-                    <span class="flex items-baseline justify-between gap-3">
-                      <span
-                        class="truncate text-lg font-bold group-hover:underline"
-                        >{{ item.design.name }}</span
-                      >
-                      <span class="shrink-0 font-mono text-xs">{{
-                        price(item)
-                      }}</span>
-                    </span>
-                    <span class="truncate text-sm text-ink-muted">{{
-                      byLine(item)
-                    }}</span>
-                    @if (item.design.styles.length) {
-                      <span class="truncate font-mono text-xs text-ink-muted">{{
-                        styleNames(item.design.styles)
-                      }}</span>
-                    }
-                  </span>
-                </a>
-              </li>
+              <li><ime-design-card [item]="item" /></li>
             } @empty {
               <li class="text-ink-muted">Nothing matches that.</li>
             }
           </ul>
+          @if (hasMore()) {
+            <div class="flex justify-center">
+              <button
+                imeButton
+                variant="secondary"
+                [disabled]="loadingMore()"
+                (click)="showMore()"
+              >
+                {{ loadingMore() ? 'Loading…' : 'Show more' }}
+              </button>
+            </div>
+          }
         } @else if (gallery.error()) {
           <ime-alert tone="error">The gallery could not be loaded.</ime-alert>
         } @else {
@@ -278,14 +329,19 @@ const TYPING_PAUSE_MS = 250;
 export class GalleryPage {
   private readonly api = inject(ApiClient);
   private readonly router = inject(Router);
-  private readonly document = inject(DOCUMENT);
   private readonly params = toSignal(inject(ActivatedRoute).queryParams, {
     initialValue: {} as Params,
   });
 
   protected readonly pill = PILL;
+  protected readonly heading = 'text-2xl font-extrabold tracking-[-0.035em]';
+  /** Sideways on phones, a row of four on wide screens. */
+  protected readonly shelf =
+    '-mx-4 flex snap-x gap-6 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4';
+  protected readonly shelfItem = 'w-[78%] shrink-0 snap-start sm:w-auto';
   protected readonly styles = DESIGN_STYLES;
   protected readonly sorts = GALLERY_SORTS;
+  protected readonly styleName = designStyleName;
 
   protected readonly query = computed<GalleryQuery>(() => {
     const params = this.params();
@@ -304,8 +360,18 @@ export class GalleryPage {
     };
   });
   protected readonly sort = computed<GallerySort>(
-    () => this.query().sort ?? 'most-used',
+    () => this.query().sort ?? 'shuffle',
   );
+  /** Whether the visitor narrowed or sorted, which swaps the shelves away. */
+  protected readonly browsing = computed(() =>
+    Object.values(this.query()).some((value) => value !== undefined),
+  );
+
+  private readonly homeResource = resource({
+    id: 'gallery-home',
+    loader: async () => unwrap(await this.api.designs.getGalleryHome()),
+  });
+  protected readonly home = computed(() => currentValue(this.homeResource));
 
   protected readonly gallery = resource({
     id: 'design-gallery',
@@ -313,22 +379,32 @@ export class GalleryPage {
     loader: async ({ params }) =>
       unwrap(await this.api.designs.listGallery(params)),
   });
-  protected readonly designs = computed(() => currentValue(this.gallery));
+  /** Pages after the first, gathered by Show more and dropped on a new query. */
+  private readonly later = linkedSignal<
+    GalleryQuery,
+    { designs: GalleryDesign[]; page: number; hasMore: boolean } | null
+  >({ source: this.query, computation: () => null });
+  protected readonly designs = computed(() => {
+    const first = currentValue(this.gallery);
+    return first && [...first.designs, ...(this.later()?.designs ?? [])];
+  });
+  protected readonly hasMore = computed(
+    () => this.later()?.hasMore ?? currentValue(this.gallery)?.hasMore ?? false,
+  );
+  protected readonly loadingMore = signal(false);
 
-  /** Designers matching the words, or those taking requests. */
+  /** Designers matching the search words. */
   private readonly designersResource = resource({
     id: 'gallery-designers',
-    // an object, since a resource with undefined params never loads
-    params: () => ({ q: this.query().q }),
+    params: () => this.query().q,
     loader: async ({ params }) =>
-      unwrap(
-        await this.api.designs.listDesigners(
-          params.q ? { q: params.q } : { requests: '1' },
-        ),
-      ),
+      unwrap(await this.api.designs.listDesigners({ q: params })),
   });
   protected readonly designers = computed(() =>
-    (currentValue(this.designersResource) ?? []).slice(0, 6),
+    (currentValue(this.designersResource)?.designers ?? []).slice(
+      0,
+      DESIGNERS_FOUND,
+    ),
   );
 
   private pause?: ReturnType<typeof setTimeout>;
@@ -347,6 +423,11 @@ export class GalleryPage {
     });
   }
 
+  /** The shuffle is the default, so it stays out of the address. */
+  protected sortParam(value: GallerySort): GallerySort | undefined {
+    return value === 'shuffle' ? undefined : value;
+  }
+
   protected typed(value: string): void {
     clearTimeout(this.pause);
     this.pause = setTimeout(() => {
@@ -357,45 +438,22 @@ export class GalleryPage {
     }, TYPING_PAUSE_MS);
   }
 
-  protected toDesigners(): void {
-    // scrollIntoView keeps the section's margin clear of the sticky header
-    this.document
-      .getElementById('designers')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  protected price(item: GalleryDesign): string {
-    return releasePriceLabel({
-      mode: item.design.pricingMode,
-      currency: item.design.currency,
-      minimumPrice: item.design.minimumPrice,
-      suggestedPrice: item.design.suggestedPrice,
-    });
-  }
-
-  protected byLine(item: GalleryDesign): string {
-    const count = item.releaseCount;
-    return [
-      item.designer?.username ? `by @${item.designer.username}` : null,
-      count ? `on ${count} ${count === 1 ? 'release' : 'releases'}` : 'new',
-      item.designer?.openToCommissions ? 'takes requests' : null,
-    ]
-      .filter(Boolean)
-      .join(', ');
-  }
-
-  protected designerLine(designer: {
-    username: string;
-    designCount: number;
-    releaseCount: number;
-  }): string {
-    const designs = `${designer.designCount} ${designer.designCount === 1 ? 'design' : 'designs'}`;
-    return designer.releaseCount
-      ? `@${designer.username}, ${designs} on ${designer.releaseCount} ${designer.releaseCount === 1 ? 'release' : 'releases'}`
-      : `@${designer.username}, ${designs}`;
-  }
-
-  protected styleNames(ids: string[]): string {
-    return ids.map(designStyleName).join(', ');
+  protected async showMore(): Promise<void> {
+    const query = this.query();
+    const page = (this.later()?.page ?? 1) + 1;
+    this.loadingMore.set(true);
+    try {
+      const next = unwrap(
+        await this.api.designs.listGallery({ ...query, page }),
+      );
+      if (query !== this.query()) return;
+      this.later.update((later) => ({
+        designs: [...(later?.designs ?? []), ...next.designs],
+        page,
+        hasMore: next.hasMore,
+      }));
+    } finally {
+      this.loadingMore.set(false);
+    }
   }
 }
