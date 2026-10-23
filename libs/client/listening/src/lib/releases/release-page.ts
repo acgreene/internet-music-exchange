@@ -4,14 +4,15 @@ import {
   Component,
   computed,
   effect,
-  type ElementRef,
+  ElementRef,
   inject,
+  Injector,
   input,
   resource,
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ApiClient, unwrap } from '@ime/api-client';
 import {
   PlayerService,
@@ -23,6 +24,7 @@ import {
   ApiError,
   genreName,
   HttpStatus,
+  type ReleaseCard,
   sideOf,
   type TracklistItem,
 } from '@ime/models';
@@ -32,20 +34,31 @@ import {
   CoverComponent,
   DurationPipe,
   EqualizerComponent,
+  ReleaseCardComponent,
   SpinnerComponent,
 } from '@ime/ui';
 import { ArtistPageHost } from '@ime/client-artist-pages';
 import { BuyPanel } from '../buying/buy-panel';
+import { ReleaseSupporters } from '../comments/release-supporters';
 import { AddToCrate } from '../crates/add-to-crate';
-import { MerchGrid } from '../merch/merch-grid';
-import { ReleaseComments } from '../comments/release-comments';
-import { ReportButton } from '../reporting/report-button';
+import { CrateCard } from '../crates/crate-card';
+import { type MenuAction, MoreMenu } from '../more-menu';
+import { openReport } from '../reporting/report-button';
 import { PageMetaService } from '../page-meta';
+import { ReleaseArtistCard } from './release-artist-card';
+import { ReleaseFormats } from './release-formats';
 import { assetKindLabel, releaseKindLabel } from './release-labels';
 
+/** Other releases by the artist shown at the bottom of the page. */
+const MORE_FROM_ARTIST = 6;
+/** Crates holding the release shown at the bottom of the page. */
+const CRATES_SHOWN = 6;
+
 /**
- * A release's page, `/artists/<handle>/<slug>`: the cover and what it costs
- * beside the tracklist, then its extras and comments.
+ * A release's page, `/artists/<handle>/<slug>`. Undesigned, it is the cover
+ * with every way to get it and the artist beside the title, tracklist, the
+ * artist's words, credits, and who supported it; then more from the artist
+ * and the crates it is in. Designed, the artist's design takes the page.
  */
 @Component({
   selector: 'ime-release-page',
@@ -55,14 +68,17 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
     ArtistPageHost,
     AlertComponent,
     BuyPanel,
-    MerchGrid,
     ButtonDirective,
     CoverComponent,
+    CrateCard,
     DatePipe,
     DurationPipe,
     EqualizerComponent,
-    ReleaseComments,
-    ReportButton,
+    MoreMenu,
+    ReleaseArtistCard,
+    ReleaseCardComponent,
+    ReleaseFormats,
+    ReleaseSupporters,
     RouterLink,
     SpinnerComponent,
   ],
@@ -90,230 +106,351 @@ import { assetKindLabel, releaseKindLabel } from './release-labels';
                 (claimed)="viewerPage.reload()"
               />
             } @else {
-              <div>
+              <div class="flex items-center gap-2">
                 <button imeButton (click)="openBuyPanel()">
                   {{ page.pricing?.mode === 'free' ? 'Get it free' : 'Buy' }}
                 </button>
-                <ime-report-button
-                  class="ml-2"
-                  targetType="release"
-                  [targetId]="page.release.id"
-                  [label]="page.release.title"
+                <ime-more-menu
+                  label="More for this release"
+                  [actions]="releaseActions()"
                 />
               </div>
             }
           </section>
-          <ime-release-comments
+          <ime-release-supporters
             [releaseId]="page.release.id"
+            [owned]="owned()"
             [canModerate]="managesArtist()"
           />
         </div>
       } @else {
-        <div
-          class="mx-auto grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1fr)_20rem] md:grid-rows-[auto_1fr]"
-        >
-          <header class="flex flex-col gap-2 md:col-start-1 md:row-start-1">
-            <p class="text-sm text-ink-muted">
-              {{ kindLabel() }}
-              @if (page.release.releasedAt; as releasedAt) {
-                · {{ releasedAt | date: 'longDate' : 'UTC' }}
-              }
-            </p>
-            <h1 class="text-5xl leading-[0.95] font-black tracking-[-0.05em]">
-              {{ page.release.title }}
-            </h1>
-            <p>
-              by
-              <a
-                class="link font-medium"
-                [routerLink]="['/artists', page.artist.handle]"
-                >{{ page.artist.name }}</a
-              >
-            </p>
-            @if (page.release.genres.length || page.release.tags.length) {
-              <ul
-                class="mt-1 flex flex-wrap gap-1.5"
-                aria-label="Genres and tags"
-              >
-                @for (genre of page.release.genres; track genre) {
-                  <li>
-                    <a
-                      class="block rounded-full border border-ink px-2.5 py-0.5 text-sm font-medium hover:bg-wash"
-                      routerLink="/search"
-                      [queryParams]="{ genres: genre }"
-                      >{{ genreName(genre) }}</a
-                    >
-                  </li>
-                }
-                @for (tag of page.release.tags; track tag) {
-                  <li>
-                    <a
-                      class="block rounded-full border border-line px-2.5 py-0.5 text-sm text-ink-muted hover:bg-wash"
-                      routerLink="/search"
-                      [queryParams]="{ q: tag }"
-                      >{{ tag }}</a
-                    >
-                  </li>
-                }
-              </ul>
-            }
-            <div class="mt-2 flex flex-wrap items-center gap-2">
-              @if (playable().length) {
-                <button imeButton (click)="play()">
-                  {{ owned() ? 'Play' : 'Play preview' }}
-                </button>
-              }
-              @if (page.release.status === 'published') {
-                <ime-add-to-crate [releaseId]="page.release.id" />
-              }
-            </div>
-          </header>
-          <aside
-            class="flex flex-col gap-4 md:col-start-2 md:row-span-2 md:row-start-1"
+        <article class="mx-auto flex max-w-6xl flex-col gap-16">
+          <div
+            class="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12"
           >
-            <ime-cover
-              class="w-full"
-              [src]="page.coverUrl"
-              [alt]="'Cover of ' + page.release.title"
-            />
-
-            <ime-buy-panel
-              [page]="page"
-              [owned]="owned()"
-              (claimed)="viewerPage.reload()"
-            />
-            @if (editions().length) {
-              <section
-                class="flex flex-col gap-3"
-                aria-labelledby="editions-heading"
-              >
-                <h2 id="editions-heading" class="font-semibold">Also on</h2>
-                <ime-merch-grid
-                  compact
-                  [items]="editions()"
-                  [handle]="page.artist.handle"
-                />
-              </section>
-            }
-            <div>
-              <ime-report-button
-                targetType="release"
-                [targetId]="page.release.id"
-                [label]="page.release.title"
+            <div class="contents lg:flex lg:flex-col lg:gap-8">
+              <ime-cover
+                class="order-1 w-full border border-line"
+                [src]="page.coverUrl"
+                [alt]="'Cover of ' + page.release.title"
+              />
+              <ime-release-formats
+                #formats
+                class="order-4"
+                [page]="page"
+                [editions]="editions()"
+                [owned]="owned()"
+                (claimed)="viewerPage.reload()"
+              />
+              <ime-release-artist-card
+                class="order-9"
+                [handle]="page.artist.handle"
               />
             </div>
-          </aside>
 
-          <div
-            class="flex min-w-0 flex-col gap-8 md:col-start-1 md:row-start-2"
-          >
-            <section aria-labelledby="tracks-heading">
-              <h2 id="tracks-heading" class="sr-only">Tracks</h2>
-              <ol class="flex flex-col border-t border-line">
-                @for (track of page.tracks; track track.trackId) {
-                  @if (opensSide(track); as side) {
-                    <li
-                      class="border-b border-hairline px-2 pt-4 pb-1.5 font-mono text-xs tracking-wider text-ink-muted uppercase"
-                      aria-hidden="true"
-                    >
-                      Side {{ side }}
-                    </li>
+            <div class="contents lg:flex lg:flex-col lg:gap-12">
+              <header class="order-2 flex flex-col gap-3">
+                <p
+                  class="font-mono text-xs tracking-wider text-ink-muted uppercase"
+                >
+                  {{ kindLabel() }}
+                  @if (page.release.releasedAt; as releasedAt) {
+                    · {{ releasedAt | date: 'longDate' : 'UTC' }}
                   }
-                  <li>
-                    <button
-                      class="grid w-full grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline px-2 py-2.5 text-left text-[15px] disabled:text-ink-subtle"
-                      [class]="
-                        isCurrent(track) ? 'bg-marker' : 'enabled:hover:bg-wash'
-                      "
-                      [disabled]="!canPlay(track)"
-                      [attr.aria-current]="isCurrent(track) || null"
-                      [attr.aria-label]="
-                        canPlay(track)
-                          ? 'Play ' + track.title
-                          : track.title + ', for owners'
-                      "
-                      (click)="play(track)"
-                    >
-                      <span class="text-right font-mono text-sm text-ink-muted">
-                        @if (isCurrent(track)) {
-                          <ime-equalizer
-                            class="text-ink"
-                            [playing]="playing()"
-                          />
-                        } @else {
-                          {{ trackNumber(track) }}
-                        }
-                      </span>
-                      <span class="flex min-w-0 items-center gap-2">
-                        <span
-                          class="truncate"
-                          [class.font-semibold]="isCurrent(track)"
-                          >{{ track.title }}</span
-                        >
-                        @if (track.isPreview && !owned()) {
-                          <span
-                            class="rounded-full border border-line px-2 text-xs"
-                            >Preview</span
-                          >
-                        }
-                      </span>
-                      <span class="font-mono text-sm text-ink-muted">{{
-                        track.durationMs | duration
-                      }}</span>
-                    </button>
-                  </li>
-                }
-              </ol>
-            </section>
-
-            @if (extras().length) {
-              <section
-                class="flex flex-col gap-2"
-                aria-labelledby="extras-heading"
-              >
-                <h2 id="extras-heading" class="text-lg font-semibold">
-                  Included
-                </h2>
-                <ul class="flex flex-col divide-y divide-hairline">
-                  @for (asset of extras(); track asset.id) {
-                    <li
-                      class="flex items-center justify-between gap-4 py-2 text-sm"
-                    >
-                      <span class="min-w-0">
-                        <span class="block truncate font-medium">{{
-                          asset.title || assetLabel(asset.kind)
-                        }}</span>
-                        @if (asset.description) {
-                          <span class="block text-ink-muted">{{
-                            asset.description
-                          }}</span>
-                        }
-                      </span>
-                      @if (asset.url) {
+                  · {{ trackCount() }}
+                  @if (runtime(); as runtime) {
+                    · {{ runtime }}
+                  }
+                </p>
+                <h1
+                  class="text-5xl leading-[0.9] font-black tracking-[-0.05em] text-balance md:text-7xl"
+                >
+                  {{ page.release.title }}
+                </h1>
+                <p class="text-lg">
+                  by
+                  <a
+                    class="link font-semibold"
+                    [routerLink]="['/artists', page.artist.handle]"
+                    >{{ page.artist.name }}</a
+                  >
+                </p>
+                @if (page.release.genres.length || page.release.tags.length) {
+                  <ul
+                    class="flex flex-wrap gap-1.5"
+                    aria-label="Genres and tags"
+                  >
+                    @for (genre of page.release.genres; track genre) {
+                      <li>
                         <a
-                          imeButton
-                          size="sm"
-                          variant="secondary"
-                          target="_blank"
-                          rel="noopener"
-                          [href]="asset.url"
-                          >Open</a
+                          class="block rounded-full border border-ink px-2.5 py-0.5 text-sm font-medium hover:bg-wash"
+                          routerLink="/search"
+                          [queryParams]="{ genres: genre }"
+                          >{{ genreName(genre) }}</a
                         >
-                      } @else {
-                        <span class="shrink-0 text-ink-subtle">For owners</span>
+                      </li>
+                    }
+                    @for (tag of page.release.tags; track tag) {
+                      <li>
+                        <a
+                          class="block rounded-full border border-line px-2.5 py-0.5 text-sm text-ink-muted hover:bg-wash"
+                          routerLink="/search"
+                          [queryParams]="{ q: tag }"
+                          >{{ tag }}</a
+                        >
+                      </li>
+                    }
+                  </ul>
+                }
+                <div class="mt-1 flex flex-wrap items-center gap-2">
+                  @if (playable().length) {
+                    <button imeButton (click)="play()">
+                      {{ owned() ? 'Play' : 'Play preview' }}
+                    </button>
+                  }
+                  @if (page.release.status === 'published') {
+                    <ime-add-to-crate [releaseId]="page.release.id" />
+                  }
+                  <ime-more-menu
+                    label="More for this release"
+                    [actions]="releaseActions()"
+                  />
+                </div>
+              </header>
+
+              <section class="order-3" aria-labelledby="tracks-heading">
+                <h2 id="tracks-heading" class="sr-only">Tracks</h2>
+                <ol class="flex flex-col border-t border-line">
+                  @for (track of page.tracks; track track.trackId) {
+                    @if (opensSide(track); as side) {
+                      <li
+                        class="border-b border-hairline px-2 pt-4 pb-1.5 font-mono text-xs tracking-wider text-ink-muted uppercase"
+                        aria-hidden="true"
+                      >
+                        Side {{ side }}
+                      </li>
+                    }
+                    <li
+                      class="flex flex-wrap items-center border-b border-hairline"
+                      [class.bg-marker]="isCurrent(track)"
+                    >
+                      <button
+                        class="group grid min-w-0 flex-1 grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-3 px-2 py-2.5 text-left text-[15px]"
+                        [class]="isCurrent(track) ? '' : 'hover:bg-wash'"
+                        [attr.aria-current]="isCurrent(track) || null"
+                        [attr.aria-label]="
+                          canPlay(track)
+                            ? 'Play ' + track.title
+                            : track.title + ', buy the record to hear it'
+                        "
+                        (click)="canPlay(track) ? play(track) : showFormats()"
+                      >
+                        <span
+                          class="text-right font-mono text-sm text-ink-muted"
+                        >
+                          @if (isCurrent(track)) {
+                            <ime-equalizer
+                              class="text-ink"
+                              [playing]="playing()"
+                            />
+                          } @else {
+                            {{ trackNumber(track) }}
+                          }
+                        </span>
+                        <span class="flex min-w-0 items-center gap-2">
+                          <span
+                            class="truncate"
+                            [class.font-semibold]="isCurrent(track)"
+                            [class.text-ink-subtle]="!canPlay(track)"
+                            >{{ track.title }}</span
+                          >
+                          @if (track.isPreview && !owned()) {
+                            <span
+                              class="rounded-full border border-line px-2 text-xs"
+                              >Preview</span
+                            >
+                          }
+                        </span>
+                        <span class="font-mono text-sm text-ink-muted">
+                          @if (canPlay(track)) {
+                            {{ track.durationMs | duration }}
+                          } @else {
+                            <span class="group-hover:hidden">{{
+                              track.durationMs | duration
+                            }}</span>
+                            <span
+                              class="hidden font-sans text-ink group-hover:inline"
+                              >Buy to hear</span
+                            >
+                          }
+                        </span>
+                      </button>
+                      @if (track.lyrics) {
+                        <button
+                          class="mr-2 rounded-full border border-line px-2 py-0.5 text-xs hover:bg-wash"
+                          [attr.aria-expanded]="lyricsOpen().has(track.trackId)"
+                          [attr.aria-label]="'Lyrics of ' + track.title"
+                          (click)="toggleLyrics(track)"
+                        >
+                          Lyrics
+                        </button>
+                      }
+                      @if (lyricsOpen().has(track.trackId)) {
+                        <p
+                          class="basis-full px-2 pt-1 pb-4 pl-13 leading-relaxed whitespace-pre-line"
+                        >
+                          {{ track.lyrics }}
+                        </p>
                       }
                     </li>
                   }
-                </ul>
+                </ol>
               </section>
-            }
 
-            <ime-release-comments
-              [releaseId]="page.release.id"
-              [canModerate]="managesArtist()"
-            />
+              @if (page.release.description; as description) {
+                <section
+                  class="order-5 flex flex-col gap-3"
+                  aria-labelledby="about-heading"
+                >
+                  <h2
+                    id="about-heading"
+                    class="text-2xl font-extrabold tracking-[-0.035em]"
+                  >
+                    About
+                  </h2>
+                  <p
+                    class="max-w-prose text-[17px] leading-relaxed whitespace-pre-line"
+                  >
+                    {{ description }}
+                  </p>
+                </section>
+              }
+
+              @if (page.release.credits; as credits) {
+                <section
+                  class="order-6 flex flex-col gap-3"
+                  aria-labelledby="credits-heading"
+                >
+                  <h2
+                    id="credits-heading"
+                    class="text-2xl font-extrabold tracking-[-0.035em]"
+                  >
+                    Credits
+                  </h2>
+                  <p
+                    class="max-w-prose font-mono text-sm leading-relaxed whitespace-pre-line"
+                  >
+                    {{ credits }}
+                  </p>
+                </section>
+              }
+
+              @if (extras().length) {
+                <section
+                  class="order-7 flex flex-col gap-2"
+                  aria-labelledby="extras-heading"
+                >
+                  <h2
+                    id="extras-heading"
+                    class="text-2xl font-extrabold tracking-[-0.035em]"
+                  >
+                    Included
+                  </h2>
+                  <ul class="flex flex-col divide-y divide-hairline">
+                    @for (asset of extras(); track asset.id) {
+                      <li
+                        class="flex items-center justify-between gap-4 py-2 text-sm"
+                      >
+                        <span class="min-w-0">
+                          <span class="block truncate font-medium">{{
+                            asset.title || assetLabel(asset.kind)
+                          }}</span>
+                          @if (asset.description) {
+                            <span class="block text-ink-muted">{{
+                              asset.description
+                            }}</span>
+                          }
+                        </span>
+                        @if (asset.url) {
+                          <a
+                            imeButton
+                            size="sm"
+                            variant="secondary"
+                            target="_blank"
+                            rel="noopener"
+                            [href]="asset.url"
+                            >Open</a
+                          >
+                        } @else {
+                          <span class="shrink-0 text-ink-subtle"
+                            >For owners</span
+                          >
+                        }
+                      </li>
+                    }
+                  </ul>
+                </section>
+              }
+
+              <ime-release-supporters
+                class="order-8"
+                [releaseId]="page.release.id"
+                [owned]="owned()"
+                [canModerate]="managesArtist()"
+              />
+            </div>
           </div>
-        </div>
+
+          @if (moreFromArtist().length) {
+            <section class="flex flex-col gap-4" aria-labelledby="more-heading">
+              <div class="flex items-baseline justify-between gap-4">
+                <h2
+                  id="more-heading"
+                  class="text-2xl font-extrabold tracking-[-0.035em]"
+                >
+                  More from {{ page.artist.name }}
+                </h2>
+                <a
+                  class="link shrink-0 text-sm"
+                  [routerLink]="['/artists', page.artist.handle]"
+                  >See all</a
+                >
+              </div>
+              <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                @for (release of moreFromArtist(); track release.id) {
+                  <li>
+                    <ime-release-card
+                      [title]="release.title"
+                      [link]="['/artists', page.artist.handle, release.slug]"
+                      [coverUrl]="release.coverUrl"
+                      [subtitle]="cardSubtitle(release)"
+                    />
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+          @if (crates().length) {
+            <section
+              class="flex flex-col gap-4"
+              aria-labelledby="crates-heading"
+            >
+              <h2
+                id="crates-heading"
+                class="text-2xl font-extrabold tracking-[-0.035em]"
+              >
+                In {{ crates().length }}
+                {{ crates().length === 1 ? 'crate' : 'crates' }}
+              </h2>
+              <ul class="grid grid-cols-3 gap-4 sm:grid-cols-6">
+                @for (crate of crates(); track crate.id) {
+                  <li><ime-crate-card [crate]="crate" /></li>
+                }
+              </ul>
+            </section>
+          }
+        </article>
       }
     } @else if (page.error(); as error) {
       <div class="flex flex-col gap-2">
@@ -343,6 +480,8 @@ export class ReleasePage {
   private readonly session = inject(SessionService);
   private readonly player = inject(PlayerService);
   private readonly meta = inject(PageMetaService);
+  private readonly injector = inject(Injector);
+  private readonly router = inject(Router);
 
   public readonly handle = input.required<string>();
   public readonly slug = input.required<string>();
@@ -385,6 +524,7 @@ export class ReleasePage {
   protected readonly buyOpen = signal(false);
   private readonly buySection =
     viewChild<ElementRef<HTMLElement>>('buySection');
+  private readonly formats = viewChild('formats', { read: ElementRef });
 
   private readonly editionsResource = resource({
     id: 'release-editions',
@@ -395,6 +535,36 @@ export class ReleasePage {
   protected readonly editions = computed(
     () => currentValue(this.editionsResource) ?? [],
   );
+
+  private readonly discography = resource({
+    id: 'release-more-from-artist',
+    params: () => this.handle(),
+    loader: async ({ params }) =>
+      unwrap(await this.api.catalog.listDiscography(params)),
+  });
+  protected readonly moreFromArtist = computed(() =>
+    (currentValue(this.discography) ?? [])
+      .filter((release) => release.slug !== this.slug())
+      .slice(0, MORE_FROM_ARTIST),
+  );
+
+  private readonly cratesResource = resource({
+    id: 'release-crates',
+    params: () => currentValue(this.page)?.release.id,
+    loader: async ({ params }) =>
+      unwrap(
+        await this.api.crates.listPublic({
+          releaseId: params,
+          limit: CRATES_SHOWN,
+        }),
+      ),
+  });
+  protected readonly crates = computed(
+    () => currentValue(this.cratesResource) ?? [],
+  );
+
+  /** Tracks whose lyrics are showing. */
+  protected readonly lyricsOpen = signal(new Set<string>());
 
   private readonly managedArtists = resource({
     params: () => this.session.user()?.id,
@@ -422,6 +592,27 @@ export class ReleasePage {
     const kind = currentValue(this.page)?.release.kind;
     return kind ? releaseKindLabel(kind) : '';
   });
+
+  protected readonly trackCount = computed(() => {
+    const count = currentValue(this.page)?.tracks.length ?? 0;
+    return `${count} ${count === 1 ? 'track' : 'tracks'}`;
+  });
+  /** How long the whole release runs, once every track's length is known. */
+  protected readonly runtime = computed(() => {
+    const tracks = currentValue(this.page)?.tracks ?? [];
+    if (!tracks.length || tracks.some((track) => !track.durationMs))
+      return null;
+    const minutes = Math.round(
+      tracks.reduce((sum, track) => sum + (track.durationMs ?? 0), 0) / 60000,
+    );
+    return minutes < 60
+      ? `${minutes} min`
+      : `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+  });
+
+  protected readonly releaseActions = computed<MenuAction[]>(() => [
+    { label: 'Report', run: () => this.report() },
+  ]);
 
   /** The tracks this viewer may stream, in running order. */
   protected readonly playable = computed(
@@ -485,6 +676,41 @@ export class ReleasePage {
 
   protected isCurrent(track: TracklistItem): boolean {
     return this.player.current()?.trackId === track.trackId;
+  }
+
+  protected toggleLyrics(track: TracklistItem): void {
+    const open = new Set(this.lyricsOpen());
+    if (!open.delete(track.trackId)) open.add(track.trackId);
+    this.lyricsOpen.set(open);
+  }
+
+  /** Bring the ways to get the release into view, for a track it unlocks. */
+  protected showFormats(): void {
+    this.formats()?.nativeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }
+
+  protected cardSubtitle(release: ReleaseCard): string {
+    const year = release.releasedAt?.slice(0, 4);
+    return [releaseKindLabel(release.kind), year].filter(Boolean).join(' · ');
+  }
+
+  private async report(): Promise<void> {
+    const page = currentValue(this.page);
+    if (!page) return;
+    if (this.session.status() === 'signed-out') {
+      await this.router.navigate(['/sign-in'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+    await openReport(this.injector, {
+      targetType: 'release',
+      targetId: page.release.id,
+      label: page.release.title,
+    });
   }
 
   protected openBuyPanel(): void {

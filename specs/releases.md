@@ -42,6 +42,13 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 - Cover art is always public: it is how the release is shown in the catalog.
 - Other assets can be either public or **gated** (available only to owners), such as high-resolution liner notes or bonus material that ships with a purchase.
 
+### The release page
+
+- A release without a design gets IME's own page. Beside the cover are every way to get it: the download, bought right there, and each physical edition with its price and how many are left. The artist sits below them, with their photo, where they are based, a follow button, and their links.
+- Beside those are the title, the tracklist, the artist's description and credits, any included extras, and who supported it with the notes they left. Tracks with lyrics can show them. A track a listener cannot hear yet offers to take them to buying it.
+- Below are more releases from the artist and the public crates the release is in.
+- Reporting a release or a note is offered quietly, in a menu, rather than beside everything.
+
 ### Pricing
 
 - Every release must be priced before it can be published. A release has exactly one pricing choice:

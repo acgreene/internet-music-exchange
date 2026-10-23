@@ -51,20 +51,28 @@ export class ReportButton {
   public readonly targetId = input.required<string>();
   public readonly label = input.required<string>();
 
-  protected async open(): Promise<void> {
-    // loaded on first use, to keep the dialog out of every page's bundle
-    const [{ Dialog }, { ReportDialog }] = await Promise.all([
-      import('@angular/cdk/dialog'),
-      import('./report-dialog'),
-    ]);
-    this.injector.get(Dialog).open<void, ReportTarget>(ReportDialog, {
-      data: {
-        targetType: this.targetType(),
-        targetId: this.targetId(),
-        label: this.label(),
-      },
-      ariaLabelledBy: 'report-heading',
-      width: 'min(28rem, calc(100vw - 2rem))',
+  protected open(): Promise<void> {
+    return openReport(this.injector, {
+      targetType: this.targetType(),
+      targetId: this.targetId(),
+      label: this.label(),
     });
   }
+}
+
+/** Open the report dialog for something. */
+export async function openReport(
+  injector: Injector,
+  target: ReportTarget,
+): Promise<void> {
+  // loaded on first use, to keep the dialog out of every page's bundle
+  const [{ Dialog }, { ReportDialog }] = await Promise.all([
+    import('@angular/cdk/dialog'),
+    import('./report-dialog'),
+  ]);
+  injector.get(Dialog).open<void, ReportTarget>(ReportDialog, {
+    data: target,
+    ariaLabelledBy: 'report-heading',
+    width: 'min(28rem, calc(100vw - 2rem))',
+  });
 }
