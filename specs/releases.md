@@ -44,8 +44,9 @@ A release is the unit of music an artist publishes and sells: a single, EP, LP, 
 
 ### The release page
 
-- A release without a design gets IME's own page. Beside the cover are every way to get it: the download, bought right there, and each physical edition with its price and how many are left. The artist sits below them, with their photo, where they are based, a follow button, and their links.
-- Beside those are the title, the tracklist, the artist's description and credits, any included extras, and who supported it with the notes they left. Tracks with lyrics can show them. A track a listener cannot hear yet offers to take them to buying it.
+- A release without a design gets IME's own page. The title and tracklist lead, followed by the artist's description, credits, lyrics, and any included extras.
+- Beside them sit the cover, every way to get the release (the download, bought right there, and each physical edition with its price and how many are left), the artist with their photo, where they are based, a follow button, and their links, and who supported it: the notes supporters left, then the supporters themselves.
+- A track a listener can hear shows a play button on hover; one they cannot hear yet offers to take them to buying it.
 - Below are more releases from the artist and the public crates the release is in.
 - Reporting a release or a note is offered quietly, in a menu, rather than beside everything.
 

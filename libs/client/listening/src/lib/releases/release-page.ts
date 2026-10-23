@@ -126,9 +126,11 @@ const CRATES_SHOWN = 6;
       } @else {
         <article class="mx-auto flex max-w-6xl flex-col gap-16">
           <div
-            class="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:items-start lg:gap-12"
+            class="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-12"
           >
-            <div class="contents lg:flex lg:flex-col lg:gap-8">
+            <div
+              class="contents lg:col-start-2 lg:row-start-1 lg:flex lg:flex-col lg:gap-8"
+            >
               <ime-cover
                 class="order-1 w-full border border-line"
                 [src]="page.coverUrl"
@@ -146,9 +148,17 @@ const CRATES_SHOWN = 6;
                 class="order-9"
                 [handle]="page.artist.handle"
               />
+              <ime-release-supporters
+                class="order-10"
+                [releaseId]="page.release.id"
+                [owned]="owned()"
+                [canModerate]="managesArtist()"
+              />
             </div>
 
-            <div class="contents lg:flex lg:flex-col lg:gap-12">
+            <div
+              class="contents lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:gap-12"
+            >
               <header class="order-2 flex flex-col gap-3">
                 <p
                   class="font-mono text-xs tracking-wider text-ink-muted uppercase"
@@ -231,7 +241,7 @@ const CRATES_SHOWN = 6;
                       </li>
                     }
                     <li
-                      class="flex flex-wrap items-center border-b border-hairline"
+                      class="flex border-b border-hairline"
                       [class.bg-marker]="isCurrent(track)"
                     >
                       <button
@@ -246,13 +256,24 @@ const CRATES_SHOWN = 6;
                         (click)="canPlay(track) ? play(track) : showFormats()"
                       >
                         <span
-                          class="text-right font-mono text-sm text-ink-muted"
+                          class="flex justify-end font-mono text-sm text-ink-muted"
                         >
                           @if (isCurrent(track)) {
                             <ime-equalizer
                               class="text-ink"
                               [playing]="playing()"
                             />
+                          } @else if (canPlay(track)) {
+                            <span class="group-hover:hidden">{{
+                              trackNumber(track)
+                            }}</span>
+                            <svg
+                              viewBox="0 0 12 12"
+                              class="ml-auto hidden size-3 fill-ink group-hover:block"
+                              aria-hidden="true"
+                            >
+                              <path d="M2 1l9 5-9 5z" />
+                            </svg>
                           } @else {
                             {{ trackNumber(track) }}
                           }
@@ -285,23 +306,6 @@ const CRATES_SHOWN = 6;
                           }
                         </span>
                       </button>
-                      @if (track.lyrics) {
-                        <button
-                          class="mr-2 rounded-full border border-line px-2 py-0.5 text-xs hover:bg-wash"
-                          [attr.aria-expanded]="lyricsOpen().has(track.trackId)"
-                          [attr.aria-label]="'Lyrics of ' + track.title"
-                          (click)="toggleLyrics(track)"
-                        >
-                          Lyrics
-                        </button>
-                      }
-                      @if (lyricsOpen().has(track.trackId)) {
-                        <p
-                          class="basis-full px-2 pt-1 pb-4 pl-13 leading-relaxed whitespace-pre-line"
-                        >
-                          {{ track.lyrics }}
-                        </p>
-                      }
                     </li>
                   }
                 </ol>
@@ -345,9 +349,50 @@ const CRATES_SHOWN = 6;
                 </section>
               }
 
+              @if (withLyrics().length) {
+                <section
+                  class="order-7 flex flex-col gap-3"
+                  aria-labelledby="lyrics-heading"
+                >
+                  <h2
+                    id="lyrics-heading"
+                    class="text-2xl font-extrabold tracking-[-0.035em]"
+                  >
+                    Lyrics
+                  </h2>
+                  <div
+                    class="flex flex-col divide-y divide-hairline border-y border-hairline"
+                  >
+                    @for (track of withLyrics(); track track.trackId) {
+                      <details class="group">
+                        <summary
+                          class="flex cursor-pointer list-none items-center gap-3 px-2 py-2.5 hover:bg-wash [&::-webkit-details-marker]:hidden"
+                        >
+                          <span
+                            class="w-8 text-right font-mono text-sm text-ink-muted"
+                            >{{ trackNumber(track) }}</span
+                          >
+                          <span class="font-medium">{{ track.title }}</span>
+                          <span
+                            class="ml-auto text-lg leading-none text-ink-muted transition-transform group-open:rotate-45"
+                            aria-hidden="true"
+                            >+</span
+                          >
+                        </summary>
+                        <p
+                          class="px-2 pt-1 pb-5 pl-13 leading-relaxed whitespace-pre-line"
+                        >
+                          {{ track.lyrics }}
+                        </p>
+                      </details>
+                    }
+                  </div>
+                </section>
+              }
+
               @if (extras().length) {
                 <section
-                  class="order-7 flex flex-col gap-2"
+                  class="order-8 flex flex-col gap-2"
                   aria-labelledby="extras-heading"
                 >
                   <h2
@@ -391,13 +436,6 @@ const CRATES_SHOWN = 6;
                   </ul>
                 </section>
               }
-
-              <ime-release-supporters
-                class="order-8"
-                [releaseId]="page.release.id"
-                [owned]="owned()"
-                [canModerate]="managesArtist()"
-              />
             </div>
           </div>
 
@@ -563,8 +601,9 @@ export class ReleasePage {
     () => currentValue(this.cratesResource) ?? [],
   );
 
-  /** Tracks whose lyrics are showing. */
-  protected readonly lyricsOpen = signal(new Set<string>());
+  protected readonly withLyrics = computed(
+    () => currentValue(this.page)?.tracks.filter((track) => track.lyrics) ?? [],
+  );
 
   private readonly managedArtists = resource({
     params: () => this.session.user()?.id,
@@ -676,12 +715,6 @@ export class ReleasePage {
 
   protected isCurrent(track: TracklistItem): boolean {
     return this.player.current()?.trackId === track.trackId;
-  }
-
-  protected toggleLyrics(track: TracklistItem): void {
-    const open = new Set(this.lyricsOpen());
-    if (!open.delete(track.trackId)) open.add(track.trackId);
-    this.lyricsOpen.set(open);
   }
 
   /** Bring the ways to get the release into view, for a track it unlocks. */

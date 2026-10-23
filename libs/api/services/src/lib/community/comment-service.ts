@@ -11,7 +11,7 @@ import { AccessService } from '../access/access-service';
 export const COMMENT_MAX_LENGTH = 2000;
 
 /** How many supporters a release page lists. */
-const SUPPORTERS_SHOWN = 48;
+const SUPPORTERS_SHOWN = 30;
 
 /**
  * A release's supporters and the notes they leave. Anyone can read them;

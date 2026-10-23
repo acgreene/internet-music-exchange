@@ -64,67 +64,29 @@ const TONES = [
     RouterLink,
   ],
   template: `
-    <section class="flex flex-col gap-5" aria-labelledby="supporters-heading">
+    <section class="flex flex-col gap-4" aria-labelledby="supporters-heading">
       <div class="flex items-baseline justify-between gap-4">
         <h2
           id="supporters-heading"
-          class="text-2xl font-extrabold tracking-[-0.035em]"
+          class="font-mono text-xs tracking-wider text-ink-muted uppercase"
         >
           Supported by
         </h2>
         @if (supporterTotal()) {
-          <span class="font-mono text-sm text-ink-muted"
+          <span class="font-mono text-xs text-ink-muted"
             >{{ supporterTotal() }}
             {{ supporterTotal() === 1 ? 'person' : 'people' }}</span
           >
         }
       </div>
 
-      @if (supporterList().length) {
-        <ul class="flex flex-wrap gap-1.5" aria-label="Supporters">
-          @for (person of supporterList(); track $index) {
-            <li>
-              @if (person.username; as username) {
-                <a
-                  class="flex size-10 items-center justify-center rounded-full text-sm font-bold uppercase ring-ink hover:ring-2"
-                  [style.background]="tone(username)"
-                  [title]="person.name || username"
-                  [attr.aria-label]="person.name || username"
-                  [routerLink]="['/users', username]"
-                  >{{ initial(person.name || username) }}</a
-                >
-              } @else {
-                <span
-                  class="flex size-10 items-center justify-center rounded-full bg-surface-muted text-sm font-bold"
-                  aria-label="A listener"
-                  >♪</span
-                >
-              }
-            </li>
-          }
-          @if (supporterTotal() > supporterList().length) {
-            <li
-              class="flex h-10 items-center rounded-full border border-line px-3 font-mono text-xs text-ink-muted"
-            >
-              +{{ supporterTotal() - supporterList().length }}
-            </li>
-          }
-        </ul>
-      } @else if (supporters.hasValue()) {
-        <p class="text-sm text-ink-muted">
-          Nobody yet. Be the first to support it.
-        </p>
-      }
-
       @if (firstPage.error()) {
         <ime-alert tone="error">The notes could not be loaded.</ime-alert>
       }
       @if (shownNotes().length) {
-        <ul class="flex flex-col gap-3">
+        <ul class="flex flex-col gap-4">
           @for (note of shownNotes(); track note.id) {
-            <li
-              class="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
-            >
+            <li class="flex flex-col gap-1">
               @if (editingId() === note.id) {
                 <form
                   class="flex flex-col gap-2"
@@ -163,36 +125,36 @@ const TONES = [
                   </div>
                 </form>
               } @else {
-                <p class="leading-relaxed whitespace-pre-line">
+                <p class="text-sm leading-relaxed whitespace-pre-line">
                   {{ note.comment }}
                 </p>
               }
-              <div class="flex items-center gap-2 text-sm">
+              <div class="flex items-center gap-1.5 text-xs text-ink-muted">
                 <span
-                  class="flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold uppercase"
+                  class="flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-ink uppercase"
                   [style.background]="tone(note.username ?? note.userId)"
                   aria-hidden="true"
                   >{{ initial(note.name || note.username || '♪') }}</span
                 >
                 @if (note.username) {
                   <a
-                    class="link font-medium"
+                    class="font-medium text-ink hover:underline"
                     [routerLink]="['/users', note.username]"
                     >{{ note.name || note.username }}</a
                   >
                 } @else {
-                  <span class="font-medium">{{
+                  <span class="font-medium text-ink">{{
                     note.name || 'A listener'
                   }}</span>
                 }
-                <span class="text-ink-subtle"
-                  >{{ note.createdAt | date: 'mediumDate' }}
+                <span
+                  >· {{ note.createdAt | date: 'mediumDate' }}
                   @if (note.edited) {
                     · edited
                   }
                 </span>
                 <ime-more-menu
-                  class="ml-auto"
+                  class="-my-1 ml-auto"
                   label="More for this note"
                   [actions]="actionsFor(note)"
                 />
@@ -201,18 +163,50 @@ const TONES = [
           }
         </ul>
         @if (notes().length > shownNotes().length || notes().length < total()) {
-          <div>
-            <button
-              imeButton
-              variant="secondary"
-              size="sm"
-              [busy]="loadingMore()"
-              (click)="showMore()"
-            >
-              Show all {{ total() }} notes
-            </button>
-          </div>
+          <button
+            class="link self-start text-sm"
+            [disabled]="loadingMore()"
+            (click)="showMore()"
+          >
+            Show all {{ total() }} notes
+          </button>
         }
+      }
+
+      @if (supporterList().length) {
+        <ul class="flex flex-wrap gap-1" aria-label="Supporters">
+          @for (person of supporterList(); track $index) {
+            <li>
+              @if (person.username; as username) {
+                <a
+                  class="flex size-8 items-center justify-center rounded-full text-xs font-bold uppercase ring-ink hover:ring-2"
+                  [style.background]="tone(username)"
+                  [title]="person.name || username"
+                  [attr.aria-label]="person.name || username"
+                  [routerLink]="['/users', username]"
+                  >{{ initial(person.name || username) }}</a
+                >
+              } @else {
+                <span
+                  class="flex size-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold"
+                  aria-label="A listener"
+                  >♪</span
+                >
+              }
+            </li>
+          }
+          @if (supporterTotal() > supporterList().length) {
+            <li
+              class="flex h-8 items-center rounded-full border border-line px-2.5 font-mono text-xs text-ink-muted"
+            >
+              +{{ supporterTotal() - supporterList().length }}
+            </li>
+          }
+        </ul>
+      } @else if (supporters.hasValue()) {
+        <p class="text-sm text-ink-muted">
+          Nobody yet. Be the first to support it.
+        </p>
       }
 
       @if (owned()) {
