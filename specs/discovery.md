@@ -71,9 +71,9 @@ Charts show what people are buying and downloading, counted in people, never in 
 
 - **Best selling** ranks releases by how many people paid for them in the period, as a download or as a record, tape, or CD. Each buyer counts once per release.
 - **Most downloaded** ranks releases by how many people got their download in the period, paid or free. Each person counts once per release.
-- A gift never counts toward a chart, and no chart shows an amount of money.
-- Charts exist for all of IME and for each genre, for this week, this month, this year, and all time. Best selling can be narrowed by format.
-- Charts show each release's position, its movement since the last chart, its peak, and its weeks on the chart, and refresh weekly. Every chart ends where the current week began; this month is the last four weeks and this year the last 52.
+- A gift never counts toward a chart. No chart shows an amount of money or how many people bought or downloaded a release, only the order, so an artist's sales stay their own.
+- Charts exist for all of IME and for each genre, for the last week, the last four weeks, the last year, and all time. Best selling can be narrowed by format.
+- Charts show each release's position, its movement since the last chart, its peak, and its weeks on the chart, and refresh weekly. Every chart ends where the current week began, so the weekly chart is last week's.
 
 ## Crates
 

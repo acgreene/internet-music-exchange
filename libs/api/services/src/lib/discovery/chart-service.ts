@@ -98,7 +98,6 @@ export class ChartService {
             position: i + 1,
             release: card.release,
             pricing: card.pricing,
-            people: count.people,
             previous: previous.get(count.releaseId) ?? null,
             peak: kept.get(count.releaseId)?.peak ?? null,
             weeks: kept.get(count.releaseId)?.weeks ?? 0,

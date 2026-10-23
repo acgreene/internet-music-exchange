@@ -21,9 +21,9 @@ const chartKindSchema = z.enum(['selling', 'downloads']);
 
 /** The periods a chart covers, each ending at the start of this week. */
 export const CHART_PERIODS = [
-  { id: 'week', name: 'This week', weeks: 1 },
-  { id: 'month', name: 'This month', weeks: 4 },
-  { id: 'year', name: 'This year', weeks: 52 },
+  { id: 'week', name: 'Last week', weeks: 1 },
+  { id: 'month', name: 'Last 4 weeks', weeks: 4 },
+  { id: 'year', name: 'Last year', weeks: 52 },
   { id: 'all', name: 'All time', weeks: null },
 ] as const;
 
@@ -48,8 +48,6 @@ export const chartEntrySchema = z.object({
   position: z.number().int(),
   release: releaseCardWithArtistSchema,
   pricing: pricingSchema.nullable(),
-  /** How many people bought it, or got its download, in the period. */
-  people: z.number().int(),
   /** Its place on last week's chart, or null when it is new. */
   previous: z.number().int().nullable(),
   /** Its best place on the weekly chart, all formats. */

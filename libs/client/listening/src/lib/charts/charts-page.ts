@@ -30,13 +30,14 @@ import { AlertComponent, CoverComponent, SpinnerComponent } from '@ime/ui';
 type Format = 'digital' | 'vinyl' | 'cassette' | 'cd';
 
 const SEGMENT =
-  'rounded-control px-3 py-1.5 text-sm font-medium hover:bg-wash aria-pressed:bg-ink aria-pressed:text-canvas aria-pressed:hover:bg-ink';
+  'whitespace-nowrap rounded-control px-3 py-1.5 text-sm font-medium hover:bg-wash aria-pressed:bg-ink aria-pressed:text-canvas aria-pressed:hover:bg-ink';
 
 /**
  * The charts, `/charts`: best selling, by how many people paid for each
  * release, and most downloaded, by how many people got its download, paid
- * or free. For a week, four weeks, a year, or all time, for all of IME or one
- * genre, and best selling for one format if chosen. No money is shown.
+ * or free. For the last week, four weeks, year, or all time, for all of IME
+ * or one genre, and best selling for one format if chosen. Neither money nor
+ * how many people is shown, only the order.
  */
 @Component({
   selector: 'ime-charts-page',
@@ -50,16 +51,35 @@ const SEGMENT =
   ],
   template: `
     <div class="mx-auto flex max-w-5xl flex-col gap-8">
-      <header class="flex flex-col gap-3">
+      <header class="flex flex-col gap-4">
         <span class="font-mono text-xs tracking-wider text-ink-muted uppercase"
           >Charts</span
         >
-        <h1
-          class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-6xl"
+        <div
+          class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
         >
-          {{ kind() === 'selling' ? 'Best selling' : 'Most downloaded' }}
-        </h1>
-        <p class="max-w-prose leading-relaxed">
+          <h1
+            class="text-4xl leading-[0.95] font-black tracking-[-0.05em] md:text-6xl"
+          >
+            {{ kind() === 'selling' ? 'Best selling' : 'Most downloaded' }}
+          </h1>
+          <div
+            class="flex gap-1 self-start rounded-control border border-line p-1 md:self-auto"
+            role="group"
+            aria-label="Chart"
+          >
+            @for (option of kinds; track option.id) {
+              <a
+                [class]="segment"
+                routerLink="/charts"
+                [queryParams]="with({ chart: option.id })"
+                [attr.aria-pressed]="kind() === option.id"
+                >{{ option.name }}</a
+              >
+            }
+          </div>
+        </div>
+        <p class="max-w-prose text-sm leading-relaxed md:text-base">
           @if (kind() === 'selling') {
             Ranked by how many people paid for each release, as a download or a
             record, tape, or CD. Each buyer counts once.
@@ -71,47 +91,24 @@ const SEGMENT =
         </p>
       </header>
 
-      <div class="flex flex-col gap-3">
-        <div class="flex flex-wrap gap-1" role="group" aria-label="Chart">
-          @for (option of kinds; track option.id) {
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div class="flex shrink-0 gap-1" role="group" aria-label="Period">
+          @for (option of periods; track option.id) {
             <a
               [class]="segment"
               routerLink="/charts"
-              [queryParams]="with({ chart: option.id })"
-              [attr.aria-pressed]="kind() === option.id"
+              [queryParams]="with({ period: option.id })"
+              [attr.aria-pressed]="period() === option.id"
               >{{ option.name }}</a
             >
           }
         </div>
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <div class="flex flex-wrap gap-1" role="group" aria-label="Period">
-            @for (option of periods; track option.id) {
-              <a
-                [class]="segment"
-                routerLink="/charts"
-                [queryParams]="with({ period: option.id })"
-                [attr.aria-pressed]="period() === option.id"
-                >{{ option.name }}</a
-              >
-            }
-          </div>
-          <label class="flex items-center gap-2 text-sm">
-            Genre
-            <select
-              class="rounded-control border border-line bg-canvas px-2 py-1.5"
-              (change)="pickGenre($any($event.target).value)"
-            >
-              <option value="" [selected]="!genre()">All of IME</option>
-              @for (option of genres; track option.id) {
-                <option [value]="option.id" [selected]="genre() === option.id">
-                  {{ option.name }}
-                </option>
-              }
-            </select>
-          </label>
-        </div>
         @if (kind() === 'selling') {
-          <div class="flex flex-wrap gap-1" role="group" aria-label="Format">
+          <span
+            class="hidden h-6 w-px shrink-0 bg-line sm:block"
+            aria-hidden="true"
+          ></span>
+          <div class="flex shrink-0 gap-1" role="group" aria-label="Format">
             <a
               [class]="segment"
               routerLink="/charts"
@@ -130,12 +127,32 @@ const SEGMENT =
             }
           </div>
         }
+        <span
+          class="hidden h-6 w-px shrink-0 bg-line sm:block"
+          aria-hidden="true"
+        ></span>
+        <label class="flex shrink-0 items-center gap-2 text-sm">
+          <span class="sr-only">Genre</span>
+          <select
+            class="rounded-control border border-line bg-canvas px-2 py-1.5"
+            (change)="pickGenre($any($event.target).value)"
+          >
+            <option value="" [selected]="!genre()">All genres</option>
+            @for (option of genres; track option.id) {
+              <option [value]="option.id" [selected]="genre() === option.id">
+                {{ option.name }}
+              </option>
+            }
+          </select>
+        </label>
       </div>
 
       @if (chart(); as chart) {
         <section class="flex flex-col gap-3" aria-labelledby="chart-heading">
           <h2 id="chart-heading" class="text-sm text-ink-muted">
-            @if (chart.from; as from) {
+            @if (period() === 'week' && chart.from) {
+              Week of {{ chart.from | date: 'MMM d, y' : 'UTC' }}
+            } @else if (chart.from; as from) {
               {{ from | date: 'MMM d' : 'UTC' }} to
               {{ chart.through | date: 'MMM d, y' : 'UTC' }}
             } @else {
@@ -188,19 +205,15 @@ const SEGMENT =
                     [routerLink]="['/artists', entry.release.artistHandle]"
                     >{{ entry.release.artistName }}</a
                   >
-                  <span class="font-mono text-xs text-ink-muted sm:hidden"
-                    >{{ movement(entry) }} · {{ people(entry) }}</span
+                  <span
+                    class="font-mono text-xs sm:hidden"
+                    [class]="movementClass(entry)"
+                    >{{ movement(entry) }}</span
                   >
                 </span>
                 <dl
-                  class="hidden grid-cols-3 gap-4 text-right font-mono text-xs sm:grid"
+                  class="hidden grid-cols-2 gap-4 text-right font-mono text-xs sm:grid"
                 >
-                  <div>
-                    <dt class="text-ink-muted">
-                      {{ kind() === 'selling' ? 'Buyers' : 'People' }}
-                    </dt>
-                    <dd>{{ entry.people }}</dd>
-                  </div>
                   <div>
                     <dt class="text-ink-muted">Peak</dt>
                     <dd>{{ entry.peak ?? '–' }}</dd>
@@ -321,12 +334,5 @@ export class ChartsPage {
   protected movementClass(entry: ChartEntry): string {
     if (entry.previous === null) return 'text-accent font-semibold';
     return entry.previous > entry.position ? 'text-ink' : 'text-ink-muted';
-  }
-
-  protected people(entry: ChartEntry): string {
-    if (this.kind() === 'selling') {
-      return `${entry.people} ${entry.people === 1 ? 'buyer' : 'buyers'}`;
-    }
-    return `${entry.people} ${entry.people === 1 ? 'person' : 'people'}`;
   }
 }

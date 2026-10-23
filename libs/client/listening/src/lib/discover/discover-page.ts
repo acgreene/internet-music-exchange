@@ -150,7 +150,7 @@ const PAGE_SIZE = 24;
             @for (entry of topSellers(); track entry.release.id) {
               <li>
                 <a
-                  class="group grid grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 py-2.5"
+                  class="group grid grid-cols-[2rem_3rem_minmax(0,1fr)] items-center gap-3 py-2.5"
                   [routerLink]="[
                     '/artists',
                     entry.release.artistHandle,
@@ -173,10 +173,6 @@ const PAGE_SIZE = 24;
                       entry.release.artistName
                     }}</span>
                   </span>
-                  <span class="font-mono text-xs text-ink-muted"
-                    >{{ entry.people }}
-                    {{ entry.people === 1 ? 'buyer' : 'buyers' }}</span
-                  >
                 </a>
               </li>
             }
