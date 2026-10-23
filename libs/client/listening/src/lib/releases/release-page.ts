@@ -25,7 +25,6 @@ import {
 import {
   ApiError,
   type ArtistPagePlayback,
-  genreName,
   HttpStatus,
   type ReleaseCard,
   sideOf,
@@ -41,7 +40,6 @@ import {
   SpinnerComponent,
 } from '@ime/ui';
 import { ArtistPageHost } from '@ime/client-artist-pages';
-import { ReleaseViewToggle } from './release-view-toggle';
 import { ReleaseSupporters } from '../comments/release-supporters';
 import { AddToCrate } from '../crates/add-to-crate';
 import { CrateCard } from '../crates/crate-card';
@@ -84,7 +82,6 @@ const CRATES_SHOWN = 6;
     ReleaseCardComponent,
     ReleaseFormats,
     ReleaseSupporters,
-    ReleaseViewToggle,
     RouterLink,
     SpinnerComponent,
   ],
@@ -104,7 +101,12 @@ const CRATES_SHOWN = 6;
             <span class="font-semibold">{{ page.release.title }}</span>
             <span class="text-ink-muted"> by {{ page.artist.name }}</span>
           </span>
-          <ime-release-view-toggle class="shrink-0" current="designed" />
+          <a
+            class="link shrink-0 text-sm"
+            [routerLink]="[]"
+            [queryParams]="{ view: 'plain' }"
+            >Standard view</a
+          >
           @if (page.release.status === 'published') {
             <ime-add-to-crate
               class="hidden shrink-0 sm:block"
@@ -175,34 +177,13 @@ const CRATES_SHOWN = 6;
                 class="link text-sm"
                 [routerLink]="[]"
                 [queryParams]="{ view: 'plain' }"
-                >Credits, supporters, and more on the standard page</a
+                >Credits, supporters, and more in the standard view</a
               >
             </aside>
           </div>
         }
       } @else {
         <article class="mx-auto flex max-w-6xl flex-col gap-16">
-          @if (bundleUrl()) {
-            <div
-              class="-mb-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-card border border-line bg-surface p-4"
-            >
-              <div class="flex min-w-0 flex-col gap-0.5">
-                <span class="font-bold">
-                  {{ page.release.title }} has its own designed page
-                </span>
-                <span class="text-sm text-ink-muted"
-                  >A page built around this record, with its artwork, notes, and
-                  music.</span
-                >
-              </div>
-              <div class="flex flex-wrap items-center gap-3">
-                <ime-release-view-toggle current="standard" />
-                <a imeButton [routerLink]="[]" [queryParams]="{ view: null }"
-                  >Open the designed page</a
-                >
-              </div>
-            </div>
-          }
           <div
             class="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-12"
           >
@@ -256,33 +237,6 @@ const CRATES_SHOWN = 6;
                     >{{ page.artist.name }}</a
                   >
                 </p>
-                @if (page.release.genres.length || page.release.tags.length) {
-                  <ul
-                    class="flex flex-wrap gap-1.5"
-                    aria-label="Genres and tags"
-                  >
-                    @for (genre of page.release.genres; track genre) {
-                      <li>
-                        <a
-                          class="block rounded-full border border-ink px-2.5 py-0.5 text-sm font-medium hover:bg-wash"
-                          routerLink="/search"
-                          [queryParams]="{ genres: genre }"
-                          >{{ genreName(genre) }}</a
-                        >
-                      </li>
-                    }
-                    @for (tag of page.release.tags; track tag) {
-                      <li>
-                        <a
-                          class="block rounded-full border border-line px-2.5 py-0.5 text-sm text-ink-muted hover:bg-wash"
-                          routerLink="/search"
-                          [queryParams]="{ q: tag }"
-                          >{{ tag }}</a
-                        >
-                      </li>
-                    }
-                  </ul>
-                }
                 <div class="mt-1 flex flex-wrap items-center gap-2">
                   @if (playable().length) {
                     <button imeButton (click)="play()">
@@ -296,6 +250,14 @@ const CRATES_SHOWN = 6;
                     label="More for this release"
                     [actions]="releaseActions()"
                   />
+                  @if (bundleUrl()) {
+                    <a
+                      class="link ml-1 text-sm"
+                      [routerLink]="[]"
+                      [queryParams]="{ view: null }"
+                      >Digital artwork</a
+                    >
+                  }
                 </div>
               </header>
 
@@ -656,7 +618,7 @@ export class ReleasePage {
   });
   protected readonly designedActions = computed<MenuAction[]>(() => [
     {
-      label: 'Standard page',
+      label: 'Standard view',
       run: () =>
         void this.router.navigate([], { queryParams: { view: 'plain' } }),
     },
@@ -779,7 +741,6 @@ export class ReleasePage {
   );
 
   protected readonly assetLabel = assetKindLabel;
-  protected readonly genreName = genreName;
 
   /** Where each side after A begins, among the tracks on the release. */
   private readonly sideStarts = computed(() => {
