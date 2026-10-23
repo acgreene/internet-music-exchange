@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  output,
   linkedSignal,
   signal,
 } from '@angular/core';
@@ -54,6 +55,14 @@ type Format = string;
             </div>
           }
         </dl>
+        <div>
+          <button
+            class="text-sm underline underline-offset-2"
+            (click)="keepDigging.emit()"
+          >
+            Back to the dig
+          </button>
+        </div>
       </div>
 
       @if (bag().length) {
@@ -203,6 +212,8 @@ export class DigEnd {
   public readonly crateName = input.required<string>();
   /** Where leaving goes: the crate dug, or all crates. */
   public readonly leaveLink = input<string[]>(['/crates']);
+  /** The listener wants to keep digging where they left off. */
+  public readonly keepDigging = output<void>();
 
   /** The format chosen for each record, digital unless changed. */
   private readonly formats = linkedSignal<DigRecord[], Map<string, Format>>({

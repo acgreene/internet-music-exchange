@@ -64,7 +64,7 @@ const END_SLACK_MS = 1500;
       }}</span>
       @if (phase() === 'digging') {
         <span class="font-mono text-xs" aria-live="polite"
-          >{{ index() + 1 }} / {{ records().length }}</span
+          >{{ index() + 1 }} of {{ records().length }}</span
         >
         <button
           class="rounded-control border border-canvas/30 px-2.5 py-1 text-xs font-semibold hover:bg-canvas hover:text-ink"
@@ -218,6 +218,7 @@ const END_SLACK_MS = 1500;
               [listenedMs]="listenedMs()"
               [crateName]="dig.name"
               [leaveLink]="leaveLink()"
+              (keepDigging)="phase.set('digging')"
             />
           </div>
         }

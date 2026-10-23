@@ -651,7 +651,7 @@ export class ReleasePage {
       : null;
     return [this.kindLabel(), date, this.trackCount(), this.runtime()]
       .filter(Boolean)
-      .join(' / ');
+      .join(' // ');
   });
 
   protected readonly releaseActions = computed<MenuAction[]>(() => [

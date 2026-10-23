@@ -102,7 +102,7 @@ Dig mode is a separate, focused space for flipping through a crate one record at
 - When the shared tracks run out, the listener is told how many more are on the record, with a way to buy it or keep it for later.
 - A release with a designed page is shown through its design while digging, with the dig controls docked over it.
 - A listener can **keep** records as they dig. Kept records go into a bag.
-- At the bottom of the crate the listener sees how many records they dug and kept and how long they listened, and can buy the bag (choosing a format for each record), make a crate of their own from it (naming it, private unless they make it public), or leave it.
+- At the bottom of the crate the listener sees how many records they dug and kept and how long they listened, and can buy the bag (choosing a format for each record), make a crate of their own from it (naming it, private unless they make it public), go back into the dig where they left off, or leave it.
 - Nothing plays automatically when a listener first opens dig mode; listening starts when they press play.
 
 ## Web & mobile
@@ -123,5 +123,6 @@ Dig mode is a separate, focused space for flipping through a crate one record at
 - Moods and vibe-based browsing beyond artists' tags.
 - A genre map or other spatial browsing.
 - Editorial writing beyond crates' notes.
-- Ranking or upvoting crates.
+- Upvoting crates, or ranking them by anything but saves.
 - Sharing a dig session as a trail.
+- **Playlists**, as their own thing apart from crates: individual tracks in any order, played straight through, saved, shared, and made together with other people. Crates stay whole records for digging.

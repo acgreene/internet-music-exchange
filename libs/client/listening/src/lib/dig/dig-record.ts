@@ -170,7 +170,6 @@ const PICTURES = new Set(['back_cover', 'photo']);
             </li>
           }
         </ol>
-        <p class="font-mono text-xs text-canvas/70">{{ sharing() }}</p>
 
         @if (page()?.release?.description; as description) {
           <p
@@ -284,7 +283,7 @@ export class DigRecordView {
     const release = this.record().release;
     return [releaseKindLabel(release.kind), release.releasedAt?.slice(0, 4)]
       .filter(Boolean)
-      .join(' / ');
+      .join(' // ');
   });
   protected readonly place = computed(() => {
     const artist = currentValue(this.artistResource)?.artist;
@@ -312,16 +311,6 @@ export class DigRecordView {
   protected readonly price = computed(() =>
     releasePriceLabel(this.record().pricing),
   );
-
-  protected readonly sharing = computed(() => {
-    const total = this.record().tracks.length;
-    const shared = this.playable().length;
-    if (this.record().owned) return `All ${total} tracks are yours to hear.`;
-    if (!shared) {
-      return `The artist shares no tracks before you get it. ${total} on the record.`;
-    }
-    return `The artist shares ${shared} of ${total} tracks, in full.`;
-  });
 
   protected readonly ranOutText = computed(() => {
     const more = this.record().tracks.length - this.playable().length;

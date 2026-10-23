@@ -319,7 +319,7 @@ export class CratePage {
       page.crate.visibility === 'public' ? 'Crate' : 'Private crate',
       `${count} ${count === 1 ? 'record' : 'records'}`,
       ...page.genres.map((genre) => genreName(genre)),
-    ].join(' / ');
+    ].join(' // ');
   });
   /** After the maker's name: who they are, and how many saved it. */
   protected readonly bylineRest = computed(() => {
