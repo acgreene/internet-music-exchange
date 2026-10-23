@@ -8,10 +8,7 @@ import { RouterLink } from '@angular/router';
 import type { ReleasePageResponse, StoreItem } from '@ime/models';
 import { CoverComponent, MoneyPipe } from '@ime/ui';
 import { BuyPanel } from '../buying/buy-panel';
-import { productTypeLabel } from '../merch/merch-labels';
-
-/** At or under this many left, the count reads as running low. */
-const LOW_STOCK = 10;
+import { LOW_STOCK, productTypeLabel } from '../merch/merch-labels';
 
 /**
  * Every way to get a release, side by side: the download, which can be

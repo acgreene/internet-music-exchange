@@ -30,6 +30,14 @@ An artist is the selling identity on IME: the entity that publishes releases, se
 - Managers can see the other managers of an artist they manage.
 - The managers decide how the artist's hosting costs are split between them (see [Funding](./funding.md)).
 
+### The artist page
+
+- An artist's page leads with their photo and name, over their header image when they uploaded one (there is no stand-in banner), with where they are based, their followers, and a follow button. Reporting the artist is offered quietly, in a menu.
+- Beside the music sits an About panel: the bio, where they are based, when they joined IME, and their links.
+- The music starts with their latest release, shown large with its price and, where it has previews, a play button. Below it the discography is grouped into albums, EPs, singles, and everything else, newest first, each release with its year and price.
+- Their merch follows, showing when an item is running low or sold out.
+- Artist pages use IME's own layout; designs for them may come later.
+
 ### Follower management
 
 - A manager can see who follows their artist.

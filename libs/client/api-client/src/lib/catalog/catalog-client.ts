@@ -8,7 +8,7 @@ import {
   type LibraryItem,
   type PlaceCount,
   type PageQuery,
-  type ReleaseCard,
+  type DiscographyItem,
   type ReleaseCardWithArtist,
   type ReleasePageResponse,
   type SearchResults,
@@ -72,7 +72,9 @@ export class CatalogClient {
   /**
    * An artist's published releases, by handle.
    */
-  public listDiscography(handle: string): Promise<ApiResult<ReleaseCard[]>> {
+  public listDiscography(
+    handle: string,
+  ): Promise<ApiResult<DiscographyItem[]>> {
     return this.transport.get(ApiRoute.CatalogDiscography, {
       params: { handle },
     });

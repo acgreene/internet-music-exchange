@@ -36,6 +36,13 @@ export const releaseCardSchema = z.object({
 
 export type ReleaseCard = z.infer<typeof releaseCardSchema>;
 
+/** A release in an artist's discography, with its price. */
+export const discographyItemSchema = releaseCardSchema.extend({
+  pricing: pricingSchema.nullable(),
+});
+
+export type DiscographyItem = z.infer<typeof discographyItemSchema>;
+
 /**
  * A release card that also names its artist, for lists that mix artists.
  */
@@ -328,7 +335,7 @@ export const catalogContracts = {
     },
   },
   [ApiRoute.CatalogDiscography]: {
-    [HttpMethod.Get]: { response: z.array(releaseCardSchema) },
+    [HttpMethod.Get]: { response: z.array(discographyItemSchema) },
   },
   [ApiRoute.CatalogReleasePage]: {
     [HttpMethod.Get]: { response: releasePageSchema },

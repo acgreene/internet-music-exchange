@@ -147,8 +147,17 @@ export class CatalogService {
     // nothing is for sale while the artist's hosting has lapsed
     if (artist.offSaleAt) return [];
 
+    const releases = await this.db.releases.listPublishedByArtist(artist.id);
+    const pricing = new Map(
+      (await this.db.releases.listPricing(releases.map((r) => r.id))).map(
+        (row) => [row.releaseId, row],
+      ),
+    );
     return this.withCovers(
-      await this.db.releases.listPublishedByArtist(artist.id),
+      releases.map((release) => ({
+        ...release,
+        pricing: pricing.get(release.id) ?? null,
+      })),
       (release) => release.id,
     );
   }

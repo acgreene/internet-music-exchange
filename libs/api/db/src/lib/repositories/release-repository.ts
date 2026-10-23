@@ -593,6 +593,15 @@ export class ReleaseRepository {
     return pricing ?? null;
   }
 
+  /** The prices of several releases at once, for those that have one. */
+  public async listPricing(releaseIds: string[]): Promise<ReleasePricing[]> {
+    if (releaseIds.length === 0) return [];
+    return this.db
+      .select()
+      .from(releasePricing)
+      .where(inArray(releasePricing.releaseId, releaseIds));
+  }
+
   /**
    * Set a release's price, replacing any price it already had.
    *

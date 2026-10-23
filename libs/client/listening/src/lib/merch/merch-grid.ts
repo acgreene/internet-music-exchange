@@ -8,7 +8,7 @@ import {
 import { RouterLink } from '@angular/router';
 import type { StoreItem } from '@ime/models';
 import { CoverComponent, MoneyPipe } from '@ime/ui';
-import { productTypeLabel } from './merch-labels';
+import { LOW_STOCK, productTypeLabel } from './merch-labels';
 
 /**
  * Merch in a grid: photo, name, and the lowest price, linking to each
@@ -42,6 +42,11 @@ import { productTypeLabel } from './merch-labels';
                 from {{ item.minPrice | money: item.currency }}
               }
             </span>
+            @if (item.totalStock > 0 && item.totalStock <= LOW_STOCK) {
+              <span class="-mt-1 font-mono text-xs text-danger"
+                >Only {{ item.totalStock }} left</span
+              >
+            }
           </a>
         </li>
       }
@@ -49,6 +54,7 @@ import { productTypeLabel } from './merch-labels';
   `,
 })
 export class MerchGrid {
+  protected readonly LOW_STOCK = LOW_STOCK;
   public readonly items = input.required<StoreItem[]>();
   /** The artist the items belong to, for their addresses. */
   public readonly handle = input.required<string>();

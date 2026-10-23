@@ -12,6 +12,9 @@ const TYPE_LABELS: Record<ProductType, string> = {
   other: 'Merch',
 };
 
+/** At or under this many left, stock reads as running low. */
+export const LOW_STOCK = 10;
+
 export function productTypeLabel(type: ProductType): string {
   return TYPE_LABELS[type];
 }
