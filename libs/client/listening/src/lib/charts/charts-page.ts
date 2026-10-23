@@ -221,12 +221,6 @@ const SEGMENT =
               </li>
             }
           </ol>
-          <p class="text-xs text-ink-muted">
-            Movement is against last week's chart. Peak and weeks are a
-            release's run on the weekly chart{{
-              genre() ? ' for this genre' : ''
-            }}.
-          </p>
         </section>
       } @else if (charts.error()) {
         <ime-alert tone="error">The chart could not be loaded.</ime-alert>
