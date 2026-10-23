@@ -238,8 +238,6 @@ export const publicCostsSchema = z.object({
       medianShare: z.number().int(),
       /** Every seller's shares together, before card fees. */
       sellersPaid: z.number().int(),
-      /** What IME's founder paid so no shared part passed the cap. */
-      subsidy: z.number().int(),
       coveredFromReserve: z.number().int(),
       creditedToSellers: z.number().int(),
       platformDonations: z.number().int(),

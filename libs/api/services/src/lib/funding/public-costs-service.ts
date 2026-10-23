@@ -21,8 +21,6 @@ export interface PublicCostMonth {
   medianShare: number;
   /** Every seller's shares together, before card fees. */
   sellersPaid: number;
-  /** What was covered so shares stayed low while IME was small. */
-  subsidy: number;
   /** Taken from the reserve to steady shares. */
   coveredFromReserve: number;
   /** Given back to sellers once the reserve was full. */
@@ -106,10 +104,7 @@ export class PublicCostsService {
     }
     // card fees go to the card network, not to IME's bills
     const shares = statements.map(
-      (statement) =>
-        statement.usageAmount +
-        statement.sharedAmount -
-        statement.subsidyAmount,
+      (statement) => statement.usageAmount + statement.sharedAmount,
     );
 
     return {
@@ -117,12 +112,9 @@ export class PublicCostsService {
       costsByCategory,
       totalCosts: costs.reduce((total, cost) => total + cost.amount, 0),
       sellerCount: period.sellerCount ?? 0,
-      sharedShare: statements[0]
-        ? statements[0].sharedAmount - statements[0].subsidyAmount
-        : 0,
+      sharedShare: statements[0] ? statements[0].sharedAmount : 0,
       medianShare: median(shares),
       sellersPaid: shares.reduce((total, share) => total + share, 0),
-      subsidy: period.subsidyTotal ?? 0,
       coveredFromReserve: -(reserve.covered_costs ?? 0),
       creditedToSellers: -(reserve.credited_to_sellers ?? 0),
       platformDonations,

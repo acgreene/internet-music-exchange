@@ -13,12 +13,6 @@ import { BillingService } from './billing-service';
 import { FundingService } from './funding-service';
 import { monthSpan } from './month-span';
 
-/**
- * The most any seller pays toward shared costs in a month while there are few
- * sellers. IME's creators cover the rest, shown as a subsidy on statements.
- */
-export const SHARED_COST_CAP = 100;
-
 /** The reserve is full at this many months of shared costs. */
 export const RESERVE_TARGET_MONTHS = 3;
 
@@ -42,7 +36,6 @@ export interface CloseSummary {
   sellers: number;
   sharedCostsTotal: number;
   sharedPerSeller: number;
-  subsidyTotal: number;
   autoTopUps: number;
   lapsed: number;
   /** Sellers whose follow-up (top-up, alert, lapse) failed and needs a look. */
@@ -194,7 +187,6 @@ export class MonthlyCloseService {
     const sellers = [...linesBySeller.keys()];
     const sharedPerSeller =
       sellers.length > 0 ? Math.ceil(sharedCostsTotal / sellers.length) : 0;
-    const subsidyPerSeller = Math.max(0, sharedPerSeller - SHARED_COST_CAP);
 
     for (const userId of sellers) {
       const lines = linesBySeller.get(userId) ?? [];
@@ -203,7 +195,7 @@ export class MonthlyCloseService {
         month,
         usageAmount: lines.reduce((total, line) => total + line.amount, 0),
         sharedAmount: sharedPerSeller,
-        subsidyAmount: subsidyPerSeller,
+        subsidyAmount: 0,
         cardFeesAmount: await this.db.funding.sumCardFees(userId, start, end),
         lines,
       });
@@ -213,14 +205,13 @@ export class MonthlyCloseService {
     await this.db.funding.closePeriod(month, {
       sellerCount: sellers.length,
       sharedCostsTotal,
-      subsidyTotal: subsidyPerSeller * sellers.length,
+      subsidyTotal: 0,
     });
 
     const summary: CloseSummary = {
       sellers: sellers.length,
       sharedCostsTotal,
       sharedPerSeller,
-      subsidyTotal: subsidyPerSeller * sellers.length,
       autoTopUps: 0,
       lapsed: 0,
       failures: [],

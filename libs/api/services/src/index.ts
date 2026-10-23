@@ -150,10 +150,7 @@ export type {
   PublicCosts,
   PublicCostsService,
 } from './lib/funding/public-costs-service';
-export {
-  GRACE_DAYS,
-  SHARED_COST_CAP,
-} from './lib/funding/monthly-close-service';
+export { GRACE_DAYS } from './lib/funding/monthly-close-service';
 export type {
   CloseSummary,
   MonthlyCloseService,

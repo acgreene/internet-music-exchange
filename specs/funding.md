@@ -43,7 +43,7 @@ Each month, a seller's share is the sum of:
 2. **Shared costs**: the month's platform-wide costs that belong to no one seller, divided evenly by the number of sellers. These include servers, database, email, domain, monitoring, and the ownership guarantee (see below).
 3. **Card fees** on that seller's own top-ups.
 
-Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. At launch, while there are too few sellers for shared costs to be small, IME's founder covers part of them so joining is not a burden, and each statement shows that subsidy. Once there are enough sellers, shared costs are simply split evenly. This is a launch measure, not a promise, and public copy does not advertise it.
+Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. At launch, until there are enough sellers for shares to be cheap, IME's founder pays the platform's bills out of pocket and sellers are not charged. From then on, the shared costs are always split evenly between sellers, with no cap and no subsidy. This is a launch measure, not a promise, and public copy does not advertise it.
 
 ## Paying
 
@@ -52,7 +52,7 @@ Serving a seller's files counts as that seller's usage, whoever is listening or 
 - At the end of each monthly period, that month's share is deducted from the balance.
 - A seller is emailed when their balance falls below an alert threshold they choose, as an amount or a percentage of their last top-up.
 - A seller can turn on **auto top-up**: a chosen amount charged to their card each month, or whenever the balance drops below their threshold.
-- A seller can see their balance, the running estimate for the current month, and past monthly statements broken into usage, shared costs, subsidy, and card fees.
+- A seller can see their balance, the running estimate for the current month, and past monthly statements broken into usage, shared costs, and card fees.
 - When a seller has nothing active left, they can request a refund of their unused balance.
 
 ## When a balance runs out

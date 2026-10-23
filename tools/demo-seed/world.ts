@@ -43,8 +43,6 @@ const SELLERS = 180;
 const DESIGNERS = 10;
 const ARTISTS = 200;
 const CLOSED_MONTHS = 6;
-/** As in the monthly close: the most a seller pays for shared bills, in cents. */
-const SHARED_COST_CAP = 100;
 /** As in the monthly close: the reserve is full at this many months of shared bills. */
 const RESERVE_TARGET_MONTHS = 3;
 
@@ -1507,8 +1505,7 @@ export function buildWorld(options: WorldOptions) {
       costs.other_services +
       costs.ownership_guarantee;
     const sharedEach = Math.round(shared / Math.max(1, activeSellers.length));
-    // IME's founder pays whatever would push the shared part past the cap
-    const subsidyEach = Math.max(0, sharedEach - SHARED_COST_CAP);
+    const subsidyEach = 0;
     closings.push({
       month,
       closedAt: new Date(monthEnd.getTime() + 2 * DAY),

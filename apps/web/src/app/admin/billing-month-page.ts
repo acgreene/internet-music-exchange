@@ -199,8 +199,7 @@ function lastMonth(): string {
           <ime-alert tone="success">
             {{ monthLabel() }} is closed: {{ summary.sellers }} sellers shared
             {{ summary.sharedCostsTotal | money: 'usd' }}
-            ({{ summary.sharedPerSeller | money: 'usd' }} each), the creators
-            covered {{ summary.subsidyTotal | money: 'usd' }},
+            ({{ summary.sharedPerSeller | money: 'usd' }} each),
             {{ summary.autoTopUps }} auto top-ups ran, and {{ summary.lapsed }}
             sellers lapsed.
           </ime-alert>

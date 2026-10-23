@@ -206,7 +206,6 @@ export const closeSummarySchema = z.object({
   sellers: z.number().int(),
   sharedCostsTotal: z.number().int(),
   sharedPerSeller: z.number().int(),
-  subsidyTotal: z.number().int(),
   autoTopUps: z.number().int(),
   lapsed: z.number().int(),
   /** Sellers whose follow-up failed and needs a look. */
