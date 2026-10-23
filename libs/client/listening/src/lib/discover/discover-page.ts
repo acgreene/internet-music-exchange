@@ -78,24 +78,12 @@ const PAGE_SIZE = 24;
             </h2>
             <p class="max-w-prose leading-relaxed">
               On IME, artists team up with designers and creative developers to
-              build a companion experience for their record: an immersive
-              gallery, a page that changes with every song, even a small game.
-              It's the cover, the inner sleeve, and the liner notes, reborn as
-              software you explore while you listen.
+              build a companion software experience for their record. It's the
+              cover, the inner sleeve, the liner notes, and the back cover,
+              reborn as software you explore while you listen.
             </p>
-            <div class="flex flex-wrap items-center gap-3">
-              <a
-                imeButton
-                [routerLink]="[
-                  '/artists',
-                  designed()[0].release.artistHandle,
-                  designed()[0].release.slug,
-                ]"
-                >Hear a designed release</a
-              >
-              <a class="link font-semibold" routerLink="/designs"
-                >Browse the design gallery</a
-              >
+            <div>
+              <a imeButton routerLink="/designs">Browse the design gallery</a>
             </div>
           </div>
           <ul class="grid grid-cols-3 gap-3">
@@ -146,9 +134,9 @@ const PAGE_SIZE = 24;
               What people are buying this week.
             </h2>
             <p class="max-w-prose leading-relaxed">
-              Charts rank releases by how many people bought them, or downloaded
-              them, never by money. Every genre has its own, from this week back
-              to all time.
+              Charts rank releases by how many people bought them or downloaded
+              them. Every genre has its own chart, from this week back to all
+              time.
             </p>
             <div>
               <a imeButton variant="secondary" routerLink="/charts"
@@ -264,9 +252,8 @@ const PAGE_SIZE = 24;
                 Flip through a crate, one record at a time.
               </h2>
               <p class="leading-relaxed text-canvas/80">
-                Hear the tracks each artist shares, in full, and move anywhere
-                in them. Keep what you love, then buy the bag at the bottom of
-                the crate. Every dig ends; nothing plays until you press play.
+                Listen to the publicly previewable tracks on each record. Keep
+                what you love, then buy the bag at the bottom of the crate.
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
