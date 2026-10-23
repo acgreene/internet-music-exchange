@@ -79,7 +79,7 @@ const OPTION =
     <div class="mx-auto flex max-w-6xl flex-col gap-6">
       <ime-search-box class="md:hidden" [value]="state().q" />
 
-      @if (chips().length || state().q) {
+      @if (chips().length) {
         <div class="flex flex-wrap items-center gap-2 text-sm">
           @if (state().said; as said) {
             <span>We read “{{ said }}” as</span>
