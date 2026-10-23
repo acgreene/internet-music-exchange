@@ -716,12 +716,13 @@ export class ReleasePage {
     const tracks = currentValue(this.page)?.tracks ?? [];
     if (!tracks.length || tracks.some((track) => !track.durationMs))
       return null;
-    const minutes = Math.round(
-      tracks.reduce((sum, track) => sum + (track.durationMs ?? 0), 0) / 60000,
+    const seconds = Math.round(
+      tracks.reduce((sum, track) => sum + (track.durationMs ?? 0), 0) / 1000,
     );
-    return minutes < 60
-      ? `${minutes} min`
-      : `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+    // past an hour it reads in full, as Spotify does: 1 hr 4 min 12 sec
+    return seconds < 3600
+      ? `${Math.round(seconds / 60)} min`
+      : `${Math.floor(seconds / 3600)} hr ${Math.floor(seconds / 60) % 60} min ${seconds % 60} sec`;
   });
 
   /** When it came out, as people say it: "March 19, 2026". */
