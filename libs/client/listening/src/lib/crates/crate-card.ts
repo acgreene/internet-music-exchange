@@ -1,11 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { CrateCard as Crate } from '@ime/models';
+import { CrateMosaic } from './crate-mosaic';
 
 /**
  * A crate in a list: the covers of its first four records, its name, who
@@ -14,26 +10,10 @@ import type { CrateCard as Crate } from '@ime/models';
 @Component({
   selector: 'ime-crate-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [CrateMosaic, RouterLink],
   template: `
     <a class="group flex flex-col gap-2" [routerLink]="['/crates', crate().id]">
-      <span
-        class="grid aspect-square grid-cols-2 grid-rows-2 gap-0.5 border border-line bg-line"
-        aria-hidden="true"
-      >
-        @for (cover of mosaic(); track $index) {
-          @if (cover) {
-            <img
-              class="size-full object-cover"
-              [src]="cover"
-              alt=""
-              loading="lazy"
-            />
-          } @else {
-            <span class="bg-wash"></span>
-          }
-        }
-      </span>
+      <ime-crate-mosaic [coverUrls]="crate().coverUrls" />
       <span class="flex flex-col">
         <span class="truncate font-bold group-hover:underline">{{
           crate().name
@@ -56,8 +36,4 @@ export class CrateCard {
   public readonly crate = input.required<Crate>();
   /** Show who made it, as lists of other people's crates do. */
   public readonly byLine = input(true);
-
-  protected readonly mosaic = computed(() =>
-    [0, 1, 2, 3].map((i) => this.crate().coverUrls[i] ?? null),
-  );
 }

@@ -305,6 +305,13 @@ export const searchSuggestionsSchema = z.object({
     }),
   ),
   tags: z.array(facetCountSchema(z.string())),
+  crates: z.array(
+    z.object({
+      id: z.guid(),
+      name: z.string(),
+      makerUsername: z.string().nullable(),
+    }),
+  ),
 });
 
 export type SearchSuggestions = z.infer<typeof searchSuggestionsSchema>;

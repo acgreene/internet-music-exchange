@@ -467,7 +467,9 @@ const OPTION =
                 aria-labelledby="crates-heading"
               >
                 <h2 id="crates-heading" class="text-lg font-bold">Crates</h2>
-                <ul class="grid grid-cols-3 gap-4 sm:grid-cols-6">
+                <ul
+                  class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+                >
                   @for (crate of crates.value(); track crate.id) {
                     <li><ime-crate-card [crate]="crate" /></li>
                   }
@@ -634,10 +636,11 @@ export class SearchPage {
       !this.crates.value()?.length
     );
   });
-  /** Filters with nothing to narrow and none to take off only get in the way. */
-  protected readonly showRail = computed(
-    () => !this.nothingFound() || this.chips().length > 0,
-  );
+  /** The filters narrow releases, so they only help when some match or are on. */
+  protected readonly showRail = computed(() => {
+    const found = this.found();
+    return !found || found.total > 0 || this.chips().length > 0;
+  });
 
   private readonly more = linkedSignal<SearchRelease[], SearchRelease[]>({
     source: () => this.found()?.releases ?? [],

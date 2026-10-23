@@ -31,7 +31,7 @@ let nextId = 0;
 
 interface Option {
   id: string;
-  kind: 'search' | 'genre' | 'artist' | 'release' | 'tag';
+  kind: 'search' | 'genre' | 'artist' | 'release' | 'tag' | 'crate';
   label: string;
   detail?: string;
   coverUrl?: string | null;
@@ -303,6 +303,18 @@ export class SearchBox {
           detail: release.artistName,
           coverUrl: release.coverUrl,
           commands: ['/artists', release.artistHandle, release.slug],
+        })),
+      });
+    }
+    if (found?.crates.length) {
+      groups.push({
+        label: 'Crates',
+        options: found.crates.map((crate) => ({
+          id: `${this.listboxId}-crate-${crate.id}`,
+          kind: 'crate',
+          label: crate.name,
+          detail: crate.makerUsername ? `@${crate.makerUsername}` : undefined,
+          commands: ['/crates', crate.id],
         })),
       });
     }

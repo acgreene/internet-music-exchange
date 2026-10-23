@@ -70,7 +70,7 @@ Each is a property of `ImeServices`, named in brackets.
   every format a release is sold in, matching artists (where they are
   based, their followers and releases) and merch, the places
   artists are based for reading them out of a search, and suggestions while
-  someone types.
+  someone types, crates included.
   Use it for the search box and the results page.
 - **`ChartService`** (`charts`): best selling, by the people who paid for
   a release, and most downloaded, by the people who got its download, paid

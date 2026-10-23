@@ -19,7 +19,7 @@ const PAGE_SIZE = 24;
 const MAX_WORDS = 8;
 const ARTISTS_SHOWN = 6;
 const MERCH_SHOWN = 8;
-const SUGGESTIONS = { artists: 4, releases: 5, tags: 4 };
+const SUGGESTIONS = { artists: 4, releases: 5, tags: 4, crates: 3 };
 
 /**
  * Searching the catalog: releases by words and filters, with how many
@@ -113,16 +113,18 @@ export class SearchService {
   }
 
   /**
-   * Artists, releases, and tags that start with or contain what someone has
+   * Artists, releases, tags, and public crates that start with or contain
+   * what someone has
    * typed so far.
    */
   public async suggest(text: string): Promise<SearchSuggestions> {
     const typed = text.trim().slice(0, 100);
-    if (!typed) return { artists: [], releases: [], tags: [] };
-    const [artists, releases, tags] = await Promise.all([
+    if (!typed) return { artists: [], releases: [], tags: [], crates: [] };
+    const [artists, releases, tags, crates] = await Promise.all([
       this.db.search.searchArtists(typed, SUGGESTIONS.artists),
       this.db.search.suggestReleases(typed, SUGGESTIONS.releases),
       this.db.search.suggestTags(typed, SUGGESTIONS.tags),
+      this.db.crates.searchPublic(typed, SUGGESTIONS.crates),
     ]);
     const [cards, artistCards] = await Promise.all([
       this.cards.releases(releases),
@@ -146,6 +148,11 @@ export class SearchService {
         coverUrl: release.coverUrl,
       })),
       tags,
+      crates: crates.map(({ id, name, ownerUsername }) => ({
+        id,
+        name,
+        makerUsername: ownerUsername,
+      })),
     };
   }
 
