@@ -22,17 +22,22 @@
       </nav>
 
       <a
-        class="hidden rounded-control border border-ink px-3 py-1.5 text-sm font-semibold hover:bg-wash lg:inline-flex"
-        routerLink="/studio"
-        >For artists</a
-      >
-
-      <a
         class="link text-[15px]"
         routerLink="/cart"
         routerLinkActive="!text-ink font-semibold !no-underline"
         [attr.aria-label]="cartLabel()"
         >Cart@if (cart.count()) { ({{ cart.count() }})}</a
+      >
+      @if (session.status() === 'signed-out') {
+      <a class="link hidden text-[15px] sm:inline" routerLink="/sign-in"
+        >Sign in</a
+      >
+      }
+
+      <a
+        class="hidden rounded-control border border-ink px-3 py-1.5 text-sm font-semibold hover:bg-wash lg:inline-flex"
+        routerLink="/studio"
+        >For artists</a
       >
 
       @switch (session.status()) { @case ('signed-in') {
@@ -44,9 +49,6 @@
         {{ initial() }}
       </button>
       } @case ('signed-out') {
-      <a class="link hidden text-[15px] sm:inline" routerLink="/sign-in"
-        >Sign in</a
-      >
       <a imeButton size="sm" class="whitespace-nowrap" routerLink="/sign-up"
         >Sign up</a
       >
