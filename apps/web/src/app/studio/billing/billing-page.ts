@@ -338,6 +338,12 @@ const toDollars = (cents: number | null | undefined) =>
                     <dd class="tabular-nums">
                       {{ statement.sharedAmount | money: 'usd' }}
                     </dd>
+                    @if (statement.subsidyAmount) {
+                      <dt class="text-ink-muted">Paid by IME's reserve</dt>
+                      <dd class="tabular-nums">
+                        −{{ statement.subsidyAmount | money: 'usd' }}
+                      </dd>
+                    }
                     <dt class="text-ink-muted">Card fees</dt>
                     <dd class="tabular-nums">
                       {{ statement.cardFeesAmount | money: 'usd' }}

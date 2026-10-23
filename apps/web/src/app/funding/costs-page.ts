@@ -102,24 +102,55 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
               id="headline-heading"
               class="max-w-3xl text-3xl leading-tight font-extrabold tracking-[-0.035em] text-balance md:text-4xl"
             >
-              In {{ month.month | date: 'MMMM' : 'UTC' }}, every seller paid
-              <span class="text-accent">{{
-                month.sharedShare | money: 'usd'
-              }}</span>
-              toward IME's shared bills.
+              @switch (coverage()) {
+                @case ('all') {
+                  In {{ month.month | date: 'MMMM' : 'UTC' }}, IME's reserve
+                  paid <span class="text-accent">every seller's share</span>.
+                }
+                @case ('part') {
+                  In {{ month.month | date: 'MMMM' : 'UTC' }}, IME's reserve
+                  paid
+                  <span class="text-accent">{{ coveredPercent() }}%</span>
+                  of every seller's share.
+                }
+                @default {
+                  In {{ month.month | date: 'MMMM' : 'UTC' }}, every seller paid
+                  <span class="text-accent">{{
+                    month.sharedShare | money: 'usd'
+                  }}</span>
+                  toward IME's shared bills.
+                }
+              }
             </h2>
             <p class="max-w-prose text-ink-muted">
-              On top of that, each seller pays for storing their own files, at
-              the provider's rate. The typical seller's whole share came to
-              {{ month.medianShare | money: 'usd' }}.
+              @if (coverage() === 'none') {
+                On top of that, each seller pays for storing their own files, at
+                the provider's rate. The typical seller's whole share came to
+                {{ month.medianShare | money: 'usd' }}.
+              } @else {
+                Each seller's part of the shared bills was
+                {{ month.sharedShare | money: 'usd' }}, plus what storing their
+                own files costs at the provider's rate. The typical seller's
+                whole share came to {{ month.medianShare | money: 'usd' }}.
+              }
             </p>
             <ul class="grid gap-3 sm:grid-cols-2">
-              <li [class]="promise">
-                <span class="font-bold"
-                  >One {{ data.minimumTopUp | money: 'usd' }} top-up</span
-                >
-                <span class="text-sm text-ink-muted">{{ topUpLasts() }}</span>
-              </li>
+              @if (data.covering) {
+                <li [class]="promise">
+                  <span class="font-bold">No card needed for now</span>
+                  <span class="text-sm text-ink-muted"
+                    >The reserve can pay a whole month of shares, so you can
+                    start selling without a top-up.</span
+                  >
+                </li>
+              } @else {
+                <li [class]="promise">
+                  <span class="font-bold"
+                    >One {{ data.minimumTopUp | money: 'usd' }} top-up</span
+                  >
+                  <span class="text-sm text-ink-muted">{{ topUpLasts() }}</span>
+                </li>
+              }
               <li [class]="promise">
                 <span class="font-bold">No cut of sales, ever</span>
                 <span class="text-sm text-ink-muted"
@@ -191,7 +222,7 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                         <dt>
                           <span class="block font-semibold">The reserve</span>
                           <span class="text-ink-muted"
-                            >To keep shares steady when costs jumped.</span
+                            >From what it held past its target.</span
                           >
                         </dt>
                         <dd class="font-mono">
@@ -227,17 +258,27 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                         {{ month.platformDonations | money: 'usd' }}
                       </dd>
                     </div>
+                    @if (month.reserveFunding) {
+                      <div class="flex justify-between gap-4">
+                        <dt class="text-ink-muted">Added by IME</dt>
+                        <dd class="font-mono">
+                          {{ month.reserveFunding | money: 'usd' }}
+                        </dd>
+                      </div>
+                    }
                     <div class="flex justify-between gap-4">
-                      <dt class="text-ink-muted">Given back to sellers</dt>
+                      <dt class="text-ink-muted">
+                        Paid toward sellers' shares
+                      </dt>
                       <dd class="font-mono">
-                        {{ month.creditedToSellers | money: 'usd' }}
+                        {{ month.coveredFromReserve | money: 'usd' }}
                       </dd>
                     </div>
                   </dl>
                   <p class="text-sm text-ink-muted">
-                    Gifts to IME's hosting fill a reserve of three months of
-                    shared bills, for months when costs spike. Anything past
-                    that goes back to sellers as credit.
+                    Gifts to IME's hosting fill a reserve. It keeps three months
+                    of costs for months when they spike, and anything past that
+                    pays sellers' shares.
                   </p>
                 </div>
               </div>
@@ -327,6 +368,11 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                       </dd>
                     </div>
                   </dl>
+                  @if (data.covering) {
+                    <p class="text-sm font-medium">
+                      Right now, the reserve pays this for you.
+                    </p>
+                  }
                   <p class="text-xs text-ink-muted">
                     A rough guide at last month's rates, counting a lossless
                     master and a streaming copy of each song. Your statement
@@ -367,7 +413,7 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                         Typical share
                       </th>
                       <th scope="col" class="p-3 text-right font-semibold">
-                        Given back
+                        Reserve paid
                       </th>
                     </tr>
                   </thead>
@@ -388,7 +434,7 @@ const SOURCE_URL = 'https://github.com/acgreene/internet-music-exchange';
                           {{ row.medianShare | money: 'usd' }}
                         </td>
                         <td class="p-3 text-right">
-                          {{ row.creditedToSellers | money: 'usd' }}
+                          {{ row.coveredFromReserve | money: 'usd' }}
                         </td>
                       </tr>
                     }
@@ -508,6 +554,19 @@ export class CostsPage {
       100,
       Math.round((data.reserveBalance / data.reserveTarget) * 100),
     );
+  });
+
+  /** How much of the latest month's shares the reserve paid. */
+  protected readonly coverage = computed<'all' | 'part' | 'none'>(() => {
+    const month = this.latest();
+    if (!month?.coveredFromReserve) return 'none';
+    return month.sellersPaid === 0 ? 'all' : 'part';
+  });
+  protected readonly coveredPercent = computed(() => {
+    const month = this.latest();
+    if (!month) return 0;
+    const owed = month.sellersPaid + month.coveredFromReserve;
+    return owed ? Math.round((month.coveredFromReserve / owed) * 100) : 0;
   });
 
   protected readonly thanks = computed(() =>

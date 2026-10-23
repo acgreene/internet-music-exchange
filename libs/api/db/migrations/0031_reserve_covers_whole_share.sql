@@ -1,0 +1,2 @@
+ALTER TABLE "statements" DROP CONSTRAINT "statements_subsidy_within_shared";--> statement-breakpoint
+ALTER TABLE "statements" ADD CONSTRAINT "statements_subsidy_within_share" CHECK ("statements"."subsidy_amount" <= "statements"."usage_amount" + "statements"."shared_amount");

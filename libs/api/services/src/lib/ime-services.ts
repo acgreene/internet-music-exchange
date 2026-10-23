@@ -158,7 +158,7 @@ export class ImeServices {
     this.auth = new AuthService(db, this.billing, webAppUrl);
     this.costShares = new CostShareService(db, access);
     this.donations = new DonationService(db, stripe, webAppUrl, email);
-    this.publicCosts = new PublicCostsService(db);
+    this.publicCosts = new PublicCostsService(db, funding);
     this.monthlyClose = new MonthlyCloseService(
       db,
       access,

@@ -199,7 +199,8 @@ function lastMonth(): string {
           <ime-alert tone="success">
             {{ monthLabel() }} is closed: {{ summary.sellers }} sellers shared
             {{ summary.sharedCostsTotal | money: 'usd' }}
-            ({{ summary.sharedPerSeller | money: 'usd' }} each),
+            ({{ summary.sharedPerSeller | money: 'usd' }} each), the reserve
+            paid {{ summary.coveredByReserve | money: 'usd' }} of their shares,
             {{ summary.autoTopUps }} auto top-ups ran, and {{ summary.lapsed }}
             sellers lapsed.
           </ime-alert>
@@ -242,6 +243,57 @@ function lastMonth(): string {
           </div>
         }
       </section>
+
+      <section
+        class="flex flex-col gap-4 rounded-card border border-line bg-surface p-4"
+        aria-labelledby="fund-heading"
+      >
+        <div>
+          <h2 id="fund-heading" class="font-semibold">Fund the reserve</h2>
+          <p class="text-sm text-ink-muted">
+            Record money IME puts in itself. Whatever the reserve holds past
+            three months of costs pays sellers' shares at each close, and while
+            it can cover a whole month, nobody needs a card or a top-up to sell.
+          </p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
+          <label class="flex flex-col gap-1.5 text-sm font-medium">
+            Amount, $
+            <input
+              imeInput
+              class="font-mono"
+              inputmode="decimal"
+              [value]="fundAmount()"
+              (input)="fundAmount.set(text($event))"
+            />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium">
+            Note
+            <input
+              imeInput
+              placeholder="Launch funding"
+              maxlength="200"
+              [value]="fundNote()"
+              (input)="fundNote.set(text($event))"
+            />
+          </label>
+        </div>
+        @if (funded(); as amount) {
+          <ime-alert tone="success"
+            >{{ amount | money: 'usd' }} is in the reserve.</ime-alert
+          >
+        }
+        <div>
+          <button
+            imeButton
+            variant="secondary"
+            [busy]="working() === 'fund'"
+            (click)="fund()"
+          >
+            Add to the reserve
+          </button>
+        </div>
+      </section>
     </div>
   `,
 })
@@ -257,7 +309,13 @@ export class BillingMonthPage {
   protected readonly description = signal('');
   protected readonly costAmount = signal('');
 
-  protected readonly working = signal<'open' | 'cost' | 'close' | null>(null);
+  protected readonly fundAmount = signal('');
+  protected readonly fundNote = signal('');
+  protected readonly funded = signal<number | null>(null);
+
+  protected readonly working = signal<
+    'open' | 'cost' | 'close' | 'fund' | null
+  >(null);
   protected readonly done = signal<'open' | null>(null);
   protected readonly added = signal<PlatformCostRequest[]>([]);
   protected readonly confirmingClose = signal(false);
@@ -343,8 +401,28 @@ export class BillingMonthPage {
     else this.error.set(result.error.message);
   }
 
+  protected async fund(): Promise<void> {
+    const amount = Math.round(Number(this.fundAmount()) * 100);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      this.error.set('Give an amount in dollars.');
+      return;
+    }
+    this.funded.set(null);
+    const ok = await this.run('fund', () =>
+      this.api.admin.fundReserve({
+        amount,
+        note: this.fundNote().trim() || undefined,
+      }),
+    );
+    if (ok) {
+      this.funded.set(amount);
+      this.fundAmount.set('');
+      this.fundNote.set('');
+    }
+  }
+
   private async run(
-    kind: 'open' | 'cost',
+    kind: 'open' | 'cost' | 'fund',
     call: () => Promise<ApiResult<unknown>>,
   ): Promise<boolean> {
     this.working.set(kind);

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."reserve_entry_kind" ADD VALUE 'funding';

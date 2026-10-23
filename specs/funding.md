@@ -43,12 +43,12 @@ Each month, a seller's share is the sum of:
 2. **Shared costs**: the month's platform-wide costs that belong to no one seller, divided evenly by the number of sellers. These include servers, database, email, domain, monitoring, and the ownership guarantee (see below).
 3. **Card fees** on that seller's own top-ups.
 
-Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. At launch, until there are enough sellers for shares to be cheap, IME's founder pays the platform's bills out of pocket and sellers are not charged. From then on, the shared costs are always split evenly between sellers, with no cap and no subsidy. This is a launch measure, not a promise, and public copy does not advertise it.
+Serving a seller's files counts as that seller's usage, whoever is listening or downloading. Provider price changes pass through as they are; IME adds no margin. Shared costs are always split evenly between sellers, with no cap. At launch, IME funds the reserve itself so that it pays sellers' shares (see The reserve) until there are enough sellers for shares to be cheap.
 
 ## Paying
 
 - Contributions are paid from a **prepaid balance**.
-- Before an artist can put anything on sale, or a designer can publish a design, each seller paying for it adds a card and makes a first top-up.
+- Before an artist can put anything on sale, or a designer can publish a design, each seller paying for it adds a card and makes a first top-up, unless the reserve is paying sellers' shares (see The reserve). Then nobody needs a card or a top-up to sell.
 - At the end of each monthly period, that month's share is deducted from the balance.
 - A seller is emailed when their balance falls below an alert threshold they choose, as an amount or a percentage of their last top-up.
 - A seller can turn on **auto top-up**: a chosen amount charged to their card each month, or whenever the balance drops below their threshold.
@@ -81,8 +81,11 @@ How people can give:
 
 ### The reserve
 
-- The platform keeps a reserve of three months of shared costs, which covers months when costs spike, so sellers' shares stay steady.
-- Surplus contributions and platform donations go into it. When it is full, anything past that is credited evenly to the month's sellers.
+- The platform keeps a reserve of three months of its costs, which covers months when costs spike, so sellers' shares stay steady.
+- Platform donations, rounding surplus, and money IME puts in itself (recorded by an admin, as at launch) go into it.
+- At each monthly close, whatever it holds past three months of costs pays sellers' shares: every share in full when it can, otherwise the same part of each. Statements show what the reserve paid. A seller whose whole share was paid skips that month's monthly auto top-up.
+- While it holds enough past its target to pay a whole month of shares, nobody needs a card or a top-up to start selling.
+- When a close finds it can no longer pay the coming month, every seller whose balance would not cover their share is emailed a month ahead to add a card and top up. From then on the usual alerts and the grace period apply.
 
 ## Web app
 
@@ -96,8 +99,8 @@ How people can give:
 
 - Leads with what every seller paid toward shared costs last month, the same for all, and the typical seller's whole share.
 - How long the smallest top-up lasts the typical seller, and that there is no cut of sales.
-- The month in full: what it cost, by category (storage and delivery, hosting, database, other services, ownership guarantee), and who paid it (sellers, and the reserve when it steadied shares).
-- The reserve against its target, gifts to hosting that month, and what was given back to sellers.
+- The month in full: what it cost, by category (storage and delivery, hosting, database, other services, ownership guarantee), and who paid it (sellers, and the reserve when it paid shares).
+- The reserve against its target, gifts to hosting and money IME added that month, and what it paid toward sellers' shares. In months it paid them, the page leads with that instead.
 - This month's thank-you list.
 - A rough estimate of what a seller would pay, from how many songs, releases, and plays they have, at the latest rates.
 - Earlier months in a table.

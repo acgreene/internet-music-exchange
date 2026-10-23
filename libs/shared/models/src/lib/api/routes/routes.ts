@@ -494,4 +494,7 @@ export enum ApiRoute {
 
   /** Close a month: issue and charge every seller's statement. */
   AdminBillingPeriodClose = '/api/admin/billing-periods/:month/close',
+
+  /** Put IME's own money into the reserve. */
+  AdminReserveFunding = '/api/admin/reserve/funding',
 }

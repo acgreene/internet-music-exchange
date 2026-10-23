@@ -186,8 +186,11 @@ Each is a property of `ImeServices`, named in brackets.
   raw body and the `Stripe-Signature` header.
 - **`MonthlyCloseService`** (`monthlyClose`): an admin's monthly close:
   opening a month with the provider's rates, entering bills, then closing it,
-  which issues statements, charges balances, runs auto top-ups, and sends
-  alerts. Use it for the admin billing tools.
+  which pays sellers' shares from what the reserve holds past three months
+  of costs, issues statements, charges balances, runs auto top-ups, and sends
+  alerts, including a month's warning when the reserve stops paying; and
+  recording money IME puts into the reserve. Use it for the admin billing
+  tools.
 
 ### Moderation
 
@@ -228,7 +231,9 @@ are internal.
   manager, platform admin, designer of a design, and managing a given
   release, track, asset, product, variant, or product photo.
 - **`FundingService`**: whether an artist's hosting is paid for, whether a
-  seller is paid up, and whether an artist or user counts as selling.
+  seller is paid up (always, while the reserve is paying sellers' shares),
+  whether the reserve is doing that, and whether an artist or user counts as
+  selling.
 - **`SellingGateService`**: what a seller, artist or designer, needs before
   something goes on sale: funded hosting, and for anything paid, a payment
   account that can take charges in its currency. Checked when publishing and

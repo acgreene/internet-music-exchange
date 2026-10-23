@@ -11,6 +11,7 @@ import {
   type OpenBillingPeriodRequest,
   type OpenReportGroup,
   type PlatformCostRequest,
+  type ReserveFundingRequest,
   type ReportRequest,
   type ReportResponse,
 } from '@ime/models';
@@ -145,6 +146,13 @@ export class AdminClient {
       params: { month },
       body: cost,
     });
+  }
+
+  /** Put IME's own money into the reserve. */
+  public fundReserve(
+    funding: ReserveFundingRequest,
+  ): Promise<ApiResult<AckResponse>> {
+    return this.transport.post(ApiRoute.AdminReserveFunding, { body: funding });
   }
 
   public closeBillingPeriod(month: string): Promise<ApiResult<CloseSummary>> {

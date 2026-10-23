@@ -51,7 +51,7 @@ export const billingPeriods = pgTable(
     sellerCount: integer('seller_count'),
     /** The month's costs that belong to no one seller. */
     sharedCostsTotal: integer('shared_costs_total'),
-    /** How much of the shared costs IME's creators covered. */
+    /** How much of sellers' shares the reserve paid. */
     subsidyTotal: integer('subsidy_total'),
     closedAt: timestamp('closed_at', { withTimezone: true }),
 

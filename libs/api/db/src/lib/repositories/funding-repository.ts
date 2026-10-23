@@ -890,6 +890,44 @@ export class FundingRepository {
   }
 
   /**
+   * Record money IME put into the reserve itself.
+   *
+   * @param amount - How much, in cents.
+   * @param note - Where it came from, as the admin wrote it.
+   */
+  public async fundReserve(amount: number, note: string | null): Promise<void> {
+    await this.db
+      .insert(reserveEntries)
+      .values({ kind: 'funding', amount, note });
+  }
+
+  /**
+   * Total what went into or out of the reserve as one kind of entry in a
+   * span of time, by when it was recorded.
+   *
+   * @param kind - The kind of entry.
+   * @param from - The start, inclusive.
+   * @param to - The end, exclusive.
+   */
+  public async sumReserveKind(
+    kind: ReserveEntryKind,
+    from: Date,
+    to: Date,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ total: sum(reserveEntries.amount).mapWith(Number) })
+      .from(reserveEntries)
+      .where(
+        and(
+          eq(reserveEntries.kind, kind),
+          gte(reserveEntries.createdAt, from),
+          lt(reserveEntries.createdAt, to),
+        ),
+      );
+    return row?.total ?? 0;
+  }
+
+  /**
    * Move money into or out of the reserve for a billing month. Donations are
    * recorded through `recordContribution` instead.
    *

@@ -202,10 +202,21 @@ export type PlatformCostRequest = z.infer<typeof platformCostRequestSchema>;
 /**
  * What closing a month did.
  */
+/** IME's own money into the reserve. */
+export const reserveFundingRequestSchema = z.object({
+  /** In USD cents. */
+  amount: z.number().int(),
+  note: z.string().max(200).optional(),
+});
+
+export type ReserveFundingRequest = z.infer<typeof reserveFundingRequestSchema>;
+
 export const closeSummarySchema = z.object({
   sellers: z.number().int(),
   sharedCostsTotal: z.number().int(),
   sharedPerSeller: z.number().int(),
+  /** What the reserve paid toward sellers' shares. */
+  coveredByReserve: z.number().int(),
   autoTopUps: z.number().int(),
   lapsed: z.number().int(),
   /** Sellers whose follow-up failed and needs a look. */
@@ -274,5 +285,11 @@ export const moderationContracts = {
   },
   [ApiRoute.AdminBillingPeriodClose]: {
     [HttpMethod.Post]: { response: closeSummarySchema },
+  },
+  [ApiRoute.AdminReserveFunding]: {
+    [HttpMethod.Post]: {
+      request: reserveFundingRequestSchema,
+      response: ackSchema,
+    },
   },
 } as const satisfies Partial<Record<ApiRoute, RouteContracts>>;

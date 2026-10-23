@@ -148,6 +148,14 @@ export class ModerationRouter extends AbstractRouter {
       ({ userId, params }) =>
         this.monthlyClose.closeMonth(userId, params.month),
     );
+
+    this.handle(
+      HttpMethod.Post,
+      ApiRoute.AdminReserveFunding,
+      'admin',
+      ({ userId, body }) =>
+        this.monthlyClose.fundReserve(userId, body.amount, body.note),
+    );
   }
 
   private target(params: {

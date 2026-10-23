@@ -236,15 +236,19 @@ export const publicCostsSchema = z.object({
       sharedShare: z.number().int(),
       /** The middle seller's whole share, before card fees. */
       medianShare: z.number().int(),
-      /** Every seller's shares together, before card fees. */
+      /** What sellers paid themselves, after the reserve's part. */
       sellersPaid: z.number().int(),
+      /** What the reserve paid toward sellers' shares. */
       coveredFromReserve: z.number().int(),
-      creditedToSellers: z.number().int(),
       platformDonations: z.number().int(),
+      /** Money IME put into the reserve itself that month. */
+      reserveFunding: z.number().int(),
     }),
   ),
   reserveBalance: z.number().int(),
   reserveTarget: z.number().int(),
+  /** The reserve can pay a whole month of shares, so nobody needs to top up. */
+  covering: z.boolean(),
   /** Who asked to be thanked by name for gifts this month, alphabetically. */
   thanks: z.object({ month: z.string(), names: z.array(z.string()) }),
   minimumTopUp: z.number().int(),

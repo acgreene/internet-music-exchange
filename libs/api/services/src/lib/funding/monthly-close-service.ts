@@ -10,15 +10,15 @@ import { Logger } from '@ime/utils';
 import { AccessService } from '../access/access-service';
 import { EmailService, fundingEmails } from '../email';
 import { BillingService } from './billing-service';
-import { FundingService } from './funding-service';
+import { FundingService, RESERVE_TARGET_MONTHS } from './funding-service';
 import { monthSpan } from './month-span';
-
-/** The reserve is full at this many months of shared costs. */
-export const RESERVE_TARGET_MONTHS = 3;
 
 /** Days a lapsed seller has to top up before things come off sale. */
 export const GRACE_DAYS = 14;
 
+/** The most one funding entry can add to the reserve, in cents. */
+const MAX_FUNDING = 1_000_000;
+const NOTE_MAX_LENGTH = 200;
 const BYTES_PER_GB = 1_000_000_000;
 const REQUESTS_PER_MILLION = 1_000_000;
 const MICRODOLLARS_PER_CENT = 10_000;
@@ -36,6 +36,8 @@ export interface CloseSummary {
   sellers: number;
   sharedCostsTotal: number;
   sharedPerSeller: number;
+  /** What the reserve paid toward sellers' shares. */
+  coveredByReserve: number;
   autoTopUps: number;
   lapsed: number;
   /** Sellers whose follow-up (top-up, alert, lapse) failed and needs a look. */
@@ -112,6 +114,38 @@ export class MonthlyCloseService {
   }
 
   /**
+   * Put IME's own money into the reserve, as at launch before sellers pay.
+   * While the reserve holds more than its target, it pays sellers' shares.
+   *
+   * @param amount - How much, in cents.
+   * @param note - Where it came from, optional.
+   * @throws ApiError 400 for an amount out of range or an overlong note.
+   */
+  public async fundReserve(
+    adminUserId: string,
+    amount: number,
+    note?: string,
+  ): Promise<void> {
+    await this.access.requireAdmin(adminUserId);
+    const text = note?.trim() ?? '';
+    if (!Number.isInteger(amount) || amount <= 0 || amount > MAX_FUNDING) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        `Funding is a whole number of cents up to $${MAX_FUNDING / 100}.`,
+      );
+    }
+    if (text.length > NOTE_MAX_LENGTH) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        `Notes are up to ${NOTE_MAX_LENGTH} characters.`,
+      );
+    }
+    await this.db.funding.fundReserve(amount, text || null);
+  }
+
+  /**
    * Close a month: issue every seller's statement and charge it.
    *
    * @throws ApiError 409 when the month is not open.
@@ -184,86 +218,141 @@ export class MonthlyCloseService {
     const sharedCostsTotal = costs
       .filter((cost) => cost.category !== 'storage_and_delivery')
       .reduce((total, cost) => total + cost.amount, 0);
+    const monthCosts = costs.reduce((total, cost) => total + cost.amount, 0);
     const sellers = [...linesBySeller.keys()];
     const sharedPerSeller =
       sellers.length > 0 ? Math.ceil(sharedCostsTotal / sellers.length) : 0;
+    const usageOf = (userId: string) =>
+      (linesBySeller.get(userId) ?? []).reduce(
+        (total, line) => total + line.amount,
+        0,
+      );
+    const owed = new Map(
+      sellers.map((userId) => [userId, usageOf(userId) + sharedPerSeller]),
+    );
+    const covered = await this.coverFromReserve(month, owed, monthCosts);
 
     for (const userId of sellers) {
-      const lines = linesBySeller.get(userId) ?? [];
       await this.db.funding.issueStatement({
         userId,
         month,
-        usageAmount: lines.reduce((total, line) => total + line.amount, 0),
+        usageAmount: usageOf(userId),
         sharedAmount: sharedPerSeller,
-        subsidyAmount: 0,
+        subsidyAmount: covered.get(userId) ?? 0,
         cardFeesAmount: await this.db.funding.sumCardFees(userId, start, end),
-        lines,
+        lines: linesBySeller.get(userId) ?? [],
       });
     }
 
-    await this.settleReserve(month, sellers, sharedCostsTotal, sharedPerSeller);
+    await this.keepRoundingSurplus(
+      month,
+      sellers.length,
+      sharedCostsTotal,
+      sharedPerSeller,
+    );
+    const coveredTotal = sum([...covered.values()]);
     await this.db.funding.closePeriod(month, {
       sellerCount: sellers.length,
       sharedCostsTotal,
-      subsidyTotal: 0,
+      subsidyTotal: coveredTotal,
     });
 
     const summary: CloseSummary = {
       sellers: sellers.length,
       sharedCostsTotal,
       sharedPerSeller,
+      coveredByReserve: coveredTotal,
       autoTopUps: 0,
       lapsed: 0,
       failures: [],
     };
     for (const userId of sellers) {
+      // nothing came out of their balance, so there is nothing to top up
+      const paidByReserve = covered.get(userId) === owed.get(userId);
       try {
-        await this.followUp(userId, month, summary);
+        await this.followUp(userId, month, summary, paidByReserve);
       } catch (error) {
         this.log.error(`follow-up failed for seller ${userId}`, error);
         summary.failures.push(userId);
       }
     }
+    await this.warnIfCoverageEnds(month, owed, coveredTotal, monthCosts);
     return summary;
   }
 
   /**
-   * Put what rounding collected beyond the bills into the reserve, and once
-   * the reserve is full, credit the excess back to the month's sellers.
+   * Pay sellers' shares from what the reserve holds past its target of
+   * three months of costs: all of every share when it can, otherwise the
+   * same part of each. Safe to repeat for the same month.
+   *
+   * @returns What the reserve paid toward each seller's share, in cents.
    */
-  private async settleReserve(
+  private async coverFromReserve(
     month: string,
-    sellers: string[],
+    owed: Map<string, number>,
+    monthCosts: number,
+  ): Promise<Map<string, number>> {
+    // a repeated close sees the balance from before its own payment
+    const paid = (await this.db.funding.sumReserveForMonth(month))
+      .covered_costs;
+    const balance = (await this.db.funding.getReserveBalance()) - (paid ?? 0);
+    const spare = balance - RESERVE_TARGET_MONTHS * monthCosts;
+    const need = sum([...owed.values()]);
+    const part = need > 0 && spare > 0 ? Math.min(1, spare / need) : 0;
+
+    const covered = new Map(
+      [...owed].map(([userId, amount]) => [userId, Math.floor(amount * part)]),
+    );
+    const total = sum([...covered.values()]);
+    if (
+      total > 0 &&
+      paid === undefined &&
+      (await this.db.jobRuns.claim('close_coverage', month))
+    ) {
+      await this.db.funding.addReserveEntry('covered_costs', -total, month);
+    }
+    return covered;
+  }
+
+  /**
+   * Once the reserve can no longer pay next month's shares, tell every
+   * seller who will owe more than their balance holds, a month ahead.
+   */
+  private async warnIfCoverageEnds(
+    month: string,
+    owed: Map<string, number>,
+    coveredTotal: number,
+    monthCosts: number,
+  ): Promise<void> {
+    if (coveredTotal === 0) return;
+    const spare =
+      (await this.db.funding.getReserveBalance()) -
+      RESERVE_TARGET_MONTHS * monthCosts;
+    if (spare >= sum([...owed.values()])) return;
+    if (!(await this.db.jobRuns.claim('coverage_ending', month))) return;
+
+    const billingUrl = `${this.webAppUrl}/studio/billing`;
+    for (const [userId, share] of owed) {
+      if ((await this.db.funding.getBalance(userId)) >= share) continue;
+      const address = await this.db.users.getEmail(userId);
+      if (address) {
+        await this.email.send(
+          fundingEmails.coverageEnding(address, share, billingUrl),
+        );
+      }
+    }
+  }
+
+  /** Put what rounding collected beyond the shared bills into the reserve. */
+  private async keepRoundingSurplus(
+    month: string,
+    sellerCount: number,
     sharedCostsTotal: number,
     sharedPerSeller: number,
   ): Promise<void> {
-    const surplus = sharedPerSeller * sellers.length - sharedCostsTotal;
+    const surplus = sharedPerSeller * sellerCount - sharedCostsTotal;
     if (surplus > 0 && (await this.db.jobRuns.claim('close_surplus', month))) {
       await this.db.funding.addReserveEntry('surplus', surplus, month);
-    }
-
-    const target = RESERVE_TARGET_MONTHS * sharedCostsTotal;
-    const excess = (await this.db.funding.getReserveBalance()) - target;
-    const creditEach =
-      sellers.length > 0 ? Math.floor(excess / sellers.length) : 0;
-    if (
-      creditEach <= 0 ||
-      !(await this.db.jobRuns.claim('close_credits', month))
-    ) {
-      return;
-    }
-
-    await this.db.funding.addReserveEntry(
-      'credited_to_sellers',
-      -creditEach * sellers.length,
-      month,
-    );
-    for (const userId of sellers) {
-      await this.db.funding.recordCredit(
-        userId,
-        creditEach,
-        `Reserve surplus for ${month.slice(0, 7)}`,
-      );
     }
   }
 
@@ -276,15 +365,20 @@ export class MonthlyCloseService {
     userId: string,
     month: string,
     summary: CloseSummary,
+    paidByReserve: boolean,
   ): Promise<void> {
-    const billing = await this.db.funding.getBilling(userId);
-    if (!billing) return;
+    let billing = await this.db.funding.getBilling(userId);
+    if (!billing) {
+      // a seller who sold while the reserve paid their share, and now owes
+      if ((await this.db.funding.getBalance(userId)) >= 0) return;
+      billing = await this.billing.setUp(userId);
+    }
 
     const threshold = await this.alertThreshold(userId);
     let balance = await this.db.funding.getBalance(userId);
 
     const wantsTopUp =
-      billing.autoTopUpMode === 'monthly' ||
+      (billing.autoTopUpMode === 'monthly' && !paidByReserve) ||
       (billing.autoTopUpMode === 'below_threshold' &&
         threshold !== null &&
         balance < threshold);
@@ -353,3 +447,6 @@ export class MonthlyCloseService {
 function toCents(microdollars: number): number {
   return Math.round(microdollars / MICRODOLLARS_PER_CENT);
 }
+
+const sum = (amounts: number[]) =>
+  amounts.reduce((total, amount) => total + amount, 0);

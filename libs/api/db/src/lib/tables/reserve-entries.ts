@@ -15,14 +15,18 @@ import { contributions } from './contributions';
 /**
  * `donation` - a gift to the platform.
  * `surplus` - contributions left over after a month's bills.
- * `covered_costs` - spent on a month when costs spiked, lowering shares.
- * `credited_to_sellers` - surplus handed back once the reserve was full.
+ * `covered_costs` - paid toward a month's seller shares, from what the
+ *   reserve held past its target.
+ * `credited_to_sellers` - surplus handed back once the reserve was full, as
+ *   the close did before the reserve paid shares directly.
+ * `funding` - money IME put in itself, as at launch before sellers pay.
  */
 export const reserveEntryKindEnum = pgEnum('reserve_entry_kind', [
   'donation',
   'surplus',
   'covered_costs',
   'credited_to_sellers',
+  'funding',
 ]);
 
 export type ReserveEntryKind = (typeof reserveEntryKindEnum.enumValues)[number];
@@ -61,6 +65,7 @@ export const reserveEntries = pgTable(
       sql`CASE ${table.kind}
         WHEN 'donation' THEN ${table.amount} > 0 AND ${table.contributionId} IS NOT NULL
         WHEN 'surplus' THEN ${table.amount} > 0 AND ${table.month} IS NOT NULL
+        WHEN 'funding' THEN ${table.amount} > 0 AND ${table.contributionId} IS NULL
         ELSE ${table.amount} < 0 AND ${table.month} IS NOT NULL
       END`,
     ),

@@ -469,9 +469,10 @@ export class BillingService {
 
   /**
    * Create a seller's billing record and Stripe customer, the first time they
-   * need one.
+   * need one: when they add a card, or when the reserve stops paying their
+   * share and they owe something.
    */
-  private async setUp(userId: string): Promise<SellerBilling> {
+  public async setUp(userId: string): Promise<SellerBilling> {
     const existing = await this.db.funding.getBilling(userId);
     if (existing) return existing;
 

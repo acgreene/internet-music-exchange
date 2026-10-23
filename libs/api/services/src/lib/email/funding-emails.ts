@@ -39,6 +39,14 @@ export const fundingEmails = {
     };
   },
 
+  coverageEnding(to: string, share: number, billingUrl: string): Email {
+    return {
+      to,
+      subject: 'From next month, your IME hosting share comes from you',
+      text: `IME's reserve has been paying sellers' hosting shares. It can't cover next month, so from then on each seller pays their own share from a prepaid balance.\n\nYour share this month was ${dollars(share)}. Add a card and top up before next month's close so nothing you sell comes off sale: ${billingUrl}\n\nThere's no cut of sales, and listeners keep what they own either way.`,
+    };
+  },
+
   lowBalance(to: string, balance: number, billingUrl: string): Email {
     return {
       to,

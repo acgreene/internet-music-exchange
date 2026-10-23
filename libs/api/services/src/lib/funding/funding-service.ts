@@ -1,8 +1,12 @@
 import { DatabaseRepository } from '@ime/db';
 
+/** The reserve is full at this many months of the platform's costs. */
+export const RESERVE_TARGET_MONTHS = 3;
+
 /**
  * Community funding's shared checks: whether an artist's hosting is paid for,
- * and whether an artist or user counts as selling.
+ * whether the reserve is paying sellers' shares, and whether an artist or
+ * user counts as selling.
  */
 export class FundingService {
   constructor(
@@ -25,13 +29,32 @@ export class FundingService {
   }
 
   /**
-   * Report whether a seller is paid up: a card on file, a positive balance,
-   * and no lapse. A designer needs this to publish a design.
+   * Report whether a seller is paid up: no lapse, and either the reserve is
+   * paying sellers' shares or they have a card on file and a positive
+   * balance. A designer needs this to publish a design.
    */
   public async isSellerFunded(userId: string): Promise<boolean> {
     const billing = await this.db.funding.getBilling(userId);
-    if (!billing?.stripePaymentMethodId || billing.lapsedAt) return false;
+    if (billing?.lapsedAt) return false;
+    if (await this.isReserveCovering()) return true;
+    if (!billing?.stripePaymentMethodId) return false;
     return (await this.db.funding.getBalance(userId)) > 0;
+  }
+
+  /**
+   * Report whether the reserve holds enough past its target to pay a month
+   * of sellers' shares, judged by the last closed month's costs. Before any
+   * month has closed, any money in it counts. While it does, nobody needs a
+   * card or a top-up to sell.
+   */
+  public async isReserveCovering(): Promise<boolean> {
+    const balance = await this.db.funding.getReserveBalance();
+    const [latest] = await this.db.funding.listClosedPeriods(1);
+    if (!latest) return balance > 0;
+    const monthCosts = (
+      await this.db.funding.listPlatformCosts(latest.month)
+    ).reduce((total, cost) => total + cost.amount, 0);
+    return balance - RESERVE_TARGET_MONTHS * monthCosts >= monthCosts;
   }
 
   /**

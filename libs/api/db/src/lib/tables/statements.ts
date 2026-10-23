@@ -47,7 +47,10 @@ export const statements = pgTable(
 
     usageAmount: integer('usage_amount').notNull(),
     sharedAmount: integer('shared_amount').notNull(),
-    /** The part of the shared costs IME's creators covered for this seller. */
+    /**
+     * What the reserve paid toward this seller's usage and shared costs, from
+     * what it held past its target.
+     */
     subsidyAmount: integer('subsidy_amount').notNull(),
     cardFeesAmount: integer('card_fees_amount').notNull(),
     totalAmount: integer('total_amount').notNull(),
@@ -65,8 +68,8 @@ export const statements = pgTable(
       sql`${table.usageAmount} >= 0 AND ${table.sharedAmount} >= 0 AND ${table.subsidyAmount} >= 0 AND ${table.cardFeesAmount} >= 0`,
     ),
     check(
-      'statements_subsidy_within_shared',
-      sql`${table.subsidyAmount} <= ${table.sharedAmount}`,
+      'statements_subsidy_within_share',
+      sql`${table.subsidyAmount} <= ${table.usageAmount} + ${table.sharedAmount}`,
     ),
     check(
       'statements_total_adds_up',
