@@ -4,7 +4,6 @@ import {
   eq,
   exists,
   getTableColumns,
-  isNull,
   ne,
   notExists,
 } from 'drizzle-orm';
