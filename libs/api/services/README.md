@@ -144,10 +144,13 @@ Each is a property of `ImeServices`, named in brackets.
   the marketplace: browsing and searching public designs, the designs an
   artist holds licenses for, and getting one, free at once or paid on the
   designer's own Stripe checkout. Use it for the marketplace screens.
-- **`DesignGalleryService`** (`gallery`): the public design gallery: every
-  listed design with a short-lived link to preview it, the releases using
-  one, and passing a request for a custom design on to its designer by
-  email, limited so no one floods a designer. Use it for `/designs`.
+- **`DesignGalleryService`** (`gallery`): the public design marketplace:
+  listed designs with a short-lived link to preview each, searched by words
+  and narrowed by style, price, designer, or designers taking requests, and
+  sorted by most used, newest, or rarely used; the designers behind them;
+  the releases using a design; and passing a request for a custom design on
+  to its designer by email, limited so no one floods a designer. Use it for
+  `/designs` and designers' profiles.
 - **`ReleaseDesignService`** (`releaseDesigns`): dressing a release in a
   licensed design: applying it, filling in its slots, uploading slot images,
   moving to a newer version, and going back to the default layout. Use it for

@@ -10,6 +10,8 @@ import {
   type DesignSummary,
   type DesignVersionResponse,
   type GalleryDesign,
+  type GalleryDesigner,
+  type GalleryQuery,
   type GalleryDesignPage,
   type ManagedDesignResponse,
   type MarketplaceDesignResponse,
@@ -32,8 +34,17 @@ export class DesignsClient {
   /**
    * Every design in the public gallery, with links to preview each.
    */
-  public listGallery(): Promise<ApiResult<GalleryDesign[]>> {
-    return this.transport.get(ApiRoute.GalleryDesigns);
+  public listGallery(
+    query: GalleryQuery = {},
+  ): Promise<ApiResult<GalleryDesign[]>> {
+    return this.transport.get(ApiRoute.GalleryDesigns, { query });
+  }
+
+  /** Designers with listed designs. */
+  public listDesigners(
+    query: { q?: string; requests?: '1' } = {},
+  ): Promise<ApiResult<GalleryDesigner[]>> {
+    return this.transport.get(ApiRoute.GalleryDesigners, { query });
   }
 
   /**

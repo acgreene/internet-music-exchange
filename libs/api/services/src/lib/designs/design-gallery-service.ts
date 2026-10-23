@@ -3,7 +3,9 @@ import {
   ApiError,
   ApiErrorKind,
   type GalleryDesign,
+  type GalleryDesigner,
   type GalleryDesignPage,
+  type GalleryQuery,
   HttpStatus,
 } from '@ime/models';
 import { CatalogCards } from '../discovery/catalog-cards';
@@ -11,7 +13,12 @@ import { designEmails, EmailService } from '../email';
 import { CloudStorageService } from '../storage';
 
 const BUNDLE_URL_EXPIRY_SECONDS = 3600;
-const GALLERY_SIZE = 48;
+/** How many listed designs the gallery reads before narrowing them. */
+const LISTED = 500;
+/** How many designs one gallery view shows. */
+const GALLERY_SIZE = 96;
+/** A design this cheap or cheaper counts as under $10. */
+const UNDER_TEN = 1000;
 const RELEASES_SHOWN = 8;
 const MESSAGE_MAX_LENGTH = 2000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -36,13 +43,97 @@ export class DesignGalleryService {
   }
 
   /**
-   * Every listed release design, newest first.
+   * Listed release designs, narrowed by words (in the name, description, or
+   * designer), a style, a price, a designer, or designers taking requests,
+   * the most used first unless asked otherwise.
    */
-  public async list(): Promise<GalleryDesign[]> {
-    const designs = await this.db.designs.listMarketplace(
-      'release',
-      GALLERY_SIZE,
-    );
+  public async list(query: GalleryQuery = {}): Promise<GalleryDesign[]> {
+    const words = (query.q ?? '').trim().toLowerCase();
+    const designer = query.designer?.trim().toLowerCase();
+    const matches = (await this.listAll()).filter((item) => {
+      const { design } = item;
+      const text = [
+        design.name,
+        design.description ?? '',
+        item.designer?.username ?? '',
+        item.designer?.name ?? '',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return (
+        (!words || text.includes(words)) &&
+        (!query.style || design.styles.includes(query.style)) &&
+        (!query.price ||
+          (query.price === 'free'
+            ? design.pricingMode === 'free'
+            : design.pricingMode === 'free' ||
+              design.minimumPrice <= UNDER_TEN)) &&
+        (!query.requests || !!item.designer?.openToCommissions) &&
+        (!designer || item.designer?.username?.toLowerCase() === designer)
+      );
+    });
+    const newest = (a: GalleryDesign, b: GalleryDesign) =>
+      (b.design.publishedAt?.getTime() ?? 0) -
+      (a.design.publishedAt?.getTime() ?? 0);
+    const sorted = matches.sort((a, b) => {
+      if (query.sort === 'newest') return newest(a, b);
+      const used = b.releaseCount - a.releaseCount;
+      return (query.sort === 'rarely-used' ? -used : used) || newest(a, b);
+    });
+    return sorted.slice(0, GALLERY_SIZE);
+  }
+
+  /**
+   * The designers behind listed designs, the most used first, narrowed by
+   * words in their name or to those taking custom requests.
+   */
+  public async listDesigners(
+    query: { q?: string; requests?: '1' } = {},
+  ): Promise<GalleryDesigner[]> {
+    const words = (query.q ?? '').trim().toLowerCase();
+    const byDesigner = new Map<string, GalleryDesigner>();
+    const styleCounts = new Map<string, Map<string, number>>();
+    for (const item of await this.listAll()) {
+      const username = item.designer?.username;
+      if (!item.designer || !username) continue;
+      const known = byDesigner.get(username) ?? {
+        username,
+        name: item.designer.name,
+        openToCommissions: item.designer.openToCommissions,
+        designCount: 0,
+        releaseCount: 0,
+        styles: [],
+      };
+      known.designCount += 1;
+      known.releaseCount += item.releaseCount;
+      byDesigner.set(username, known);
+      const counts = styleCounts.get(username) ?? new Map<string, number>();
+      for (const style of item.design.styles) {
+        counts.set(style, (counts.get(style) ?? 0) + 1);
+      }
+      styleCounts.set(username, counts);
+    }
+    return [...byDesigner.values()]
+      .map((designer) => ({
+        ...designer,
+        styles: [...(styleCounts.get(designer.username) ?? new Map())]
+          .sort((a, b) => b[1] - a[1])
+          .map(([style]) => style),
+      }))
+      .filter(
+        (designer) =>
+          (!query.requests || designer.openToCommissions) &&
+          (!words ||
+            `${designer.username} ${designer.name ?? ''}`
+              .toLowerCase()
+              .includes(words)),
+      )
+      .sort((a, b) => b.releaseCount - a.releaseCount);
+  }
+
+  /** Every listed release design, as the gallery shows it. */
+  private async listAll(): Promise<GalleryDesign[]> {
+    const designs = await this.db.designs.listMarketplace('release', LISTED);
     const counts = await this.db.designs.countReleasesUsing(
       designs.map((design) => design.id),
     );
@@ -188,6 +279,7 @@ export class DesignGalleryService {
         currency: design.currency,
         minimumPrice: design.minimumPrice,
         suggestedPrice: design.suggestedPrice,
+        styles: design.styles,
         publishedAt: design.publishedAt,
       },
       designer: designer && {

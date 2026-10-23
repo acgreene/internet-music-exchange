@@ -357,6 +357,9 @@ export enum ApiRoute {
   /** Public designs on show to everyone, ready to preview. */
   GalleryDesigns = '/api/gallery/designs',
 
+  /** Designers with listed designs, `?requests=1` for those taking requests. */
+  GalleryDesigners = '/api/gallery/designers',
+
   /** One design in the gallery, with releases that use it. */
   GalleryDesign = '/api/gallery/designs/:designId',
 

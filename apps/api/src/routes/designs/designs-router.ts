@@ -116,8 +116,18 @@ export class DesignsRouter extends AbstractRouter {
   }
 
   private registerGallery(): void {
-    this.handle(HttpMethod.Get, ApiRoute.GalleryDesigns, 'public', () =>
-      this.gallery.list(),
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.GalleryDesigns,
+      'public',
+      ({ query }) => this.gallery.list(query),
+    );
+
+    this.handle(
+      HttpMethod.Get,
+      ApiRoute.GalleryDesigners,
+      'public',
+      ({ query }) => this.gallery.listDesigners(query),
     );
 
     this.handle(

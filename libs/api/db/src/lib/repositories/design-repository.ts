@@ -77,6 +77,7 @@ export interface CreateDesignParams {
 export interface UpdateDesignParams {
   name?: string;
   description?: string | null;
+  styles?: string[];
   visibility?: DesignVisibility;
   pricingMode?: PricingMode;
   currency?: Currency | null;

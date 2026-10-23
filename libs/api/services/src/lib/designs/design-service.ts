@@ -11,7 +11,13 @@ import {
   getPostgresErrorCode,
   PostgresErrorCode,
 } from '@ime/db';
-import { ApiError, ApiErrorKind, HttpStatus } from '@ime/models';
+import {
+  ApiError,
+  ApiErrorKind,
+  HttpStatus,
+  isDesignStyleId,
+  MAX_DESIGN_STYLES,
+} from '@ime/models';
 import { AccessService } from '../access/access-service';
 import type { PricingInput } from '../releases/release-service';
 import { SellingGateService } from '../selling';
@@ -40,6 +46,8 @@ export interface DesignChanges {
   name?: string;
   description?: string | null;
   visibility?: DesignVisibility;
+  /** Style ids from IME's list, most fitting first. */
+  styles?: string[];
 }
 
 export interface DesignVersionInput {
@@ -139,6 +147,10 @@ export class DesignService {
           ? undefined
           : this.validDescription(changes.description),
       visibility: changes.visibility,
+      styles:
+        changes.styles === undefined
+          ? undefined
+          : this.validStyles(changes.styles),
     });
     return (await this.db.designs.getById(designId)) as Design;
   }
@@ -426,6 +438,26 @@ export class DesignService {
       );
     }
     return trimmed;
+  }
+
+  private validStyles(styles: string[]): string[] {
+    const unique = [...new Set(styles)];
+    if (unique.length > MAX_DESIGN_STYLES) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        `Pick up to ${MAX_DESIGN_STYLES} styles.`,
+      );
+    }
+    const unknown = unique.find((style) => !isDesignStyleId(style));
+    if (unknown) {
+      throw new ApiError(
+        ApiErrorKind.Http,
+        HttpStatus.BadRequest,
+        `"${unknown}" is not on IME's list of styles.`,
+      );
+    }
+    return unique;
   }
 
   private validDescription(description?: string | null): string | null {

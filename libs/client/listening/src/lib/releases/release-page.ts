@@ -1,4 +1,4 @@
-import { DatePipe, formatDate } from '@angular/common';
+import { formatDate } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -76,7 +76,6 @@ const CRATES_SHOWN = 6;
     ButtonDirective,
     CoverComponent,
     CrateCard,
-    DatePipe,
     DurationPipe,
     EqualizerComponent,
     MoreMenu,

@@ -12,6 +12,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { ApiClient, type ApiResult, unwrap } from '@ime/api-client';
 import { currentValue } from '@ime/client-data';
+import { DESIGN_STYLES, MAX_DESIGN_STYLES } from '@ime/models';
 import {
   AlertComponent,
   ButtonDirective,
@@ -177,6 +178,32 @@ import { DesignVersionsSection } from './sections/design-versions-section';
             </label>
             <fieldset class="flex flex-col gap-2">
               <legend class="mb-1.5 text-sm font-medium">
+                Styles, up to {{ maxStyles }}
+              </legend>
+              <div class="flex flex-wrap gap-1.5">
+                @for (style of allStyles; track style.id) {
+                  <button
+                    type="button"
+                    class="rounded-full border px-3 py-1 text-sm"
+                    [class]="
+                      styles().includes(style.id)
+                        ? 'border-ink bg-ink text-canvas'
+                        : 'border-line hover:border-ink'
+                    "
+                    [attr.aria-pressed]="styles().includes(style.id)"
+                    [disabled]="
+                      !styles().includes(style.id) &&
+                      styles().length >= maxStyles
+                    "
+                    (click)="toggleStyle(style.id)"
+                  >
+                    {{ style.name }}
+                  </button>
+                }
+              </div>
+            </fieldset>
+            <fieldset class="flex flex-col gap-2">
+              <legend class="mb-1.5 text-sm font-medium">
                 Who can find it
               </legend>
               <label class="flex items-start gap-3">
@@ -299,6 +326,11 @@ export class DesignEditorPage {
   protected readonly visibility = linkedSignal(
     () => this.managed()?.design.visibility ?? 'public',
   );
+  protected readonly allStyles = DESIGN_STYLES;
+  protected readonly maxStyles = MAX_DESIGN_STYLES;
+  protected readonly styles = linkedSignal<string[]>(
+    () => this.managed()?.design.styles ?? [],
+  );
   protected readonly handle = signal('');
 
   protected readonly working = signal<
@@ -320,9 +352,18 @@ export class DesignEditorPage {
         name: this.name().trim(),
         description: this.description().trim() || null,
         visibility: this.visibility(),
+        styles: this.styles(),
       }),
     );
     if (done) this.detailsSaved.set(true);
+  }
+
+  protected toggleStyle(id: string): void {
+    this.styles.update((styles) =>
+      styles.includes(id)
+        ? styles.filter((style) => style !== id)
+        : [...styles, id],
+    );
   }
 
   protected async publish(): Promise<void> {

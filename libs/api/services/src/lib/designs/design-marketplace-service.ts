@@ -30,6 +30,7 @@ export interface MarketplaceDesign {
     | 'currency'
     | 'minimumPrice'
     | 'suggestedPrice'
+    | 'styles'
     | 'publishedAt'
   >;
   /** The slots its latest version gives artists to fill in. */
@@ -103,6 +104,7 @@ export class DesignMarketplaceService {
         currency: design.currency,
         minimumPrice: design.minimumPrice,
         suggestedPrice: design.suggestedPrice,
+        styles: design.styles,
         publishedAt: design.publishedAt,
       },
       slots: latest.slots,

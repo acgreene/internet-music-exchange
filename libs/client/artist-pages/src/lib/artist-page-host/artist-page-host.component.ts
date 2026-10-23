@@ -1,5 +1,6 @@
 import {
   afterNextRender,
+  booleanAttribute,
   Component,
   computed,
   DestroyRef,
@@ -49,7 +50,7 @@ export class ArtistPageHost {
   public readonly payload = input.required<ArtistPageRenderPayload>();
 
   /** Take the whole box and let the design scroll inside it. */
-  public readonly fill = input(false);
+  public readonly fill = input(false, { transform: booleanAttribute });
 
   /** What is playing from this record, passed on to the design. */
   public readonly playback = input<ArtistPagePlayback | null>(null);

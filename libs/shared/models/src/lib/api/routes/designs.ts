@@ -45,6 +45,8 @@ export const designSummarySchema = z.object({
   currency: currencySchema.nullable(),
   minimumPrice: z.number().int(),
   suggestedPrice: z.number().int().nullable(),
+  /** Style ids from IME's list, most fitting first. */
+  styles: z.array(z.string()),
   publishedAt: timestampSchema.nullable(),
 });
 
@@ -153,6 +155,49 @@ export const galleryDesignPageSchema = galleryDesignSchema.extend({
 
 export type GalleryDesignPage = z.infer<typeof galleryDesignPageSchema>;
 
+export const GALLERY_SORTS = [
+  { id: 'most-used', name: 'Most used' },
+  { id: 'newest', name: 'Newest' },
+  { id: 'rarely-used', name: 'Rarely used' },
+] as const;
+
+export type GallerySort = (typeof GALLERY_SORTS)[number]['id'];
+
+/** What the gallery is narrowed to: words, a style, a price, and a sort. */
+export const galleryQuerySchema = z.object({
+  q: z.string().max(100).optional(),
+  style: z.string().optional(),
+  price: z.enum(['free', 'under-10']).optional(),
+  /** Only designs by designers taking custom requests. */
+  requests: z.enum(['1']).optional(),
+  /** Only designs by this designer. */
+  designer: z.string().optional(),
+  sort: z
+    .enum(GALLERY_SORTS.map((sort) => sort.id) as [GallerySort])
+    .optional(),
+});
+
+export type GalleryQuery = z.infer<typeof galleryQuerySchema>;
+
+/** A designer with listed designs, as the gallery shows them. */
+export const galleryDesignerSchema = z.object({
+  username: z.string(),
+  name: z.string().nullable(),
+  openToCommissions: z.boolean(),
+  designCount: z.number().int(),
+  /** How many releases on sale use their designs. */
+  releaseCount: z.number().int(),
+  /** Their styles, most used first. */
+  styles: z.array(z.string()),
+});
+
+export type GalleryDesigner = z.infer<typeof galleryDesignerSchema>;
+
+export const galleryDesignersQuerySchema = z.object({
+  q: z.string().max(100).optional(),
+  requests: z.enum(['1']).optional(),
+});
+
 export const commissionRequestSchema = z.object({ message: z.string() });
 
 export type CommissionRequest = z.infer<typeof commissionRequestSchema>;
@@ -207,6 +252,7 @@ export const designChangesRequestSchema = z.object({
   name: z.string().optional(),
   description: z.string().nullable().optional(),
   visibility: z.enum(['public', 'private']).optional(),
+  styles: z.array(z.string()).max(3).optional(),
 });
 
 export type DesignChangesRequest = z.infer<typeof designChangesRequestSchema>;
@@ -309,7 +355,16 @@ export const designContracts = {
     [HttpMethod.Get]: { response: marketplaceDesignSchema },
   },
   [ApiRoute.GalleryDesigns]: {
-    [HttpMethod.Get]: { response: z.array(galleryDesignSchema) },
+    [HttpMethod.Get]: {
+      query: galleryQuerySchema,
+      response: z.array(galleryDesignSchema),
+    },
+  },
+  [ApiRoute.GalleryDesigners]: {
+    [HttpMethod.Get]: {
+      query: galleryDesignersQuerySchema,
+      response: z.array(galleryDesignerSchema),
+    },
   },
   [ApiRoute.GalleryDesign]: {
     [HttpMethod.Get]: { response: galleryDesignPageSchema },
