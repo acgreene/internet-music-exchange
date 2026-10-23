@@ -17,6 +17,7 @@ import { SessionService, currentValue } from '@ime/client-data';
 import {
   ApiError,
   type ArtistPagePlayback,
+  designStyleName,
   HttpStatus,
   type Shelf,
 } from '@ime/models';
@@ -150,7 +151,12 @@ const SEGMENT =
                 {{ page.design.name }}
               </h1>
               @if (page.designer?.username; as username) {
-                <p class="text-sm text-ink-muted">by &#64;{{ username }}</p>
+                <p class="text-sm text-ink-muted">
+                  by
+                  <a class="link" [routerLink]="['/users', username]"
+                    >&#64;{{ username }}</a
+                  >
+                </p>
               }
               @if (page.design.description; as description) {
                 <p class="leading-relaxed">{{ description }}</p>
@@ -158,6 +164,10 @@ const SEGMENT =
               <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                 <dt class="text-ink-muted">Price</dt>
                 <dd>{{ price() }}</dd>
+                @if (page.design.styles.length) {
+                  <dt class="text-ink-muted">Style</dt>
+                  <dd>{{ styleNames() }}</dd>
+                }
                 <dt class="text-ink-muted">Used on</dt>
                 <dd>
                   {{ page.releaseCount }}
@@ -178,7 +188,8 @@ const SEGMENT =
 
             @if (page.designer?.openToCommissions) {
               <section
-                class="flex flex-col gap-3 border-t border-line pt-6"
+                id="commission"
+                class="flex scroll-mt-24 flex-col gap-3 border-t border-line pt-6"
                 aria-labelledby="commission-heading"
               >
                 <h2 id="commission-heading" class="font-bold">
@@ -301,6 +312,10 @@ export class DesignPage {
   /** A design reads its content once, so a change renders it afresh. */
   protected readonly previewKey = computed(
     () => `${this.device()}|${this.kind()}|${this.cover()?.length ?? 0}`,
+  );
+
+  protected readonly styleNames = computed(() =>
+    (this.page()?.design.styles ?? []).map(designStyleName).join(', '),
   );
 
   protected readonly price = computed(() => {

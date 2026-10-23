@@ -5,18 +5,34 @@ import {
   input,
   resource,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiClient } from '@ime/api-client';
 import { SessionService } from '@ime/client-data';
-import { CrateCard, ReportButton } from '@ime/client-listening';
-import { AlertComponent, SpinnerComponent } from '@ime/ui';
+import {
+  CrateCard,
+  DesignThumbnail,
+  ReportButton,
+  releasePriceLabel,
+} from '@ime/client-listening';
+import { designStyleName, type GalleryDesign } from '@ime/models';
+import { AlertComponent, ButtonDirective, SpinnerComponent } from '@ime/ui';
 
 /**
- * Anyone's public profile, `/users/<username>`.
+ * Anyone's public profile, `/users/<username>`: their crates, and for a
+ * designer, their designs and a way to ask them for one.
  */
 @Component({
   selector: 'ime-user-profile-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AlertComponent, CrateCard, ReportButton, SpinnerComponent],
+  imports: [
+    AlertComponent,
+    ButtonDirective,
+    CrateCard,
+    DesignThumbnail,
+    ReportButton,
+    RouterLink,
+    SpinnerComponent,
+  ],
   template: `
     @if (profile.isLoading()) {
       <ime-spinner />
@@ -28,6 +44,16 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
           {{ user.name || user.username }}
         </h1>
         <p class="text-ink-muted">&#64;{{ user.username }}</p>
+        @if (user.openToCommissions && designs.value()?.length) {
+          <div class="mt-3">
+            <a
+              imeButton
+              [routerLink]="['/designs', designs.value()![0].design.id]"
+              fragment="commission"
+              >Ask for a design</a
+            >
+          </div>
+        }
         @if (user.id !== session.user()?.id) {
           <div class="mt-2">
             <ime-report-button
@@ -38,6 +64,45 @@ import { AlertComponent, SpinnerComponent } from '@ime/ui';
           </div>
         }
       </div>
+      @if (designs.value()?.length) {
+        <section
+          class="mt-10 flex flex-col gap-4"
+          aria-labelledby="designs-heading"
+        >
+          <h2
+            id="designs-heading"
+            class="text-2xl font-extrabold tracking-[-0.035em]"
+          >
+            Designs
+          </h2>
+          <ul class="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            @for (item of designs.value(); track item.design.id) {
+              <li>
+                <a
+                  class="group flex flex-col gap-3"
+                  [routerLink]="['/designs', item.design.id]"
+                >
+                  <ime-design-thumbnail [design]="item" />
+                  <span class="flex items-baseline justify-between gap-3">
+                    <span class="truncate font-bold group-hover:underline">{{
+                      item.design.name
+                    }}</span>
+                    <span class="shrink-0 font-mono text-xs">{{
+                      price(item)
+                    }}</span>
+                  </span>
+                  @if (item.design.styles.length) {
+                    <span
+                      class="-mt-2 truncate font-mono text-xs text-ink-muted"
+                      >{{ styleNames(item.design.styles) }}</span
+                    >
+                  }
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
       @if (crates.value()?.length) {
         <section
           class="mt-10 flex flex-col gap-4"
@@ -66,6 +131,28 @@ export class UserProfilePage {
   protected readonly session = inject(SessionService);
 
   public readonly username = input.required<string>();
+
+  /** Their listed designs, the most used first. */
+  protected readonly designs = resource({
+    params: () => this.username(),
+    loader: async ({ params }) => {
+      const result = await this.api.designs.listGallery({ designer: params });
+      return result.ok ? result.data : [];
+    },
+  });
+
+  protected price(item: GalleryDesign): string {
+    return releasePriceLabel({
+      mode: item.design.pricingMode,
+      currency: item.design.currency,
+      minimumPrice: item.design.minimumPrice,
+      suggestedPrice: item.design.suggestedPrice,
+    });
+  }
+
+  protected styleNames(ids: string[]): string {
+    return ids.map(designStyleName).join(', ');
+  }
 
   /** Their public crates. */
   protected readonly crates = resource({
