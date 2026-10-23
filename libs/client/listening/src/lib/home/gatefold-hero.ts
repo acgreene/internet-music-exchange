@@ -126,7 +126,8 @@ const PANEL =
             <p
               class="font-mono text-xs leading-relaxed short:text-[11px] short:leading-snug"
             >
-              The artist keeps {{ share }}% here, more on bigger orders. On
+              The artist keeps {{ share }}% of the $10 sale here, and more on
+              bigger orders. On
               <a
                 class="link"
                 href="https://bandcamp.com/artists"
